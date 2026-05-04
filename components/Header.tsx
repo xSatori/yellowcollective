@@ -10,6 +10,14 @@ import { formatNumber } from "@/utils/formatNumber";
 import { BigNumber, ethers } from "ethers";
 import { useNounsBalance } from "@/hooks/fetch/useNounsBalance";
 
+const navItems = [
+  { label: "About", href: "/about" },
+  { label: "Proposals", href: "/proposals" },
+  { label: "Treasury", href: "/treasury" },
+  { label: "Contracts", href: "/contracts" },
+  { label: "Community", href: "/community" },
+];
+
 export default function Header() {
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
@@ -54,6 +62,18 @@ export default function Header() {
             </h6>
           </Link>
         </Button>
+      </div>
+
+      <div className="hidden flex-1 items-center justify-end gap-2 px-4 lg:flex">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
+          >
+            <h6>{item.label}</h6>
+          </Link>
+        ))}
       </div>
 
       <CustomConnectButton className="bg-skin-backdrop px-6 h-10 rounded-xl border border-skin-stroke text-skin-base transition ease-in-out hover:scale-110" />

@@ -1,0 +1,431 @@
+import Layout from "@/components/Layout";
+import {
+  getAddresses,
+  type DAOAddresses,
+} from "@/services/nouns-builder/manager";
+import DefaultProvider from "@/utils/DefaultProvider";
+import { formatTreasuryBalance } from "@/utils/formatTreasuryBalance";
+import { shortenAddress } from "@/utils/shortenAddress";
+import {
+  ContractInfo,
+  Founder,
+  getContractInfo,
+  getFounders,
+} from "data/nouns-builder/token";
+import { TOKEN_CONTRACT, TOKEN_NETWORK } from "constants/addresses";
+import { ETHERSCAN_BASEURL } from "constants/urls";
+import { YELLOW_COLLECTIVE_CONTRACTS } from "data/contracts";
+import { BigNumber } from "ethers";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
+import Head from "next/head";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useMemo } from "react";
+
+type Delegate = {
+  address: string;
+  votes: number;
+  votePercent: number;
+  joined?: string;
+};
+
+type AboutPageProps = {
+  contract: ContractInfo;
+  addresses: DAOAddresses;
+  founders: Founder[];
+  delegates: Delegate[];
+  treasuryBalance: string | null;
+};
+
+const membersListUrl = `https://nouns.build/api/membersList/${TOKEN_CONTRACT}?chainId=${TOKEN_NETWORK}`;
+
+const getFallbackAddresses = (): DAOAddresses => ({
+  metadata: YELLOW_COLLECTIVE_CONTRACTS.metadata.address,
+  auction: YELLOW_COLLECTIVE_CONTRACTS.auctionHouse.address,
+  treasury: YELLOW_COLLECTIVE_CONTRACTS.treasury.address,
+  governor: YELLOW_COLLECTIVE_CONTRACTS.governor.address,
+});
+
+const getNumber = (value: unknown): number => {
+  if (Array.isArray(value)) return value.length;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+};
+
+const getJoinedDate = (value: unknown) => {
+  if (!value) return "";
+
+  const timestamp = getNumber(value);
+  const date =
+    timestamp > 0
+      ? new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp)
+      : new Date(String(value));
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const normalizeMembers = (
+  payload: unknown,
+  totalSupply: number
+): Delegate[] => {
+  const data = payload as {
+    members?: unknown[];
+    membersList?: unknown[];
+    delegates?: unknown[];
+  };
+  const members = Array.isArray(payload)
+    ? payload
+    : data.membersList || data.members || data.delegates || [];
+
+  return members
+    .map((member) => {
+      const item = member as Record<string, unknown>;
+      const address = String(
+        item.address ||
+          item.delegate ||
+          item.voter ||
+          item.wallet ||
+          item.owner ||
+          item.id ||
+          ""
+      );
+      const votes = getNumber(
+        item.votes ||
+          item.tokenCount ||
+          item.tokens ||
+          item.votingPower ||
+          item.balance
+      );
+      const explicitVotePercent = getNumber(
+        item.votePercent || item.votePct || item.percent
+      );
+
+      return {
+        address,
+        votes,
+        votePercent:
+          explicitVotePercent ||
+          (totalSupply > 0 ? (votes / totalSupply) * 100 : 0),
+        joined: getJoinedDate(item.joined || item.joinedAt || item.createdAt),
+      };
+    })
+    .filter((delegate) => delegate.address.startsWith("0x"))
+    .sort((a, b) => b.votes - a.votes);
+};
+
+const fetchDelegates = async (totalSupply: number) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch(membersListUrl, { signal: controller.signal });
+    if (!response.ok) return [];
+
+    return normalizeMembers(await response.json(), totalSupply);
+  } catch (error) {
+    console.warn("Unable to load DAO members list", error);
+    return [];
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const getTotalSupply = (contract: ContractInfo) => {
+  try {
+    return Number(BigNumber.from(contract.total_supply).toString());
+  } catch (error) {
+    console.warn("Unable to format total supply", error);
+    return 0;
+  }
+};
+
+export const getStaticProps = async (): Promise<
+  GetStaticPropsResult<AboutPageProps>
+> => {
+  const tokenContract = TOKEN_CONTRACT as `0x${string}`;
+  const contract = await getContractInfo({ address: tokenContract });
+  const totalSupply = getTotalSupply(contract);
+
+  const [addressesResult, foundersResult, delegates] = await Promise.allSettled(
+    [
+      getAddresses({ tokenAddress: tokenContract }),
+      getFounders({ address: tokenContract }),
+      fetchDelegates(totalSupply),
+    ]
+  );
+
+  const addresses =
+    addressesResult.status === "fulfilled"
+      ? addressesResult.value
+      : getFallbackAddresses();
+  const founders =
+    foundersResult.status === "fulfilled" ? foundersResult.value : [];
+
+  let treasuryBalance: string | null = null;
+  try {
+    treasuryBalance = (
+      await DefaultProvider.getBalance(addresses.treasury)
+    ).toHexString();
+  } catch (error) {
+    console.warn("Unable to load treasury balance", error);
+  }
+
+  return {
+    props: {
+      contract,
+      addresses,
+      founders,
+      delegates: delegates.status === "fulfilled" ? delegates.value : [],
+      treasuryBalance,
+    },
+    revalidate: 60,
+  };
+};
+
+export default function AboutPage({
+  contract,
+  addresses,
+  founders,
+  delegates,
+  treasuryBalance,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
+  const totalSupply = useMemo(() => getTotalSupply(contract), [contract]);
+  const formattedTreasuryBalance = useMemo(() => {
+    if (!treasuryBalance) return "--";
+
+    try {
+      return `${formatTreasuryBalance(BigNumber.from(treasuryBalance))} ETH`;
+    } catch (error) {
+      console.error("Unable to format treasury balance", error);
+      return "--";
+    }
+  }, [treasuryBalance]);
+  const stats = [
+    { label: "Treasury", value: formattedTreasuryBalance },
+    { label: "Owners", value: delegates.length || "--" },
+    { label: "Total supply", value: totalSupply || "--" },
+    { label: "Chain", value: "Base", isChain: true },
+  ];
+
+  const description =
+    contract.description ||
+    "No DAO description was found in the token metadata.";
+  const externalUrl =
+    contract.external_url || `${ETHERSCAN_BASEURL}/address/${TOKEN_CONTRACT}`;
+
+  const exportDelegates = () => {
+    const rows = [
+      ["Delegate", "Votes", "Vote %", "Joined"],
+      ...delegates.map((delegate) => [
+        delegate.address,
+        String(delegate.votes),
+        delegate.votePercent.toFixed(2),
+        delegate.joined || "",
+      ]),
+    ];
+    const csv = rows
+      .map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "yellow-collective-delegates.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Layout>
+      <Head>
+        <title>About | Yellow Collective</title>
+      </Head>
+
+      <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-10 pb-12">
+        <div className="flex items-center justify-between gap-6">
+          <div className="flex min-w-0 items-center gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-skin-stroke bg-accent">
+              {contract.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={contract.image}
+                  alt={contract.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="font-heading text-2xl text-skin-base">YC</span>
+              )}
+            </div>
+            <h1 className="truncate text-[34px] leading-none md:text-[44px]">
+              {contract.name || "Yellow Collective"}
+            </h1>
+          </div>
+
+          <a
+            href={externalUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-skin-muted font-heading text-2xl text-skin-base shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
+            aria-label="Open DAO website"
+          >
+            <ArrowTopRightOnSquareIcon className="h-7 w-7" />
+          </a>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm"
+            >
+              <div className="text-base text-secondary">{stat.label}</div>
+              <div className="mt-3 flex items-center gap-3 font-heading text-3xl leading-none text-skin-base">
+                {stat.isChain && (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-blue text-xl text-white">
+                    =
+                  </span>
+                )}
+                {stat.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <section className="rounded-2xl border border-skin-stroke bg-skin-muted p-6 shadow-sm md:p-8">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            className="prose prose-skin max-w-none prose-headings:font-heading prose-h2:mb-4 prose-h2:text-3xl prose-p:text-base prose-p:leading-snug prose-a:text-accent-blue prose-a:underline md:prose-p:text-lg"
+            components={{
+              h1: ({ children }) => (
+                <h2 className="mb-5 text-3xl font-bold leading-none">
+                  {children}
+                </h2>
+              ),
+              h2: ({ children }) => (
+                <h2 className="mb-5 text-3xl font-bold leading-none">
+                  {children}
+                </h2>
+              ),
+              a: ({ href, children }) => (
+                <a href={href} target="_blank" rel="noreferrer">
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {description}
+          </ReactMarkdown>
+        </section>
+
+        <section className="flex flex-col gap-5">
+          <h2 className="font-heading text-3xl leading-none">Founders</h2>
+          {founders.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {founders.map((founder, index) => (
+                <a
+                  key={founder.wallet}
+                  href={`${ETHERSCAN_BASEURL}/address/${founder.wallet}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span
+                      className={`h-10 w-10 shrink-0 rounded-full border border-skin-stroke ${
+                        index % 2 === 0
+                          ? "bg-gradient-to-br from-white via-cyan-200 to-accent-blue"
+                          : "bg-gradient-to-br from-white via-pink-200 to-accent"
+                      }`}
+                    />
+                    <span className="truncate text-base font-bold md:text-lg">
+                      {shortenAddress(founder.wallet, 5)}
+                    </span>
+                  </div>
+                  <span className="font-heading text-xl">
+                    {founder.ownershipPct}%
+                  </span>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-6 text-base text-secondary md:text-lg">
+              No founders allocation found.
+            </div>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-heading text-3xl leading-none">Delegates</h2>
+            <button
+              type="button"
+              onClick={exportDelegates}
+              disabled={delegates.length === 0}
+              className="rounded-xl border border-skin-stroke bg-skin-muted px-5 py-3 font-heading text-lg shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Export CSV
+            </button>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-skin-muted shadow-sm">
+            <div className="max-h-[620px] overflow-auto">
+              <div className="grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] gap-6 border-b border-skin-stroke p-5 font-heading text-xl">
+                <div>Delegate</div>
+                <div>Votes</div>
+                <div>Vote %</div>
+                <div>Joined</div>
+              </div>
+
+              {delegates.length > 0 ? (
+                delegates.map((delegate, index) => (
+                  <a
+                    key={delegate.address}
+                    href={`${ETHERSCAN_BASEURL}/address/${delegate.address}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-6 p-5 text-base transition hover:bg-[#fff7bf] md:text-lg"
+                  >
+                    <div className="flex min-w-0 items-center gap-4">
+                      <span
+                        className={`h-9 w-9 shrink-0 rounded-full border border-skin-stroke ${
+                          index % 3 === 0
+                            ? "bg-gradient-to-br from-white via-cyan-200 to-accent-blue"
+                            : index % 3 === 1
+                              ? "bg-gradient-to-br from-white via-pink-200 to-accent"
+                              : "bg-gradient-to-br from-white via-lime-200 to-cyan-300"
+                        }`}
+                      />
+                      <span className="truncate">
+                        {shortenAddress(delegate.address, 5)}
+                      </span>
+                    </div>
+                    <div>{delegate.votes} Tokens</div>
+                    <div>{delegate.votePercent.toFixed(2)}%</div>
+                    <div>{delegate.joined || "--"}</div>
+                  </a>
+                ))
+              ) : (
+                <div className="p-6 text-base text-secondary md:text-lg">
+                  Delegate data is not available from the members API yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </Layout>
+  );
+}

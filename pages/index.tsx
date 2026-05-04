@@ -19,6 +19,7 @@ import Faq from "@/components/Faq";
 import Description from "@/components/Description";
 import Head from "next/head";
 import { getFrameMetadata } from "@/utils/getFrameMetadata";
+import { TOKEN_CONTRACT } from "constants/addresses";
 
 export const getStaticProps = async (): Promise<
   GetStaticPropsResult<{
@@ -31,8 +32,7 @@ export const getStaticProps = async (): Promise<
   }>
 > => {
   // Get token and auction info
-  const tokenContract = process.env
-    .NEXT_PUBLIC_TOKEN_CONTRACT! as `0x${string}`;
+  const tokenContract = TOKEN_CONTRACT as `0x${string}`;
 
   const [addresses, contract, frameMetadata] = await Promise.all([
     getAddresses({ tokenAddress: tokenContract }),

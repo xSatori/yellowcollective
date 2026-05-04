@@ -1,4 +1,5 @@
 import { base, baseGoerli } from "@wagmi/chains";
+import { TOKEN_NETWORK } from "constants/addresses";
 
 export const ETHERSCAN_BASEURL = {
   "1": "https://etherscan.io",
@@ -7,7 +8,7 @@ export const ETHERSCAN_BASEURL = {
   "7777777": "https://testnet.explorer.zora.energy/",
   "8453": base.blockExplorers.etherscan.url,
   "84531": baseGoerli.blockExplorers.etherscan.url,
-}[process.env.NEXT_PUBLIC_TOKEN_NETWORK ?? "1"];
+}[TOKEN_NETWORK];
 
 export const SUBGRAPH_ENDPOINT = {
   "1": "https://api.goldsky.com/api/public/project_clkk1ucdyf6ak38svcatie9tf/subgraphs/nouns-builder-ethereum-mainnet/stable/gn",
@@ -20,7 +21,7 @@ export const SUBGRAPH_ENDPOINT = {
     "https://api.goldsky.com/api/public/project_clkk1ucdyf6ak38svcatie9tf/subgraphs/nouns-builder-base-mainnet/stable/gn",
   "84531":
     "https://api.goldsky.com/api/public/project_clkk1ucdyf6ak38svcatie9tf/subgraphs/nouns-builder-base-testnet/stable/gn",
-}[process.env.NEXT_PUBLIC_TOKEN_NETWORK ?? "1"]!;
+}[TOKEN_NETWORK]!;
 
 export const ETHER_ACTOR_BASEURL = "https://ether.actor";
 export const IPFS_GATEWAY =

@@ -7,6 +7,7 @@ import { zoraTestnet, zora, base, baseGoerli } from "@wagmi/chains";
 
 import { createPublicClient, http } from "viem";
 import { baseSepolia, mainnet as mainnetViem } from "viem/chains";
+import { TOKEN_NETWORK } from "constants/addresses";
 
 const selectedChain = {
   "1": mainnet,
@@ -16,20 +17,39 @@ const selectedChain = {
   "8453": base,
   "84531": baseGoerli,
   "84532": baseSepolia,
-}[process.env.NEXT_PUBLIC_TOKEN_NETWORK ?? "1"]!;
+}[TOKEN_NETWORK]!;
+
+const ALCHEMY_KEY = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
+const getAlchemyUrl = (baseUrl: string, fallbackUrl: string) =>
+  ALCHEMY_KEY ? `${baseUrl}/${ALCHEMY_KEY}` : fallbackUrl;
 
 export const RPC_URLS: { [chainId: string]: string } = {
-  "1": `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
-  "5": `https://eth-goerli.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+  "1": getAlchemyUrl(
+    "https://eth-mainnet.g.alchemy.com/v2",
+    "https://eth.llamarpc.com"
+  ),
+  "5": getAlchemyUrl(
+    "https://eth-goerli.g.alchemy.com/v2",
+    "https://ethereum-goerli.publicnode.com"
+  ),
   "999": "https://testnet.rpc.zora.energy",
   "7777777": "https://rpc.zora.energy",
-  "8453": `https://base-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
-  "84531": `https://base-goerli.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
-  "84532": `https://base-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
+  "8453": getAlchemyUrl(
+    "https://base-mainnet.g.alchemy.com/v2",
+    "https://mainnet.base.org"
+  ),
+  "84531": getAlchemyUrl(
+    "https://base-goerli.g.alchemy.com/v2",
+    "https://goerli.base.org"
+  ),
+  "84532": getAlchemyUrl(
+    "https://base-sepolia.g.alchemy.com/v2",
+    "https://sepolia.base.org"
+  ),
 };
 
 export const MAINNET_RPC_URL = RPC_URLS["1"];
-export const RPC_URL = RPC_URLS[process.env.NEXT_PUBLIC_TOKEN_NETWORK ?? "1"]!;
+export const RPC_URL = RPC_URLS[TOKEN_NETWORK]!;
 
 export type ChainId =
   | "1"
@@ -67,9 +87,7 @@ const wagmiClient = createClient({
 
 const viemMainnetClient = createPublicClient({
   chain: mainnetViem,
-  transport: http(
-    `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-  ),
+  transport: http(RPC_URLS["1"]),
 });
 
 export { wagmiClient, chains, viemMainnetClient };

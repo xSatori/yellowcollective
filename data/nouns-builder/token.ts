@@ -11,7 +11,9 @@ import { TOKEN_CONTRACT } from "constants/addresses";
 import MainnetProvider from "@/utils/MainnetProvider";
 
 const { token } = BuilderSDK.connect({ signerOrProvider: DefaultProvider });
-const { token: mainnetToken } = BuilderSDK.connect({ signerOrProvider: MainnetProvider });
+const { token: mainnetToken } = BuilderSDK.connect({
+  signerOrProvider: MainnetProvider,
+});
 
 export type ContractInfo = {
   name: string;
@@ -108,6 +110,20 @@ export const getFounder = async ({
     BigNumber.from(founderId)
   );
   return { wallet, ownershipPct, vestExpiry } as Founder;
+};
+
+export const getFounders = async ({ address }: { address: string }) => {
+  const tokenContract = token({
+    address: address as string,
+  });
+
+  const founders = await tokenContract.getFounders();
+
+  return founders.map(({ wallet, ownershipPct, vestExpiry }) => ({
+    wallet,
+    ownershipPct: Number(ownershipPct),
+    vestExpiry: Number(vestExpiry),
+  })) as Founder[];
 };
 
 export const getBalanceOf = async ({

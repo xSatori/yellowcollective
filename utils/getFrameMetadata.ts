@@ -37,7 +37,15 @@ export const metaTagPropertyRegex = /^(fc|frog|og:image|og:title)/;
  */
 export async function getFrameMetadata(url: string): Promise<FrameMetadata> {
   try {
-    const text = await fetch(url).then((r) => r.text());
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(
+        `Skipping frame metadata for "${url}" because the request returned ${response.status}.`
+      );
+      return [];
+    }
+
+    const text = await response.text();
 
     const dom = parseFromString(text.replace(/<!doctype html>/i, ""));
     const nodes = dom.getElementsByTagName("meta");
@@ -56,12 +64,12 @@ export async function getFrameMetadata(url: string): Promise<FrameMetadata> {
 
     return metaTags;
   } catch (error) {
-    throw new Error(
+    console.warn(
       [
-        `Failed to extract frame meta tags from "${url}".`,
-        "",
+        `Skipping frame metadata for "${url}".`,
         `Error: ${error}`,
       ].join("\n")
     );
+    return [];
   }
 }
