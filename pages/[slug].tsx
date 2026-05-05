@@ -22,7 +22,7 @@ export const getStaticPaths = async () => {
   const templateDirectory = path.join(process.cwd(), "templates");
   const files = await fs.readdir(templateDirectory, { withFileTypes: true });
   const paths = files
-    .filter((dirent) => dirent.isFile())
+    .filter((dirent) => dirent.isFile() && dirent.name.endsWith(".md"))
     .map((file) => file.name.replace(/\.md?$/, ""))
     .filter((slug) => !RESERVED_PAGE_SLUGS.has(slug))
     .map((slug) => ({ params: { slug } }));
