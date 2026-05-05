@@ -4,7 +4,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-const repoUrl = "https://github.com/xSatori/yellow-collective";
+const repoUrl = "https://github.com/Yellow-Collective/yellow-collective";
 
 const slugify = (value: string) =>
   value
