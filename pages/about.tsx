@@ -437,7 +437,7 @@ export default function AboutPage({
               type="button"
               onClick={exportDelegates}
               disabled={delegates.length === 0}
-              className="rounded-xl border border-skin-stroke bg-skin-muted px-5 py-3 font-heading text-lg shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
               Export CSV
             </button>

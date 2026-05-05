@@ -1,15 +1,16 @@
-import Image from "next/image";
-import { useDAOAddresses, useTreasuryBalance } from "hooks";
-import Link from "next/link";
-import { ETHERSCAN_BASEURL } from "constants/urls";
-import CustomConnectButton from "./CustomConnectButton";
-import { BASED_AND_YELLOW_MULTISIG, TOKEN_CONTRACT } from "constants/addresses";
-import Button from "./Button";
-import { useBalance } from "wagmi";
 import { formatNumber } from "@/utils/formatNumber";
-import { BigNumber, ethers } from "ethers";
 import { useNounsBalance } from "@/hooks/fetch/useNounsBalance";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import Button from "./Button";
+import CustomConnectButton from "./CustomConnectButton";
+import Image from "next/image";
+import Link from "next/link";
+import { BASED_AND_YELLOW_MULTISIG, TOKEN_CONTRACT } from "constants/addresses";
+import { BigNumber, ethers } from "ethers";
+import { ETHERSCAN_BASEURL } from "constants/urls";
+import { useBalance } from "wagmi";
+import { useDAOAddresses, useTreasuryBalance } from "hooks";
+import { useEffect, useMemo, useState } from "react";
 
 const daoItems = [
   { label: "About", href: "/about" },
@@ -19,6 +20,7 @@ const daoItems = [
 ];
 
 export default function Header() {
+  const [isMounted, setIsMounted] = useState(false);
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
@@ -39,10 +41,40 @@ export default function Header() {
   const nounsBalance = BigNumber.from(treasuryNounsBalance ?? 0).add(
     BigNumber.from(multisigNounsBalance ?? 0)
   );
+  const multisigBalance = multisigBalanceData?.value ?? BigNumber.from(0);
+  const balanceLabel = useMemo(() => {
+    if (!isMounted) return "0";
+
+    const parts = [
+      treasury ? formatNumber(ethers.utils.formatEther(treasury), 2) : "0",
+    ];
+
+    if (multisigBalance.gt(1000)) {
+      parts.push(formatNumber(multisigBalanceData?.formatted, 2));
+    }
+
+    if (nounsBalance.gt(0)) {
+      parts.push(
+        `${nounsBalance.toString()} ${nounsBalance.gt(1) ? "Nouns" : "Noun"}`
+      );
+    }
+
+    return parts.join(" + ");
+  }, [
+    isMounted,
+    multisigBalance,
+    multisigBalanceData?.formatted,
+    nounsBalance,
+    treasury,
+  ]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
-    <div className="flex items-center justify-between w-full px-4 md:px-10 py-2 h-[80px] gap-2">
-      <div className="flex flex-row gap-4 md:gap-8 justify-start items-center">
+    <div className="flex h-[80px] w-full items-center justify-between gap-2 px-4 py-2 md:px-10">
+      <div className="flex flex-row items-center justify-start gap-4 md:gap-8">
         <Link href="/">
           <Image src="/noggles.svg" width={80} height={30} alt="Yellow" />
         </Link>
@@ -52,21 +84,7 @@ export default function Header() {
             rel="noreferer noopener noreferrer"
             target="_blank"
           >
-            <h6>
-              Ξ{" "}
-              {treasury
-                ? formatNumber(ethers.utils.formatEther(treasury), 2)
-                : "0"}
-              {(multisigBalanceData?.value ?? BigNumber.from(0)) >
-                BigNumber.from(1000) &&
-                " + " + formatNumber(multisigBalanceData?.formatted, 2)}
-              {nounsBalance.gt(0)
-                ? " + " +
-                  nounsBalance +
-                  " " +
-                  (nounsBalance.gt(1) ? "Nouns" : "Noun")
-                : ""}
-            </h6>
+            <h6>&Xi; {balanceLabel}</h6>
           </Link>
         </Button>
       </div>
@@ -108,7 +126,7 @@ export default function Header() {
         </div>
       </div>
 
-      <CustomConnectButton className="bg-skin-backdrop px-6 h-10 rounded-xl border border-skin-stroke text-skin-base transition ease-in-out hover:scale-110" />
+      <CustomConnectButton className="h-10 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out hover:scale-110" />
     </div>
   );
 }

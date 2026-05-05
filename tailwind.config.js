@@ -1,5 +1,3 @@
-const defaultTheme = require("tailwindcss/defaultTheme");
-
 function withOpacity(variableName) {
   return ({ opacityValue }) => {
     if (opacityValue !== undefined) {
@@ -87,8 +85,8 @@ module.exports = {
       fontFamily: {
         pally: ["var(--font-pally)", "sans-serif"],
         nns: ["var(--font-nns)", "sans-serif"],
-        heading: ["var(--font-heading)", ...defaultTheme.fontFamily.sans],
-        body: ["var(--font-body)", ...defaultTheme.fontFamily.sans],
+        heading: ["var(--font-pally)", "sans-serif"],
+        body: ["var(--font-pally)", "sans-serif"],
       },
       typography: ({ theme }) => ({
         skin: {

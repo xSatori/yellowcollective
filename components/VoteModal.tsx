@@ -1,4 +1,7 @@
-import { Proposal } from "@/services/nouns-builder/governor";
+import {
+  PREVIEW_PROPOSAL_ID,
+  Proposal,
+} from "@/services/nouns-builder/governor";
 import { TOKEN_CONTRACT } from "constants/addresses";
 import {
   useContractWrite,
@@ -10,8 +13,8 @@ import { GovernorABI } from "@buildersdk/sdk";
 import { BigNumber } from "ethers";
 import { useState } from "react";
 import Image from "next/image";
-import { useUserVotes } from "@/hooks/fetch/useUserVotes";
 import { XMarkIcon } from "@heroicons/react/20/solid";
+import { getProposalName } from "@/utils/getProposalName";
 
 export default function VoteModal({
   proposal,
@@ -22,92 +25,193 @@ export default function VoteModal({
   proposalNumber: number;
   setOpen: (value: boolean) => void;
 }) {
-  const { data: userVotes } = useUserVotes({
-    timestamp: proposal.proposal.timeCreated,
-  });
+  const isPreviewProposal = proposal.proposalId === PREVIEW_PROPOSAL_ID;
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
   const [support, setSupport] = useState<0 | 1 | 2 | undefined>();
-  const { config } = usePrepareContractWrite(
-    support !== undefined
-      ? {
-          address: addresses?.governor,
-          abi: GovernorABI,
-          functionName: "castVote",
-          args: [proposal.proposalId, BigNumber.from(support)],
-        }
-      : undefined
+  const [reason, setReason] = useState("");
+  const trimmedReason = reason.trim();
+  const hasReason = trimmedReason.length > 0;
+  const shouldPrepare = Boolean(
+    addresses?.governor && support !== undefined && !isPreviewProposal
   );
-  const { write, data, isLoading: writeLoading } = useContractWrite(config);
+  const { config: castVoteConfig } = usePrepareContractWrite({
+    address: addresses?.governor,
+    abi: GovernorABI,
+    functionName: "castVote",
+    args: [proposal.proposalId, BigNumber.from(support ?? 0)],
+    enabled: shouldPrepare && !hasReason,
+  });
+  const { config: castVoteWithReasonConfig } = usePrepareContractWrite({
+    address: addresses?.governor,
+    abi: GovernorABI,
+    functionName: "castVoteWithReason",
+    args: [proposal.proposalId, BigNumber.from(support ?? 0), trimmedReason],
+    enabled: shouldPrepare && hasReason,
+  });
+  const castVoteWrite = useContractWrite(castVoteConfig);
+  const castVoteWithReasonWrite = useContractWrite(castVoteWithReasonConfig);
+  const activeWrite = hasReason ? castVoteWithReasonWrite : castVoteWrite;
+  const { write, data, isLoading: writeLoading } = activeWrite;
   const { isLoading: txLoading, isSuccess: txSuccess } = useWaitForTransaction({
     hash: data?.hash,
   });
+  const selectedVote = voteOptions.find((option) => option.value === support);
+  const proposalTitle = getProposalName(proposal.description);
+  const canSubmit = Boolean(
+    support !== undefined && (isPreviewProposal || write) && !txSuccess
+  );
 
   return (
-    <div className="text-center text-skin-base pb-4 relative">
+    <div className="relative rounded-2xl bg-skin-backdrop p-1 text-skin-base">
       <div className="absolute top-0 right-0">
-        <button type="button" onClick={() => setOpen(false)}>
-          <XMarkIcon className="h-6" />
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="rounded-full p-1 transition hover:bg-[#fff7bf]"
+          aria-label="Close vote modal"
+        >
+          <XMarkIcon className="h-5" />
         </button>
       </div>
-      <div className="font-heading text-4xl font-bold">
-        Vote on Prop {proposalNumber}
+
+      <div className="pr-8">
+        <div className="font-heading text-2xl font-bold leading-none">
+          Submit vote
+        </div>
+        <div className="mt-2 font-heading text-sm font-bold text-secondary">
+          Proposal {proposalNumber} {proposalTitle}
+        </div>
       </div>
-      <div className="text-skin-muted text-lg mt-2">
-        Voting with {userVotes} NFTs
+
+      <div className="mt-6 rounded-xl border border-skin-stroke bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3">
+          {voteOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setSupport(option.value)}
+              className={`rounded-[22px] border-0 px-5 py-5 text-left font-heading font-bold shadow-[0px_6px_0px_0px_var(--vote-shadow)] transition hover:-translate-y-0.5 hover:shadow-[0px_8px_0px_0px_var(--vote-shadow)] active:translate-y-1 active:shadow-[0px_2px_0px_0px_var(--vote-shadow)] ${option.buttonClassName}`}
+              style={
+                {
+                  "--vote-shadow": option.shadowColor,
+                } as React.CSSProperties
+              }
+            >
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-heading text-2xl font-bold leading-none text-white">
+                  {option.label}
+                </span>
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 bg-white font-heading text-xl leading-none shadow-sm ${
+                    support === option.value
+                      ? `border-white ${option.selectedIconClassName}`
+                      : "border-skin-stroke bg-white"
+                  }`}
+                >
+                  {support === option.value ? option.selectedIcon : ""}
+                </span>
+              </div>
+              <div className="mt-3 font-heading text-base font-bold leading-snug text-white/90">
+                {option.description}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <button
-        onClick={() => setSupport(1)}
-        className={`w-full ${
-          support === 1
-            ? "bg-green-200 text-green-600"
-            : "bg-skin-backdrop hover:bg-skin-muted"
-        } rounded-xl py-2 mt-6 border border-skin-stroke text-skin-muted`}
-      >
-        For
-      </button>
+      <label className="mt-5 block font-heading text-sm font-bold text-skin-base">
+        Reason
+      </label>
+      <textarea
+        value={reason}
+        onChange={(event) => setReason(event.target.value)}
+        placeholder="Optional reason for your vote"
+        rows={4}
+        className="mt-2 w-full resize-none rounded-xl border border-skin-stroke bg-white px-4 py-3 text-base text-skin-base shadow-sm placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+      />
 
-      <button
-        onClick={() => setSupport(0)}
-        className={`w-full ${
-          support === 0
-            ? "bg-red-200 text-red-600"
-            : "bg-skin-backdrop hover:bg-skin-muted"
-        } rounded-xl py-2 mt-6 border border-skin-stroke text-skin-muted`}
-      >
-        Against
-      </button>
-
-      <button
-        onClick={() => setSupport(2)}
-        className={`w-full ${
-          support === 2
-            ? "bg-gray-300 text-gray-700"
-            : "bg-skin-backdrop hover:bg-skin-muted"
-        } rounded-xl py-2 mt-6 border border-skin-stroke text-skin-muted`}
-      >
-        Abstain
-      </button>
-
-      <button
-        onClick={() => write?.()}
-        disabled={txLoading || txSuccess}
-        className={`w-full ${
-          write
-            ? "bg-skin-button-accent hover:bg-skin-button-accent-hover text-skin-inverted"
-            : "bg-skin-button-muted text-skin-inverted"
-        } rounded-xl py-2 mt-6 flex justify-around`}
-      >
-        {txSuccess ? (
-          "Vote Submitted 🎉"
-        ) : writeLoading || txLoading ? (
-          <Image src={"/spinner.svg"} alt="spinner" width={20} height={20} />
-        ) : (
-          "Submit Vote"
-        )}
-      </button>
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="h-12 flex-1 rounded-xl border border-skin-stroke bg-white font-heading text-base font-bold text-skin-base transition hover:bg-[#fff7bf]"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={() => write?.()}
+          disabled={!canSubmit || writeLoading || txLoading || txSuccess}
+          className={`h-12 flex-1 rounded-[18px] px-4 font-heading text-base font-bold shadow-[0px_4.02px_0px_0px_#3f3f3f] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#3f3f3f] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none ${
+            canSubmit && !writeLoading && !txLoading && !txSuccess
+              ? "bg-skin-button-accent text-skin-inverted hover:bg-skin-button-accent-hover"
+              : "bg-skin-button-muted text-skin-inverted"
+          }`}
+        >
+          {isPreviewProposal ? (
+            selectedVote ? (
+              `Preview ${selectedVote.label}`
+            ) : (
+              "Select vote"
+            )
+          ) : txSuccess ? (
+            "Vote submitted"
+          ) : writeLoading || txLoading ? (
+            <span className="flex justify-center">
+              <Image
+                src={"/spinner.svg"}
+                alt="spinner"
+                width={20}
+                height={20}
+              />
+            </span>
+          ) : selectedVote ? (
+            `Submit ${selectedVote.label}`
+          ) : (
+            "Select vote"
+          )}
+        </button>
+      </div>
     </div>
   );
 }
+
+const voteOptions: Array<{
+  value: 0 | 1 | 2;
+  label: string;
+  description: string;
+  buttonClassName: string;
+  shadowColor: string;
+  selectedIcon: string;
+  selectedIconClassName: string;
+}> = [
+  {
+    value: 1,
+    label: "For",
+    description: "Support this proposal.",
+    buttonClassName: "bg-skin-proposal-success hover:bg-[#13bf62]",
+    shadowColor: "#087a3f",
+    selectedIcon: "✓",
+    selectedIconClassName: "text-skin-proposal-success",
+  },
+  {
+    value: 0,
+    label: "Against",
+    description: "Vote against this proposal.",
+    buttonClassName: "bg-skin-proposal-danger hover:bg-[#f43a35]",
+    shadowColor: "#a90f0c",
+    selectedIcon: "×",
+    selectedIconClassName: "text-skin-proposal-danger",
+  },
+  {
+    value: 2,
+    label: "Abstain",
+    description: "Participate without voting for or against.",
+    buttonClassName: "bg-skin-proposal-muted hover:bg-[#8a8a8a]",
+    shadowColor: "#4f4f4f",
+    selectedIcon: "–",
+    selectedIconClassName: "text-skin-proposal-muted",
+  },
+];

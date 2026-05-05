@@ -12,7 +12,10 @@ import { getProposalDescription } from "@/utils/getProposalDescription";
 import ModalWrapper from "@/components/ModalWrapper";
 import VoteModal from "@/components/VoteModal";
 import { Fragment, useState } from "react";
-import { Proposal } from "@/services/nouns-builder/governor";
+import {
+  PREVIEW_PROPOSAL_ID,
+  Proposal,
+} from "@/services/nouns-builder/governor";
 import useSWR from "swr";
 import { ETHERSCAN_BASEURL, ETHER_ACTOR_BASEURL } from "constants/urls";
 import { BigNumber, ethers } from "ethers";
@@ -82,15 +85,15 @@ export default function ProposalComponent() {
       <div className="flex flex-col sm:flex-row items-baseline justify-between">
         <div className="flex items-baseline">
           <Link
-            href="/vote"
-            className="flex items-center border border-skin-stroke hover:bg-skin-muted rounded-full p-2 mr-4"
+            href="/proposals"
+            className="mr-4 flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
           >
-            <ArrowLeftIcon className="h-4" />
+            <ArrowLeftIcon className="h-4 text-skin-base" />
           </Link>
 
           <div className="">
             <div className="flex items-center">
-              <div className="font-heading text-2xl text-skin-muted mr-4 break-words">
+              <div className="font-heading text-2xl text-skin-base mr-4 break-words">
                 Proposal {proposalNumber}
               </div>
               <ProposalStatus proposal={proposal} />
@@ -116,7 +119,7 @@ export default function ProposalComponent() {
       </div>
 
       <div className="items-center w-full grid grid-cols-3 gap-4 mt-12">
-        <div className="w-full bg-skin-muted border border-skin-stroke rounded-xl p-6">
+        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6">
           <ProgressBar
             label="For"
             type="success"
@@ -124,7 +127,7 @@ export default function ProposalComponent() {
             percentage={getVotePercentage(forVotes)}
           />
         </div>
-        <div className="w-full bg-skin-muted border border-skin-stroke rounded-xl p-6">
+        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6">
           <ProgressBar
             label="Against"
             type="danger"
@@ -132,7 +135,7 @@ export default function ProposalComponent() {
             percentage={getVotePercentage(againstVotes)}
           />
         </div>
-        <div className="w-full bg-skin-muted border border-skin-stroke rounded-xl p-6">
+        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6">
           <ProgressBar
             label="Abstain"
             type="muted"
@@ -143,7 +146,7 @@ export default function ProposalComponent() {
       </div>
 
       <div className="items-center w-full grid sm:grid-cols-3 gap-4 mt-4">
-        <div className="w-full border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
+        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
           <div className="font-heading text-xl text-skin-muted">Threshold</div>
           <div className="text-right">
             <div className="text-skin-muted">Current Threshold</div>
@@ -153,7 +156,7 @@ export default function ProposalComponent() {
           </div>
         </div>
 
-        <div className="w-full border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
+        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
           <div className="font-heading text-xl text-skin-muted">Ends</div>
           <div className="text-right">
             <div className="text-skin-muted">{getTime(voteEnd)}</div>
@@ -161,7 +164,7 @@ export default function ProposalComponent() {
           </div>
         </div>
 
-        <div className="w-full border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
+        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
           <div className="font-heading text-xl text-skin-muted">Snapshot</div>
           <div className="text-right">
             <div className="text-skin-muted">{getTime(voteStart)}</div>
@@ -170,7 +173,7 @@ export default function ProposalComponent() {
         </div>
       </div>
 
-      <div className="mt-12">
+      <section className="mt-12 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
         <div className="text-2xl font-heading text-skin-base font-bold">
           Description
         </div>
@@ -182,13 +185,12 @@ export default function ProposalComponent() {
         >
           {getProposalDescription(proposal.description)}
         </ReactMarkdown>
-      </div>
+      </section>
 
-      <div className="text-2xl font-heading text-skin-base mt-8 font-bold">
-        Proposed Transactions
-      </div>
-
-      <div className="mt-4 max-w-[75vw]">
+      <section className="mt-8 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <div className="text-2xl font-heading text-skin-base font-bold">
+          Proposed Transactions
+        </div>
         {proposal.targets.map((_, index) => (
           <ProposedTransactions
             key={index}
@@ -197,7 +199,7 @@ export default function ProposalComponent() {
             calldata={proposal.calldatas[index]}
           />
         ))}
-      </div>
+      </section>
     </Layout>
   );
 }
@@ -215,15 +217,13 @@ const ProposedTransactions = ({
   calldata,
 }: {
   target: string;
-  value: number;
+  value: string | number;
   calldata: string;
 }) => {
   const { data, error } = useSWR<EtherActorResponse>(
     calldata ? `${ETHER_ACTOR_BASEURL}/decode/${target}/${calldata}` : undefined
   );
   const valueBN = BigNumber.from(value);
-
-  if (!data || error) return <Fragment />;
 
   const linkIfAddress = (value: string) => {
     if (ethers.utils.isAddress(value))
@@ -242,13 +242,16 @@ const ProposedTransactions = ({
   };
 
   return (
-    <div className="w-full">
+    <div className="mt-4 w-full rounded-xl border border-skin-stroke bg-white p-4">
       <div className="break-words">
         {linkIfAddress(target)}
         <span>{`.${data?.functionName || "transfer"}(`}</span>
       </div>
-      {!data?.decoded && !valueBN.isZero() && (
+      {(!data?.decoded || error) && !valueBN.isZero() && (
         <div className="ml-4">{`${ethers.utils.formatEther(valueBN)} ETH`}</div>
+      )}
+      {(!data?.decoded || error) && calldata && calldata !== "0x" && (
+        <div className="ml-4 break-words">{calldata}</div>
       )}
       {data?.decoded?.map((decoded, index) => (
         <div className="ml-4" key={index}>
@@ -268,16 +271,21 @@ const VoteButton = ({
   proposalNumber: number;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const isPreviewProposal = proposal.proposalId === PREVIEW_PROPOSAL_ID;
   const { data: userVotes } = useUserVotes({
     timestamp: proposal.proposal.timeCreated,
   });
 
-  if (proposal.state !== 1 || !userVotes || userVotes < 1) return <Fragment />;
+  if (
+    proposal.state !== 1 ||
+    (!isPreviewProposal && (!userVotes || userVotes < 1))
+  )
+    return <Fragment />;
 
   return (
     <Fragment>
       <ModalWrapper
-        className="w-full max-w-lg bg-skin-muted"
+        className="w-full max-w-lg border border-skin-stroke bg-skin-backdrop"
         open={modalOpen}
         setOpen={setModalOpen}
       >
@@ -288,7 +296,7 @@ const VoteButton = ({
         />
       </ModalWrapper>
       <button
-        className="bg-skin-button-accent text-skin-inverted rounded-xl px-4 py-3 font-semibold w-full sm:w-auto mt-8 sm:mt-0"
+        className="mt-8 w-full rounded-[18px] bg-skin-button-accent px-4 py-3 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:bg-skin-button-accent-hover hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none sm:mt-0 sm:w-auto"
         onClick={() => setModalOpen(true)}
       >
         Submit vote

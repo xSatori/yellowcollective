@@ -38,47 +38,57 @@ const getStatus = (state: number) => {
   switch (state) {
     case 0:
       return {
-        label: "Pending",
-        className: "border-yellow-200 text-yellow-600",
+        label: "Upcoming",
+        className: "bg-skin-proposal-highlighted",
+      };
+    case 9:
+      return {
+        label: "Upcoming",
+        className: "bg-skin-proposal-highlighted",
+      };
+    case 10:
+      return {
+        label: "Upcoming",
+        className: "bg-skin-proposal-highlighted",
       };
     case 1:
       return {
         label: "Active",
-        className: "border-emerald-200 text-emerald-600",
+        className: "bg-skin-proposal-highlighted",
       };
     case 2:
       return {
-        label: "Cancelled",
-        className: "border-skin-stroke text-secondary",
+        label: "Canceled",
+        className: "bg-skin-proposal-muted",
       };
     case 3:
-      return { label: "Defeated", className: "border-red-200 text-red-600" };
+      return { label: "Defeated", className: "bg-skin-proposal-danger" };
     case 4:
       return {
         label: "Succeeded",
-        className: "border-emerald-200 text-emerald-600",
+        className: "bg-skin-proposal-success",
       };
     case 5:
       return {
         label: "Queued",
-        className: "border-purple-200 text-purple-500",
+        className: "bg-[#ffcc00] text-skin-base",
       };
     case 6:
       return {
         label: "Expired",
-        className: "border-skin-stroke text-secondary",
+        className: "bg-skin-proposal-muted",
       };
     case 7:
       return {
         label: "Executed",
-        className: "border-blue-100 text-accent-blue",
+        className: "bg-skin-proposal-success",
       };
     case 8:
-      return { label: "Vetoed", className: "border-red-200 text-red-600" };
+      return { label: "Vetoed", className: "bg-skin-proposal-danger" };
     default:
       return {
         label: "Unknown",
-        className: "border-skin-stroke text-secondary",
+        className: "bg-skin-proposal-muted",
       };
   }
 };
@@ -173,12 +183,12 @@ const ProposalRow = ({
       href={`/proposals/nouns/${proposal.proposalNumber}`}
       className="grid min-h-[96px] grid-cols-[44px_1fr] items-center gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md md:grid-cols-[64px_1fr_auto]"
     >
-      <div className="font-heading text-2xl text-secondary">
+      <div className="font-heading text-2xl text-skin-base">
         {proposal.proposalNumber}
       </div>
 
       <div className="min-w-0">
-        <h2 className="truncate font-heading text-2xl leading-none text-skin-base md:text-3xl">
+        <h2 className="truncate font-heading text-xl leading-none text-skin-base md:text-2xl">
           {proposal.title}
         </h2>
         <div className="mt-3 text-base text-secondary md:text-lg">
@@ -191,7 +201,7 @@ const ProposalRow = ({
           {getDaysFromTimestamp(proposal.timeCreated)}
         </div>
         <div
-          className={`rounded-full border bg-skin-muted px-4 py-2 font-heading text-base md:text-lg ${status.className}`}
+          className={`${status.className} w-24 rounded-md p-1 px-2 text-center ${status.className.includes("text-") ? "" : "text-white"}`}
         >
           {status.label}
         </div>

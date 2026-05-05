@@ -9,16 +9,23 @@ import { promises as fs } from "fs";
 import path from "path";
 import Layout from "@/components/Layout";
 
+const RESERVED_PAGE_SLUGS = new Set([
+  "about",
+  "community",
+  "contracts",
+  "create-proposal",
+  "proposals",
+  "treasury",
+]);
+
 export const getStaticPaths = async () => {
   const templateDirectory = path.join(process.cwd(), "templates");
   const files = await fs.readdir(templateDirectory, { withFileTypes: true });
   const paths = files
     .filter((dirent) => dirent.isFile())
-    .map((file) => ({
-      params: {
-        slug: file.name.replace(/\.md?$/, ""),
-      },
-    }));
+    .map((file) => file.name.replace(/\.md?$/, ""))
+    .filter((slug) => !RESERVED_PAGE_SLUGS.has(slug))
+    .map((slug) => ({ params: { slug } }));
 
   return {
     paths,

@@ -1,76 +1,26 @@
 import Layout from "@/components/Layout";
+import ProposalStatus from "@/components/ProposalStatus";
 import { getProposalName } from "@/utils/getProposalName";
+import { Proposal } from "@/services/nouns-builder/governor";
 import { TOKEN_CONTRACT } from "constants/addresses";
-import { ETHERSCAN_BASEURL, SUBGRAPH_ENDPOINT } from "constants/urls";
-import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { GraphQLClient, gql } from "graphql-request";
+import { useDAOAddresses, useGetAllProposals } from "hooks";
 
-type ProposalListItem = {
-  proposalId: string;
-  proposalNumber: number;
-  title?: string | null;
-  description?: string | null;
-  timeCreated: string;
-  voteStart: string;
-  voteEnd: string;
-  queued: boolean;
-  executed: boolean;
-  canceled: boolean;
-  vetoed: boolean;
-  forVotes: number;
-  againstVotes: number;
-  quorumVotes: string;
-  transactionHash: string;
-};
+const formatDate = (timestamp: number) => {
+  if (!timestamp) return "";
 
-type ProposalsPageProps = {
-  proposals: ProposalListItem[];
-};
-
-const proposalQuery = gql`
-  query yellowCollectiveProposals($tokenAddress: String!) {
-    daos(first: 1, where: { tokenAddress: $tokenAddress }) {
-      proposals(first: 100, orderBy: proposalNumber, orderDirection: desc) {
-        proposalId
-        proposalNumber
-        title
-        description
-        timeCreated
-        voteStart
-        voteEnd
-        queued
-        executed
-        canceled
-        vetoed
-        forVotes
-        againstVotes
-        quorumVotes
-        transactionHash
-      }
-    }
-  }
-`;
-
-const getTimestamp = (value: string) => Number(value || 0);
-
-const formatDate = (timestamp: string) => {
-  const value = getTimestamp(timestamp);
-  if (!value) return "";
-
-  return new Date(value * 1000).toLocaleDateString("en-US", {
+  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
 };
 
-const getDaysFromNow = (timestamp: string, futurePrefix: string) => {
-  const value = getTimestamp(timestamp);
-  if (!value) return "";
+const getDaysFromNow = (timestamp: number, futurePrefix: string) => {
+  if (!timestamp) return "";
 
-  const diff = value * 1000 - Date.now();
+  const diff = timestamp * 1000 - Date.now();
   const days = Math.max(1, Math.round(Math.abs(diff) / 86400000));
 
   if (diff >= 0) {
@@ -82,104 +32,33 @@ const getDaysFromNow = (timestamp: string, futurePrefix: string) => {
   return days === 1 ? "1 day ago" : `${days} days ago`;
 };
 
-const getTitle = (proposal: ProposalListItem) => {
-  const source = proposal.title || proposal.description || "Untitled proposal";
-
-  try {
-    const parsed = JSON.parse(source) as { title?: string };
-    if (parsed.title) return parsed.title;
-  } catch {
-    // Proposal titles may be plain strings or JSON metadata.
-  }
-
-  return getProposalName(source);
-};
-
-const getStatus = (proposal: ProposalListItem) => {
-  const now = Date.now() / 1000;
-  const quorumVotes = Number(proposal.quorumVotes || 0);
-
-  if (proposal.vetoed) {
-    return { label: "Vetoed", className: "border-red-200 text-red-600" };
-  }
-  if (proposal.canceled) {
-    return {
-      label: "Cancelled",
-      className: "border-skin-stroke text-secondary",
-    };
-  }
-  if (proposal.executed) {
-    return { label: "Executed", className: "border-blue-100 text-accent-blue" };
-  }
-  if (proposal.queued) {
-    return { label: "Queued", className: "border-purple-200 text-purple-500" };
-  }
-  if (now < getTimestamp(proposal.voteStart)) {
-    return { label: "Pending", className: "border-yellow-200 text-yellow-600" };
-  }
-  if (now <= getTimestamp(proposal.voteEnd)) {
-    return {
-      label: "Active",
-      className: "border-emerald-200 text-emerald-600",
-    };
-  }
-  if (
-    proposal.forVotes > proposal.againstVotes &&
-    proposal.forVotes >= quorumVotes
-  ) {
-    return {
-      label: "Succeeded",
-      className: "border-emerald-200 text-emerald-600",
-    };
-  }
-  return { label: "Defeated", className: "border-red-200 text-red-600" };
-};
-
-const getTimingLabel = (proposal: ProposalListItem) => {
+const getTimingLabel = (proposal: Proposal) => {
   const now = Date.now() / 1000;
 
-  if (now <= getTimestamp(proposal.voteEnd)) {
-    return getDaysFromNow(proposal.voteEnd, "Ends");
+  if (now <= proposal.proposal.voteEnd) {
+    return getDaysFromNow(proposal.proposal.voteEnd, "Ends");
   }
-  if (proposal.queued) {
-    return getDaysFromNow(proposal.voteEnd, "Expires");
+  if (proposal.state === 5) {
+    return getDaysFromNow(proposal.proposal.voteEnd, "Expires");
   }
-  if (proposal.executed) {
-    return getDaysFromNow(proposal.timeCreated, "Created");
+  if (proposal.state === 7) {
+    return getDaysFromNow(proposal.proposal.timeCreated, "Created");
   }
   return "";
 };
 
-export const getStaticProps = async (): Promise<
-  GetStaticPropsResult<ProposalsPageProps>
-> => {
-  try {
-    const client = new GraphQLClient(SUBGRAPH_ENDPOINT);
-    const response = await client.request<{
-      daos: { proposals: ProposalListItem[] }[];
-    }>(proposalQuery, {
-      tokenAddress: TOKEN_CONTRACT.toLowerCase(),
-    });
+export default function ProposalsPage() {
+  const { data: addresses } = useDAOAddresses({
+    tokenContract: TOKEN_CONTRACT,
+  });
+  const {
+    data: proposals,
+    error,
+    isLoading,
+  } = useGetAllProposals({
+    governorContract: addresses?.governor,
+  });
 
-    return {
-      props: {
-        proposals: response.daos[0]?.proposals || [],
-      },
-      revalidate: 60,
-    };
-  } catch (error) {
-    console.warn("Unable to load proposals", error);
-
-    return {
-      props: { proposals: [] },
-      revalidate: 60,
-    };
-  }
-};
-
-export default function ProposalsPage({
-  proposals,
-}: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
     <Layout>
       <Head>
@@ -209,16 +88,28 @@ export default function ProposalsPage({
           </div>
           <Link
             href="/create-proposal"
-            className="rounded-xl bg-skin-base px-6 py-3 font-heading text-lg leading-none text-skin-inverted shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:text-xl"
+            className="rounded-[18px] bg-skin-base px-6 py-3 font-heading text-lg leading-none text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none md:text-xl"
           >
             Create proposal
           </Link>
         </div>
 
         <div className="flex flex-col gap-5">
-          {proposals.length > 0 ? (
-            proposals.map((proposal) => (
-              <ProposalRow key={proposal.proposalId} proposal={proposal} />
+          {isLoading || (!addresses?.governor && !error) ? (
+            <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-8 text-base text-secondary md:text-lg">
+              Loading proposals...
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-8 text-base text-secondary md:text-lg">
+              Unable to load proposals.
+            </div>
+          ) : proposals && proposals.length > 0 ? (
+            proposals.map((proposal, index) => (
+              <ProposalRow
+                key={proposal.proposalId}
+                proposal={proposal}
+                proposalNumber={proposals.length - index}
+              />
             ))
           ) : (
             <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-8 text-base text-secondary md:text-lg">
@@ -231,27 +122,30 @@ export default function ProposalsPage({
   );
 }
 
-const ProposalRow = ({ proposal }: { proposal: ProposalListItem }) => {
-  const status = getStatus(proposal);
+const ProposalRow = ({
+  proposal,
+  proposalNumber,
+}: {
+  proposal: Proposal;
+  proposalNumber: number;
+}) => {
   const timingLabel = getTimingLabel(proposal);
 
   return (
-    <a
-      href={`${ETHERSCAN_BASEURL}/tx/${proposal.transactionHash}`}
-      target="_blank"
-      rel="noreferrer"
+    <Link
+      href={`/proposals/${proposal.proposalId}`}
       className="grid min-h-[96px] grid-cols-[44px_1fr] items-center gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md md:grid-cols-[44px_1fr_auto]"
     >
-      <div className="font-heading text-2xl text-secondary">
-        {proposal.proposalNumber}
+      <div className="font-heading text-xl text-skin-base">
+        {proposalNumber}
       </div>
 
       <div className="min-w-0">
-        <h2 className="truncate font-heading text-2xl leading-none text-skin-base md:text-3xl">
-          {getTitle(proposal)}
+        <h2 className="truncate font-heading text-xl leading-none text-skin-base md:text-2xl">
+          {getProposalName(proposal.description)}
         </h2>
         <div className="mt-3 text-base text-secondary md:text-lg">
-          {formatDate(proposal.timeCreated)}
+          {formatDate(proposal.proposal.timeCreated)}
         </div>
       </div>
 
@@ -261,12 +155,8 @@ const ProposalRow = ({ proposal }: { proposal: ProposalListItem }) => {
             {timingLabel}
           </div>
         )}
-        <div
-          className={`rounded-full border bg-skin-muted px-4 py-2 font-heading text-base md:text-lg ${status.className}`}
-        >
-          {status.label}
-        </div>
+        <ProposalStatus proposal={proposal} />
       </div>
-    </a>
+    </Link>
   );
 };
