@@ -20,6 +20,7 @@ import { BigNumber } from "ethers";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useMemo } from "react";
@@ -378,19 +379,14 @@ export default function AboutPage({
               <div className="text-base text-secondary">{stat.label}</div>
               <div className="mt-3 flex items-center gap-3 font-heading text-3xl leading-none text-skin-base">
                 {stat.isChain && (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0052ff]">
-                    <svg
-                      viewBox="0 0 32 32"
-                      className="h-8 w-8"
-                      aria-hidden="true"
-                    >
-                      <circle cx="16" cy="16" r="16" fill="#0052ff" />
-                      <path
-                        d="M16.25 25.25c4.28 0 7.86-2.98 8.78-6.98h-11.6v-4.54h11.6c-.92-4-4.5-6.98-8.78-6.98a9.25 9.25 0 1 0 0 18.5Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </span>
+                  <Image
+                    src="/chains/base.svg"
+                    alt=""
+                    width={32}
+                    height={32}
+                    aria-hidden="true"
+                    className="h-8 w-8"
+                  />
                 )}
                 {stat.value}
               </div>

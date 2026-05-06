@@ -13,12 +13,11 @@ const faqItems: FaqItem[] = [
     content: (
       <>
         <p>
-          Approximately once every 3 months, The Yellow Collective will host a
-          community-wide art contest and choose a new set of traits (heads and
-          accessories) that will then be inducted into the collection. We may
-          also decide as a Collective to retire certain traits at these
-          intervals. This way, the Collection will always feel fresh and
-          community-curated!
+          Periodically, The Yellow Collective will host a community-wide art
+          contest and choose a new set of traits (heads and accessories) that
+          will then be inducted into the collection. We may also decide as a
+          Collective to retire certain traits at these intervals. This way, the
+          Collection will always feel fresh and community-curated!
         </p>
         <p>
           On a related note, several times per year, the Collective may also
@@ -132,27 +131,6 @@ const faqItems: FaqItem[] = [
           Every 10th Collective Noun will go to the Collective Nounder wallet as
           an incentive-aligning founders{"'"} reward.
         </p>
-        <p>
-          Every 11th Collective Noun will go to the Collective Noun treasury.
-          These Nouns will be earmarked as prizes for Art Contests, as well as
-          periodic Raffle Prizes for minters of TNS{" "}
-          <ExternalLink href="https://nomo.wtf">NOMO Nouns</ExternalLink> (as a
-          way to allow for a potential lower-cost entry to TYC for any of our
-          global community members who may feel priced out by the Daily
-          Auction.)
-        </p>
-        <p>
-          After Token #10 is minted, 2 proposals will be made to 1{")"} Airdrop
-          a founding team allocation of 1 token each (12 total) to the
-          Collective Nounders, and 2{")"} Turn on the 10 allocation for Prizes
-          as mentioned above. These will only be turned on after 10 tokens so as
-          not to interfere with the fun and mystique of the first 10 auctions by
-          laying claim to all the early tokens for allocations. TYC is setting
-          this expectation here in advance of launch as part of our implied
-          tokenomics, and appreciate in advance the pledged support of these
-          initiatives from any member who joins the club with tokens 1 through
-          10.
-        </p>
       </>
     ),
   },
@@ -183,11 +161,6 @@ const faqItems: FaqItem[] = [
           Ten percent of any Creator Rewards earned by any piece minted by The
           Yellow Collective will be automatically shared with Nouns DAO, as a
           thank you for its open source infrastructure.
-        </p>
-        <p>
-          Collective Nouns Uses the same protocol for onchain SVG artwork, and
-          the same kind of pseudorandom seeder contract as Nouns DAO. You can
-          read more about both of these at nouns.wtf.
         </p>
       </>
     ),
