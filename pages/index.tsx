@@ -97,7 +97,9 @@ export default function SiteComponent({
       {isMounted && (
         <div className="bg-accent min-h-screen flex flex-col items-center justify-start w-screen">
           <Banner />
-          <Header />
+          <div className="max-w-[1400px] w-full">
+            <Header />
+          </div>
           <Hero />
           <Description />
           <Faq />

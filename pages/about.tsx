@@ -23,6 +23,7 @@ import Head from "next/head";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useMemo } from "react";
+import { isAddress } from "viem";
 
 type Delegate = {
   address: string;
@@ -126,10 +127,19 @@ const normalizeMembers = (
       const explicitVotePercent = getNumber(
         item.votePercent || item.votePct || item.percent
       );
+      const displayName = [
+        item.displayName,
+        item.ensName,
+        item.ens,
+        item.name,
+        item.username,
+        item.handle,
+      ].find((value) => typeof value === "string" && value.trim());
 
       return {
         address,
-        displayName: null,
+        displayName:
+          typeof displayName === "string" ? displayName.trim() : null,
         votes,
         votePercent:
           explicitVotePercent ||
@@ -137,7 +147,7 @@ const normalizeMembers = (
         joined: getJoinedDate(item.joined || item.joinedAt || item.createdAt),
       };
     })
-    .filter((delegate) => delegate.address.startsWith("0x"))
+    .filter((delegate) => isAddress(delegate.address))
     .sort((a, b) => b.votes - a.votes);
 };
 
@@ -170,7 +180,11 @@ const getTotalSupply = (contract: ContractInfo) => {
 const resolveEnsNames = async (addresses: string[]) => {
   const names = new Map<string, string>();
   const uniqueAddresses = Array.from(
-    new Set(addresses.map((address) => address.toLowerCase()))
+    new Set(
+      addresses
+        .filter((address) => isAddress(address))
+        .map((address) => address.toLowerCase())
+    )
   );
 
   for (let i = 0; i < uniqueAddresses.length; i += 16) {
@@ -236,7 +250,9 @@ export const getStaticProps = async (): Promise<
       ? delegates.value.map((delegate) => ({
           ...delegate,
           displayName:
-            resolvedNames.get(delegate.address.toLowerCase()) ?? null,
+            delegate.displayName ||
+            resolvedNames.get(delegate.address.toLowerCase()) ||
+            null,
         }))
       : [];
 

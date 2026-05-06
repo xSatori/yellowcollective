@@ -45,23 +45,29 @@ export default function CommunityPage({
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          {projects.map((project) => (
-            <Link
-              key={project.slug}
-              href={`/community/${project.slug}`}
-              aria-label={project.title}
-              className="group block overflow-hidden rounded-2xl border border-skin-stroke bg-skin-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={project.image}
-                alt={project.title}
-                className="aspect-square h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
-              />
-            </Link>
-          ))}
-        </div>
+        {projects.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            {projects.map((project) => (
+              <Link
+                key={project.slug}
+                href={`/community/${project.slug}`}
+                aria-label={project.title}
+                className="group block overflow-hidden rounded-2xl border border-skin-stroke bg-skin-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="aspect-square h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-6 text-base text-secondary md:text-lg">
+            No community projects have been submitted yet.
+          </div>
+        )}
       </div>
     </Layout>
   );
