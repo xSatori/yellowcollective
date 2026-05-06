@@ -52,14 +52,19 @@ export default function CommunityPage({
                 key={project.slug}
                 href={`/community/${project.slug}`}
                 aria-label={project.title}
-                className="group block overflow-hidden rounded-2xl border border-skin-stroke bg-skin-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="group block overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={project.image}
                   alt={project.title}
-                  className="aspect-square h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                  className="aspect-square w-full bg-skin-muted object-cover transition duration-200 group-hover:scale-[1.03]"
                 />
+                <div className="min-h-[86px] border-t border-skin-stroke bg-white p-4">
+                  <h2 className="font-heading text-xl leading-tight text-skin-base">
+                    {project.title}
+                  </h2>
+                </div>
               </Link>
             ))}
           </div>

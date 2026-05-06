@@ -1,0 +1,2243 @@
+{
+  "images": [
+    {
+      "name": "yellow",
+      "trait": "backgrounds",
+      "uri": "/playground/yellow-collective/backgrounds/yellow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/0-backgrounds/yellow.png"
+    },
+    {
+      "name": "based",
+      "trait": "backgrounds",
+      "uri": "/playground/yellow-collective/backgrounds/based.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/0-backgrounds/based.png"
+    },
+    {
+      "name": "greyscale-7",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/greyscale-7.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/greyscale-7.png"
+    },
+    {
+      "name": "teal",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/teal.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/teal.png"
+    },
+    {
+      "name": "computer-blue",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/computer-blue.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/computer-blue.png"
+    },
+    {
+      "name": "greyscale-1",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/greyscale-1.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/greyscale-1.png"
+    },
+    {
+      "name": "hot-brown",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/hot-brown.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/hot-brown.png"
+    },
+    {
+      "name": "beige-crt",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/beige-crt.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/beige-crt.png"
+    },
+    {
+      "name": "yellow",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/yellow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/yellow.png"
+    },
+    {
+      "name": "peachy-a",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/peachy-a.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/peachy-a.png"
+    },
+    {
+      "name": "orange-yellow",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/orange-yellow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/orange-yellow.png"
+    },
+    {
+      "name": "peachy-b",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/peachy-b.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/peachy-b.png"
+    },
+    {
+      "name": "rust",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/rust.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/rust.png"
+    },
+    {
+      "name": "red-pinkish",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/red-pinkish.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/red-pinkish.png"
+    },
+    {
+      "name": "gunk",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/gunk.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/gunk.png"
+    },
+    {
+      "name": "orange",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/orange.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/orange.png"
+    },
+    {
+      "name": "beigebsod",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/beigebsod.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/beigebsod.png"
+    },
+    {
+      "name": "teal-light",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/teal-light.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/teal-light.png"
+    },
+    {
+      "name": "cold",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/cold.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/cold.png"
+    },
+    {
+      "name": "green",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/green.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/green.png"
+    },
+    {
+      "name": "fog-grey",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/fog-grey.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/fog-grey.png"
+    },
+    {
+      "name": "dark-brown",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/dark-brown.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/dark-brown.png"
+    },
+    {
+      "name": "blue-sky",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/blue-sky.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/blue-sky.png"
+    },
+    {
+      "name": "magenta",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/magenta.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/magenta.png"
+    },
+    {
+      "name": "greyscale-8",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/greyscale-8.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/greyscale-8.png"
+    },
+    {
+      "name": "greyscale-9",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/greyscale-9.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/greyscale-9.png"
+    },
+    {
+      "name": "blue-grey",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/blue-grey.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/blue-grey.png"
+    },
+    {
+      "name": "slime-green",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/slime-green.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/slime-green.png"
+    },
+    {
+      "name": "dark-pink",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/dark-pink.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/dark-pink.png"
+    },
+    {
+      "name": "red",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/red.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/red.png"
+    },
+    {
+      "name": "gold",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/gold.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/gold.png"
+    },
+    {
+      "name": "purple",
+      "trait": "bodies",
+      "uri": "/playground/yellow-collective/bodies/purple.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/1-bodies/purple.png"
+    },
+    {
+      "name": "secret-x",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/secret-x.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/secret-x.png"
+    },
+    {
+      "name": "chain-logo",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/chain-logo.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/chain-logo.png"
+    },
+    {
+      "name": "bling-scissors",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-scissors.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-scissors.png"
+    },
+    {
+      "name": "stripes-blit",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-blit.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-blit.png"
+    },
+    {
+      "name": "body-gradient-dusk",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-dusk.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-dusk.png"
+    },
+    {
+      "name": "uroko",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/uroko.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/uroko.png"
+    },
+    {
+      "name": "bling-love",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-love.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-love.png"
+    },
+    {
+      "name": "tee-yo!",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/tee-yo.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/tee-yo!.png"
+    },
+    {
+      "name": "snowflake",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/snowflake.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/snowflake.png"
+    },
+    {
+      "name": "body-gradient-sunset",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-sunset.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-sunset.png"
+    },
+    {
+      "name": "bling-anchor",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-anchor.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-anchor.png"
+    },
+    {
+      "name": "body-gradient-dawn",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-dawn.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-dawn.png"
+    },
+    {
+      "name": "insignia",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/insignia.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/insignia.png"
+    },
+    {
+      "name": "rgb",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/rgb.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/rgb.png"
+    },
+    {
+      "name": "checkers-big-red-cold",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-big-red-cold.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-big-red-cold.png"
+    },
+    {
+      "name": "flash",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/flash.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/flash.png"
+    },
+    {
+      "name": "body-ice-cold",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-ice-cold.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-ice-cold.png"
+    },
+    {
+      "name": "slime-splat",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/slime-splat.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/slime-splat.png"
+    },
+    {
+      "name": "lp",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/lp.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/lp.png"
+    },
+    {
+      "name": "wet-money",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/wet-money.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/wet-money.png"
+    },
+    {
+      "name": "stripes-blue-med",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-blue-med.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-blue-med.png"
+    },
+    {
+      "name": "broken-heart",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/broken-heart.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/broken-heart.png"
+    },
+    {
+      "name": "woolweave-dirt",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/woolweave-dirt.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/woolweave-dirt.png"
+    },
+    {
+      "name": "text-dao-black",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-dao-black.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-dao-black.png"
+    },
+    {
+      "name": "high-pants-brown",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/high-pants-brown.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/high-pants-brown.png"
+    },
+    {
+      "name": "belly-chameleon",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/belly-chameleon.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/belly-chameleon.png"
+    },
+    {
+      "name": "text-ico",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-ico.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-ico.png"
+    },
+    {
+      "name": "clover",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/clover.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/clover.png"
+    },
+    {
+      "name": "bling-sparkles",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-sparkles.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-sparkles.png"
+    },
+    {
+      "name": "text-cc2",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-cc2.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-cc2.png"
+    },
+    {
+      "name": "checkers-bigwalk-grey-light",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-bigwalk-grey-light.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-bigwalk-grey-light.png"
+    },
+    {
+      "name": "bling-mask",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-mask.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-mask.png"
+    },
+    {
+      "name": "aardvark",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/aardvark.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/aardvark.png"
+    },
+    {
+      "name": "bling-cheese",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-cheese.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-cheese.png"
+    },
+    {
+      "name": "checkers-spaced-black",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-spaced-black.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-spaced-black.png"
+    },
+    {
+      "name": "text-mint",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-mint.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-mint.png"
+    },
+    {
+      "name": "text-doom",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-doom.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-doom.png"
+    },
+    {
+      "name": "body-grayscale-9",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-grayscale-9.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-grayscale-9.png"
+    },
+    {
+      "name": "old-shirt",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/old-shirt.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/old-shirt.png"
+    },
+    {
+      "name": "carrot",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/carrot.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/carrot.png"
+    },
+    {
+      "name": "text-noun-multicolor",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-noun-multicolor.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-noun-multicolor.png"
+    },
+    {
+      "name": "checkers-big-green",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-big-green.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-big-green.png"
+    },
+    {
+      "name": "text-yolo",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-yolo.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-yolo.png"
+    },
+    {
+      "name": "dragon",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/dragon.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/dragon.png"
+    },
+    {
+      "name": "chicken",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/chicken.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/chicken.png"
+    },
+    {
+      "name": "shrimp",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/shrimp.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/shrimp.png"
+    },
+    {
+      "name": "stripes-yellow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-yellow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-yellow.png"
+    },
+    {
+      "name": "pocket-pencil",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/pocket-pencil.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/pocket-pencil.png"
+    },
+    {
+      "name": "text-lol",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-lol.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-lol.png"
+    },
+    {
+      "name": "bird-side",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bird-side.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bird-side.png"
+    },
+    {
+      "name": "body-gradient-glacier",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-glacier.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-glacier.png"
+    },
+    {
+      "name": "cow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/cow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/cow.png"
+    },
+    {
+      "name": "ethereum",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/ethereum.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/ethereum.png"
+    },
+    {
+      "name": "lines-45-rose",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/lines-45-rose.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/lines-45-rose.png"
+    },
+    {
+      "name": "bling-arrow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-arrow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-arrow.png"
+    },
+    {
+      "name": "text-we",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-we.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-we.png"
+    },
+    {
+      "name": "hoodie-strings-uneven",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/hoodie-strings-uneven.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/hoodie-strings-uneven.png"
+    },
+    {
+      "name": "body-gradient-ice",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-ice.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-ice.png"
+    },
+    {
+      "name": "tie-purple-on-white",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/tie-purple-on-white.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/tie-purple-on-white.png"
+    },
+    {
+      "name": "glasses-logo",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/glasses-logo.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/glasses-logo.png"
+    },
+    {
+      "name": "text-a2+b2",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-a2-b2.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-a2%2Bb2.png"
+    },
+    {
+      "name": "text-nil-grey-dark",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-nil-grey-dark.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-nil-grey-dark.png"
+    },
+    {
+      "name": "matrix-white",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/matrix-white.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/matrix-white.png"
+    },
+    {
+      "name": "dinosaur",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/dinosaur.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/dinosaur.png"
+    },
+    {
+      "name": "text-cc",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-cc.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-cc.png"
+    },
+    {
+      "name": "text-noun-pink",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-noun-pink.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-noun-pink.png"
+    },
+    {
+      "name": "text-yay",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-yay.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-yay.png"
+    },
+    {
+      "name": "heart",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/heart.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/heart.png"
+    },
+    {
+      "name": "mars-face",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/mars-face.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/mars-face.png"
+    },
+    {
+      "name": "decay-pride",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/decay-pride.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/decay-pride.png"
+    },
+    {
+      "name": "fries",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/fries.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/fries.png"
+    },
+    {
+      "name": "decay-grey-dark",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/decay-grey-dark.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/decay-grey-dark.png"
+    },
+    {
+      "name": "tie-red",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/tie-red.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/tie-red.png"
+    },
+    {
+      "name": "checkers-blue",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-blue.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-blue.png"
+    },
+    {
+      "name": "body-yellow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-yellow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-yellow.png"
+    },
+    {
+      "name": "stripes-and-checks",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-and-checks.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-and-checks.png"
+    },
+    {
+      "name": "yin-yang",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/yin-yang.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/yin-yang.png"
+    },
+    {
+      "name": "id",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/id.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/id.png"
+    },
+    {
+      "name": "safety-vest",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/safety-vest.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/safety-vest.png"
+    },
+    {
+      "name": "clock-bling",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/clock-bling.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/clock-bling.png"
+    },
+    {
+      "name": "tie-dye",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/tie-dye.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/tie-dye.png"
+    },
+    {
+      "name": "text-foo",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-foo.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-foo.png"
+    },
+    {
+      "name": "small-bling",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/small-bling.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/small-bling.png"
+    },
+    {
+      "name": "stripes-brown",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-brown.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-brown.png"
+    },
+    {
+      "name": "scarf-clown",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/scarf-clown.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/scarf-clown.png"
+    },
+    {
+      "name": "body-gradient-checkers-disco",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-checkers-disco.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-checkers-disco.png"
+    },
+    {
+      "name": "wave",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/wave.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/wave.png"
+    },
+    {
+      "name": "bling-anvil",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-anvil.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-anvil.png"
+    },
+    {
+      "name": "stripes-red-cold",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-red-cold.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-red-cold.png"
+    },
+    {
+      "name": "bird-flying",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bird-flying.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bird-flying.png"
+    },
+    {
+      "name": "cloud",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/cloud.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/cloud.png"
+    },
+    {
+      "name": "taxi-checkers",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/taxi-checkers.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/taxi-checkers.png"
+    },
+    {
+      "name": "robot",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/robot.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/robot.png"
+    },
+    {
+      "name": "moon-block",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/moon-block.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/moon-block.png"
+    },
+    {
+      "name": "body-gradient-red-pink",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-red-pink.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-red-pink.png"
+    },
+    {
+      "name": "bling-rings",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-rings.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-rings.png"
+    },
+    {
+      "name": "wall",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/wall.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/wall.png"
+    },
+    {
+      "name": "axe",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/axe.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/axe.png"
+    },
+    {
+      "name": "1n",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/1n.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/1n.png"
+    },
+    {
+      "name": "light-bulb",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/light-bulb.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/light-bulb.png"
+    },
+    {
+      "name": "eye",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/eye.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/eye.png"
+    },
+    {
+      "name": "checkers-vibrant",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-vibrant.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-vibrant.png"
+    },
+    {
+      "name": "stripes-big-red",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-big-red.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-big-red.png"
+    },
+    {
+      "name": "think",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/think.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/think.png"
+    },
+    {
+      "name": "sweater",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/sweater.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/sweater.png"
+    },
+    {
+      "name": "text-noun-green",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-noun-green.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-noun-green.png"
+    },
+    {
+      "name": "checkers-bigwalk-rainbow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-bigwalk-rainbow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-bigwalk-rainbow.png"
+    },
+    {
+      "name": "bling-dollar",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-dollar.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-dollar.png"
+    },
+    {
+      "name": "lines-45-greens",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/lines-45-greens.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/lines-45-greens.png"
+    },
+    {
+      "name": "checkers-spaced-white",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-spaced-white.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-spaced-white.png"
+    },
+    {
+      "name": "grid-simple-beige",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/grid-simple-beige.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/grid-simple-beige.png"
+    },
+    {
+      "name": "text-rofl",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-rofl.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-rofl.png"
+    },
+    {
+      "name": "text-dope",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-dope.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-dope.png"
+    },
+    {
+      "name": "none",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/none.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/none.png"
+    },
+    {
+      "name": "grease",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/grease.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/grease.png"
+    },
+    {
+      "name": "text-io",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-io.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-io.png"
+    },
+    {
+      "name": "bling-pizza",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-pizza.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-pizza.png"
+    },
+    {
+      "name": "checkers-yellow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-yellow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-yellow.png"
+    },
+    {
+      "name": "shirt-black",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/shirt-black.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/shirt-black.png"
+    },
+    {
+      "name": "leaf",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/leaf.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/leaf.png"
+    },
+    {
+      "name": "stripes-olive",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-olive.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stripes-olive.png"
+    },
+    {
+      "name": "bling-gold-ingot",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-gold-ingot.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/bling-gold-ingot.png"
+    },
+    {
+      "name": "text-copy",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-copy.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-copy.png"
+    },
+    {
+      "name": "body-beige",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-beige.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-beige.png"
+    },
+    {
+      "name": "basepaint",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/basepaint.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/basepaint.png"
+    },
+    {
+      "name": "infinity",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/infinity.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/infinity.png"
+    },
+    {
+      "name": "stains-blood",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stains-blood.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stains-blood.png"
+    },
+    {
+      "name": "checkers-magenta",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-magenta.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-magenta.png"
+    },
+    {
+      "name": "stains-zombie",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stains-zombie.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/stains-zombie.png"
+    },
+    {
+      "name": "text-noun",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-noun.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-noun.png"
+    },
+    {
+      "name": "toady-hawk",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/toady-hawk.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/toady-hawk.png"
+    },
+    {
+      "name": "checkers-black",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-black.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-black.png"
+    },
+    {
+      "name": "tatewaku",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/tatewaku.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/tatewaku.png"
+    },
+    {
+      "name": "tie-black-on-white",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/tie-black-on-white.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/tie-black-on-white.png"
+    },
+    {
+      "name": "text-pop",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-pop.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-pop.png"
+    },
+    {
+      "name": "sunset",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/sunset.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/sunset.png"
+    },
+    {
+      "name": "text-lmao",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-lmao.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-lmao.png"
+    },
+    {
+      "name": "collar-sunset",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/collar-sunset.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/collar-sunset.png"
+    },
+    {
+      "name": "rainbow-steps",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/rainbow-steps.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/rainbow-steps.png"
+    },
+    {
+      "name": "ducky",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/ducky.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/ducky.png"
+    },
+    {
+      "name": "text-pi",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/text-pi.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/text-pi.png"
+    },
+    {
+      "name": "body-gradient-pride",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/body-gradient-pride.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/body-gradient-pride.png"
+    },
+    {
+      "name": "glasses-logo-sun",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/glasses-logo-sun.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/glasses-logo-sun.png"
+    },
+    {
+      "name": "rain",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/rain.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/rain.png"
+    },
+    {
+      "name": "woolweave-bi-colour",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/woolweave-bi-colour.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/woolweave-bi-colour.png"
+    },
+    {
+      "name": "glasses",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/glasses.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/glasses.png"
+    },
+    {
+      "name": "checkers-rgb",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-rgb.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-rgb.png"
+    },
+    {
+      "name": "checkers-bigwalk-blue-prime",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/checkers-bigwalk-blue-prime.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/2-accessories/checkers-bigwalk-blue-prime.png"
+    },
+    {
+      "name": "square-root",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/square-root.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/square-root.png"
+    },
+    {
+      "name": "scarf-dark-teal",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/scarf-dark-teal.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/scarf-dark-teal.png"
+    },
+    {
+      "name": "planet",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/planet.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/planet.png"
+    },
+    {
+      "name": "fly",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/fly.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/fly.png"
+    },
+    {
+      "name": "black-cat",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/black-cat.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/black-cat.png"
+    },
+    {
+      "name": "terror-toy",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/terror-toy.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/terror-toy.png"
+    },
+    {
+      "name": "paint-brush",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/paint-brush.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/paint-brush.png"
+    },
+    {
+      "name": "heart-yellow",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/heart-yellow.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/heart-yellow.png"
+    },
+    {
+      "name": "bling-ugly",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bling-ugly.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/bling-ugly.png"
+    },
+    {
+      "name": "matchstick",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/matchstick.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/matchstick.png"
+    },
+    {
+      "name": "gradient-beach",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/gradient-beach.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/gradient-beach.png"
+    },
+    {
+      "name": "bathrobe",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/bathrobe.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/bathrobe.png"
+    },
+    {
+      "name": "gradient-midnight",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/gradient-midnight.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/gradient-midnight.png"
+    },
+    {
+      "name": "crab",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/crab.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/crab.png"
+    },
+    {
+      "name": "apron",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/apron.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/apron.png"
+    },
+    {
+      "name": "traffic-light",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/traffic-light.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/traffic-light.png"
+    },
+    {
+      "name": "lemon",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/lemon.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/lemon.png"
+    },
+    {
+      "name": "pipe",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/pipe.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/pipe.png"
+    },
+    {
+      "name": "stripes-purple",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/stripes-purple.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/stripes-purple.png"
+    },
+    {
+      "name": "camoflauge",
+      "trait": "accessories",
+      "uri": "/playground/yellow-collective/accessories/camoflauge.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/2-accessories/camoflauge.png"
+    },
+    {
+      "name": "macaron",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/macaron.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/macaron.png"
+    },
+    {
+      "name": "farcaster-arch",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/farcaster-arch.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/farcaster-arch.png"
+    },
+    {
+      "name": "plunger",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/plunger.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/plunger.png"
+    },
+    {
+      "name": "pretzel",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/pretzel.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/pretzel.png"
+    },
+    {
+      "name": "starfish",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/starfish.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/starfish.png"
+    },
+    {
+      "name": "retro-radio",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/retro-radio.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/retro-radio.png"
+    },
+    {
+      "name": "worm",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/worm.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/worm.png"
+    },
+    {
+      "name": "bathtub",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/bathtub.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/bathtub.png"
+    },
+    {
+      "name": "water-gun",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/water-gun.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/water-gun.png"
+    },
+    {
+      "name": "price-sticker",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/price-sticker.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/price-sticker.png"
+    },
+    {
+      "name": "dolphin",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/dolphin.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/dolphin.png"
+    },
+    {
+      "name": "sunny-optimism",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/sunny-optimism.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/sunny-optimism.png"
+    },
+    {
+      "name": "lion",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/lion.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/lion.png"
+    },
+    {
+      "name": "world-map",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/world-map.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/world-map.png"
+    },
+    {
+      "name": "locomotive",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/locomotive.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/locomotive.png"
+    },
+    {
+      "name": "traffic-barrel",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/traffic-barrel.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/traffic-barrel.png"
+    },
+    {
+      "name": "accordion",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/accordion.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/accordion.png"
+    },
+    {
+      "name": "zorb",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/zorb.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/zorb.png"
+    },
+    {
+      "name": "gumball-machine",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/gumball-machine.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/gumball-machine.png"
+    },
+    {
+      "name": "smol-fisher-boy",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/smol-fisher-boy.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/smol-fisher-boy.png"
+    },
+    {
+      "name": "toucan",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/toucan.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/toucan.png"
+    },
+    {
+      "name": "skis",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/skis.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/skis.png"
+    },
+    {
+      "name": "spray-paint",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/spray-paint.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/spray-paint.png"
+    },
+    {
+      "name": "candle-white",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/candle-white.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/candle-white.png"
+    },
+    {
+      "name": "clapperboard",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/clapperboard.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/clapperboard.png"
+    },
+    {
+      "name": "rubber-eraser",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/rubber-eraser.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/rubber-eraser.png"
+    },
+    {
+      "name": "slippery-sign",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/slippery-sign.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/slippery-sign.png"
+    },
+    {
+      "name": "crayon-box",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/crayon-box.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/crayon-box.png"
+    },
+    {
+      "name": "flip-flop",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/flip-flop.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/flip-flop.png"
+    },
+    {
+      "name": "penguin",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/penguin.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/penguin.png"
+    },
+    {
+      "name": "folder",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/folder.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/folder.png"
+    },
+    {
+      "name": "walkman",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/walkman.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/walkman.png"
+    },
+    {
+      "name": "sloth",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/sloth.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/sloth.png"
+    },
+    {
+      "name": "yin-yang",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/yin-yang.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/yin-yang.png"
+    },
+    {
+      "name": "balloon",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/balloon.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/balloon.png"
+    },
+    {
+      "name": "red-flag",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/red-flag.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/red-flag.png"
+    },
+    {
+      "name": "nouny-clock",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/nouny-clock.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/nouny-clock.png"
+    },
+    {
+      "name": "studio-mic",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/studio-mic.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/studio-mic.png"
+    },
+    {
+      "name": "scarecrow",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/scarecrow.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/scarecrow.png"
+    },
+    {
+      "name": "base",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/base.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/base.png"
+    },
+    {
+      "name": "robot-chicken",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/robot-chicken.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/robot-chicken.png"
+    },
+    {
+      "name": "rooster",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/rooster.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/rooster.png"
+    },
+    {
+      "name": "lemon",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/lemon.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/lemon.png"
+    },
+    {
+      "name": "dumpster-fire",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/dumpster-fire.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/dumpster-fire.png"
+    },
+    {
+      "name": "maki",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/maki.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/maki.png"
+    },
+    {
+      "name": "ship-in-a-bottle",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/ship-in-a-bottle.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/ship-in-a-bottle.png"
+    },
+    {
+      "name": "viking-helmet",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/viking-helmet.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/viking-helmet.png"
+    },
+    {
+      "name": "chalkboard",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/chalkboard.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/chalkboard.png"
+    },
+    {
+      "name": "drain",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/drain.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/drain.png"
+    },
+    {
+      "name": "nouns-motorcycle",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/nouns-motorcycle.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/nouns-motorcycle.png"
+    },
+    {
+      "name": "alligator",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/alligator.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/alligator.png"
+    },
+    {
+      "name": "paper-plane",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/paper-plane.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/paper-plane.png"
+    },
+    {
+      "name": "vhs",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/vhs.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/vhs.png"
+    },
+    {
+      "name": "moka",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/moka.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/moka.png"
+    },
+    {
+      "name": "snail",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/snail.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/3-heads/snail.png"
+    },
+    {
+      "name": "popcorn",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/popcorn.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/popcorn.png"
+    },
+    {
+      "name": "pinched-fingers",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/pinched-fingers.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/pinched-fingers.png"
+    },
+    {
+      "name": "plant",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/plant.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/plant.png"
+    },
+    {
+      "name": "stereoscope",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/stereoscope.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/stereoscope.png"
+    },
+    {
+      "name": "shield",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/shield.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/shield.png"
+    },
+    {
+      "name": "rhino",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/rhino.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/rhino.png"
+    },
+    {
+      "name": "pirate-hat",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/pirate-hat.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/pirate-hat.png"
+    },
+    {
+      "name": "colosseum",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/colosseum.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/colosseum.png"
+    },
+    {
+      "name": "paint-roller",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/paint-roller.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/paint-roller.png"
+    },
+    {
+      "name": "rat",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/rat.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/rat.png"
+    },
+    {
+      "name": "octopus",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/octopus.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/octopus.png"
+    },
+    {
+      "name": "black-pearl",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/black-pearl.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/black-pearl.png"
+    },
+    {
+      "name": "mummy",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/mummy.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/mummy.png"
+    },
+    {
+      "name": "anglerfish",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/anglerfish.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/anglerfish.png"
+    },
+    {
+      "name": "mammoth",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/mammoth.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/mammoth.png"
+    },
+    {
+      "name": "mermaid",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/mermaid.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/mermaid.png"
+    },
+    {
+      "name": "chessboard",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/chessboard.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/chessboard.png"
+    },
+    {
+      "name": "ethereum",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/ethereum.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/ethereum.png"
+    },
+    {
+      "name": "paperbag",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/paperbag.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/paperbag.png"
+    },
+    {
+      "name": "raccoon",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/raccoon.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/raccoon.png"
+    },
+    {
+      "name": "chest",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/chest.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/chest.png"
+    },
+    {
+      "name": "daikon",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/daikon.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/daikon.png"
+    },
+    {
+      "name": "nouns-bill",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/nouns-bill.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/nouns-bill.png"
+    },
+    {
+      "name": "croissant",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/croissant.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/croissant.png"
+    },
+    {
+      "name": "wifi-router",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/wifi-router.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/wifi-router.png"
+    },
+    {
+      "name": "submarine",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/submarine.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/submarine.png"
+    },
+    {
+      "name": "gramophone",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/gramophone.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/gramophone.png"
+    },
+    {
+      "name": "mop",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/mop.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/mop.png"
+    },
+    {
+      "name": "calculator",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/calculator.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/calculator.png"
+    },
+    {
+      "name": "bull",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/bull.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/bull.png"
+    },
+    {
+      "name": "flame",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/flame.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/flame.png"
+    },
+    {
+      "name": "console",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/console.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/console.png"
+    },
+    {
+      "name": "burlap-sack",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/burlap-sack.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/burlap-sack.png"
+    },
+    {
+      "name": "amp",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/amp.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/amp.png"
+    },
+    {
+      "name": "caterpillar",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/caterpillar.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/caterpillar.png"
+    },
+    {
+      "name": "xylophone",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/xylophone.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/xylophone.png"
+    },
+    {
+      "name": "ufo",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/ufo.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/ufo.png"
+    },
+    {
+      "name": "centaur",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/centaur.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/centaur.png"
+    },
+    {
+      "name": "duckling",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/duckling.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/duckling.png"
+    },
+    {
+      "name": "football",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/football.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/football.png"
+    },
+    {
+      "name": "haunted-house",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/haunted-house.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/haunted-house.png"
+    },
+    {
+      "name": "mechanical-drawing-toy",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/mechanical-drawing-toy.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/mechanical-drawing-toy.png"
+    },
+    {
+      "name": "dynamite",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/dynamite.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/dynamite.png"
+    },
+    {
+      "name": "conical-flask",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/conical-flask.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/conical-flask.png"
+    },
+    {
+      "name": "jetpack",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/jetpack.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/jetpack.png"
+    },
+    {
+      "name": "fuel-canister",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/fuel-canister.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/fuel-canister.png"
+    },
+    {
+      "name": "anchor",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/anchor.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/anchor.png"
+    },
+    {
+      "name": "acorn",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/acorn.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/acorn.png"
+    },
+    {
+      "name": "fried-egg",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/fried-egg.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/fried-egg.png"
+    },
+    {
+      "name": "fruit-bowl",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/fruit-bowl.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/fruit-bowl.png"
+    },
+    {
+      "name": "bullseye",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/bullseye.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/bullseye.png"
+    },
+    {
+      "name": "liltoad",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/liltoad.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/liltoad.png"
+    },
+    {
+      "name": "floppy-disk",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/floppy-disk.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/floppy-disk.png"
+    },
+    {
+      "name": "golf",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/golf.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/golf.png"
+    },
+    {
+      "name": "rice-cooker",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/rice-cooker.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/rice-cooker.png"
+    },
+    {
+      "name": "eyeshadow",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/eyeshadow.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/eyeshadow.png"
+    },
+    {
+      "name": "vulture",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/vulture.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/vulture.png"
+    },
+    {
+      "name": "broccoli",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/broccoli.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/broccoli.png"
+    },
+    {
+      "name": "dog-food",
+      "trait": "heads",
+      "uri": "/playground/yellow-collective/heads/dog-food.png",
+      "sourceUri": "ipfs://bafybeigrscxoeoj6ydhback4hiygkn343xjzqgadxlcdurty2pnbku6jvi/3-heads/dog-food.png"
+    },
+    {
+      "name": "tns-yellow-noggles",
+      "trait": "glasses",
+      "uri": "/playground/yellow-collective/glasses/tns-yellow-noggles.png",
+      "sourceUri": "ipfs://bafybeicwsv2lnwjkcru3yfu73vpsp4xcf7ylh35dldybql5xlyks5hl4om/4-glasses/tns-yellow-noggles.png"
+    }
+  ],
+  "renderLayers": [
+    "backgrounds",
+    "bodies",
+    "accessories",
+    "heads",
+    "glasses"
+  ],
+  "orderedLayers": [
+    {
+      "trait": "glasses",
+      "properties": [
+        "tns-yellow-noggles"
+      ]
+    },
+    {
+      "trait": "heads",
+      "properties": [
+        "macaron",
+        "farcaster-arch",
+        "plunger",
+        "pretzel",
+        "starfish",
+        "retro-radio",
+        "worm",
+        "bathtub",
+        "water-gun",
+        "price-sticker",
+        "dolphin",
+        "sunny-optimism",
+        "lion",
+        "world-map",
+        "locomotive",
+        "traffic-barrel",
+        "accordion",
+        "zorb",
+        "gumball-machine",
+        "smol-fisher-boy",
+        "toucan",
+        "skis",
+        "spray-paint",
+        "candle-white",
+        "clapperboard",
+        "rubber-eraser",
+        "slippery-sign",
+        "crayon-box",
+        "flip-flop",
+        "penguin",
+        "folder",
+        "walkman",
+        "sloth",
+        "yin-yang",
+        "balloon",
+        "red-flag",
+        "nouny-clock",
+        "studio-mic",
+        "scarecrow",
+        "base",
+        "robot-chicken",
+        "rooster",
+        "lemon",
+        "dumpster-fire",
+        "maki",
+        "ship-in-a-bottle",
+        "viking-helmet",
+        "chalkboard",
+        "drain",
+        "nouns-motorcycle",
+        "alligator",
+        "paper-plane",
+        "vhs",
+        "moka",
+        "snail",
+        "popcorn",
+        "pinched-fingers",
+        "plant",
+        "stereoscope",
+        "shield",
+        "rhino",
+        "pirate-hat",
+        "colosseum",
+        "paint-roller",
+        "rat",
+        "octopus",
+        "black-pearl",
+        "mummy",
+        "anglerfish",
+        "mammoth",
+        "mermaid",
+        "chessboard",
+        "ethereum",
+        "paperbag",
+        "raccoon",
+        "chest",
+        "daikon",
+        "nouns-bill",
+        "croissant",
+        "wifi-router",
+        "submarine",
+        "gramophone",
+        "mop",
+        "calculator",
+        "bull",
+        "flame",
+        "console",
+        "burlap-sack",
+        "amp",
+        "caterpillar",
+        "xylophone",
+        "ufo",
+        "centaur",
+        "duckling",
+        "football",
+        "haunted-house",
+        "mechanical-drawing-toy",
+        "dynamite",
+        "conical-flask",
+        "jetpack",
+        "fuel-canister",
+        "anchor",
+        "acorn",
+        "fried-egg",
+        "fruit-bowl",
+        "bullseye",
+        "liltoad",
+        "floppy-disk",
+        "golf",
+        "rice-cooker",
+        "eyeshadow",
+        "vulture",
+        "broccoli",
+        "dog-food"
+      ]
+    },
+    {
+      "trait": "accessories",
+      "properties": [
+        "secret-x",
+        "chain-logo",
+        "bling-scissors",
+        "stripes-blit",
+        "body-gradient-dusk",
+        "uroko",
+        "bling-love",
+        "tee-yo!",
+        "snowflake",
+        "body-gradient-sunset",
+        "bling-anchor",
+        "body-gradient-dawn",
+        "insignia",
+        "rgb",
+        "checkers-big-red-cold",
+        "flash",
+        "body-ice-cold",
+        "slime-splat",
+        "lp",
+        "wet-money",
+        "stripes-blue-med",
+        "broken-heart",
+        "woolweave-dirt",
+        "text-dao-black",
+        "high-pants-brown",
+        "belly-chameleon",
+        "text-ico",
+        "clover",
+        "bling-sparkles",
+        "text-cc2",
+        "checkers-bigwalk-grey-light",
+        "bling-mask",
+        "aardvark",
+        "bling-cheese",
+        "checkers-spaced-black",
+        "text-mint",
+        "text-doom",
+        "body-grayscale-9",
+        "old-shirt",
+        "carrot",
+        "text-noun-multicolor",
+        "checkers-big-green",
+        "text-yolo",
+        "dragon",
+        "chicken",
+        "shrimp",
+        "stripes-yellow",
+        "pocket-pencil",
+        "text-lol",
+        "bird-side",
+        "body-gradient-glacier",
+        "cow",
+        "ethereum",
+        "lines-45-rose",
+        "bling-arrow",
+        "text-we",
+        "hoodie-strings-uneven",
+        "body-gradient-ice",
+        "tie-purple-on-white",
+        "glasses-logo",
+        "text-a2+b2",
+        "text-nil-grey-dark",
+        "matrix-white",
+        "dinosaur",
+        "text-cc",
+        "text-noun-pink",
+        "text-yay",
+        "heart",
+        "mars-face",
+        "decay-pride",
+        "fries",
+        "decay-grey-dark",
+        "tie-red",
+        "checkers-blue",
+        "body-yellow",
+        "stripes-and-checks",
+        "yin-yang",
+        "id",
+        "safety-vest",
+        "clock-bling",
+        "tie-dye",
+        "text-foo",
+        "small-bling",
+        "stripes-brown",
+        "scarf-clown",
+        "body-gradient-checkers-disco",
+        "wave",
+        "bling-anvil",
+        "stripes-red-cold",
+        "bird-flying",
+        "cloud",
+        "taxi-checkers",
+        "robot",
+        "moon-block",
+        "body-gradient-red-pink",
+        "bling-rings",
+        "wall",
+        "axe",
+        "1n",
+        "light-bulb",
+        "eye",
+        "checkers-vibrant",
+        "stripes-big-red",
+        "think",
+        "sweater",
+        "text-noun-green",
+        "checkers-bigwalk-rainbow",
+        "bling-dollar",
+        "lines-45-greens",
+        "checkers-spaced-white",
+        "grid-simple-beige",
+        "text-rofl",
+        "text-dope",
+        "none",
+        "grease",
+        "text-io",
+        "bling-pizza",
+        "checkers-yellow",
+        "shirt-black",
+        "leaf",
+        "stripes-olive",
+        "bling-gold-ingot",
+        "text-copy",
+        "body-beige",
+        "basepaint",
+        "infinity",
+        "stains-blood",
+        "checkers-magenta",
+        "stains-zombie",
+        "text-noun",
+        "toady-hawk",
+        "checkers-black",
+        "tatewaku",
+        "tie-black-on-white",
+        "text-pop",
+        "sunset",
+        "text-lmao",
+        "collar-sunset",
+        "rainbow-steps",
+        "ducky",
+        "text-pi",
+        "body-gradient-pride",
+        "glasses-logo-sun",
+        "rain",
+        "woolweave-bi-colour",
+        "glasses",
+        "checkers-rgb",
+        "checkers-bigwalk-blue-prime",
+        "square-root",
+        "scarf-dark-teal",
+        "planet",
+        "fly",
+        "black-cat",
+        "terror-toy",
+        "paint-brush",
+        "heart-yellow",
+        "bling-ugly",
+        "matchstick",
+        "gradient-beach",
+        "bathrobe",
+        "gradient-midnight",
+        "crab",
+        "apron",
+        "traffic-light",
+        "lemon",
+        "pipe",
+        "stripes-purple",
+        "camoflauge"
+      ]
+    },
+    {
+      "trait": "bodies",
+      "properties": [
+        "greyscale-7",
+        "teal",
+        "computer-blue",
+        "greyscale-1",
+        "hot-brown",
+        "beige-crt",
+        "yellow",
+        "peachy-a",
+        "orange-yellow",
+        "peachy-b",
+        "rust",
+        "red-pinkish",
+        "gunk",
+        "orange",
+        "beigebsod",
+        "teal-light",
+        "cold",
+        "green",
+        "fog-grey",
+        "dark-brown",
+        "blue-sky",
+        "magenta",
+        "greyscale-8",
+        "greyscale-9",
+        "blue-grey",
+        "slime-green",
+        "dark-pink",
+        "red",
+        "gold",
+        "purple"
+      ]
+    },
+    {
+      "trait": "backgrounds",
+      "properties": [
+        "yellow",
+        "based"
+      ]
+    }
+  ]
+}

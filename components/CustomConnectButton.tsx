@@ -1,10 +1,7 @@
-import { useTheme } from "@/hooks/useTheme";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Button from "./Button";
-import { Address, useAccount } from "wagmi";
-import Image from "next/image";
+import { Address } from "wagmi";
 import clsx from "clsx";
-import { zeroAddress } from "viem";
 import WalletInfo from "./WalletInfo";
 
 export type CustomConnectButtonProps = {
@@ -12,8 +9,6 @@ export type CustomConnectButtonProps = {
 };
 
 const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
-  const { address } = useAccount();
-
   return (
     <ConnectButton.Custom>
       {({
@@ -38,7 +33,11 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
             {(() => {
               if (!mounted || !account || !chain) {
                 return (
-                  <Button variant="secondary" onClick={openConnectModal}>
+                  <Button
+                    variant="secondary"
+                    onClick={openConnectModal}
+                    className={className}
+                  >
                     Connect
                   </Button>
                 );
@@ -46,7 +45,11 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
 
               if (chain.unsupported) {
                 return (
-                  <Button variant="negative" onClick={openChainModal}>
+                  <Button
+                    variant="negative"
+                    onClick={openChainModal}
+                    className={className}
+                  >
                     Wrong network
                   </Button>
                 );
@@ -55,7 +58,7 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
                 <Button
                   variant="secondary"
                   onClick={openAccountModal}
-                  className="flex flex-row gap-2 "
+                  className={clsx("flex flex-row gap-2", className)}
                 >
                   <WalletInfo address={account.address as Address} size="sm" />
                 </Button>
