@@ -133,9 +133,10 @@ export default function NounsProposalDetailPage({
           <div className="flex items-baseline">
             <Link
               href="/proposals/nouns"
-              className="mr-4 flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+              className="mr-4 flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
+              aria-label="Back to Nouns DAO proposals"
             >
-              <ArrowLeftIcon className="h-4 text-skin-base" />
+              <ArrowLeftIcon className="h-5 text-skin-base" />
             </Link>
 
             <div>

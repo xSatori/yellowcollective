@@ -1,4 +1,3 @@
-import useEnsWalletInfo from "@/hooks/fetch/useEnsName";
 import { shortenAddress } from "@/utils/shortenAddress";
 import { ethers } from "ethers";
 import { Address } from "wagmi";
@@ -8,7 +7,6 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import useEnsName from "@/hooks/fetch/useEnsName";
 import useEnsAvatar from "@/hooks/fetch/useEnsAvatar";
-import clsx from "clsx";
 
 interface WalletInfoProps {
   address?: Address;
@@ -35,33 +33,14 @@ export default function WalletInfo({
 
   const name = useMemo(() => {
     if (!disableEns && ensNameResp?.ensName) {
-      const name = ensNameResp.ensName;
-      if (name.includes("⌐◨-◨")) {
-        // NNS
-        const split = name.split(".");
-        return (
-          <>
-            {split[0]}.
-            <span
-              className={clsx(
-                "font-nns",
-                size == "sm" ? " text-[14px]" : "text-[24px]"
-              )}
-            >
-              {split[1]}
-            </span>
-          </>
-        );
-      } else {
-        return name;
-      }
+      return ensNameResp.ensName;
     } else {
       return shortenAddress(
         address ? getAddress(address) : ethers.constants.AddressZero,
         4
       );
     }
-  }, [address, ensNameResp, size]);
+  }, [address, disableEns, ensNameResp]);
 
   return (
     <div className="flex flex-row gap-2 items-center">

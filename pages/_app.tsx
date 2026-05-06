@@ -15,12 +15,6 @@ export const pally = localFont({
   variable: "--font-pally",
 });
 
-export const nns = localFont({
-  src: "../styles/LondrinaSolid-NNS.ttf",
-  display: "swap",
-  variable: "--font-nns",
-});
-
 const MyApp = ({ Component, pageProps }: AppProps) => {
   useInitTheme();
 
@@ -47,7 +41,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             />
           </Head>
 
-          <main className={`${nns.variable} ${pally.variable}`}>
+          <main className={pally.variable}>
             <Component {...pageProps} />
             <Analytics />
           </main>

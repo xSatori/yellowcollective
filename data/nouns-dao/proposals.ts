@@ -1,5 +1,8 @@
 import { providers, utils } from "ethers";
-import { Pool } from "pg";
+import {
+  getNounsDaoIndexerPool,
+  getNounsDaoIndexerSchema,
+} from "data/nouns-dao/indexer";
 
 export type NounsDaoProposal = {
   proposalId: string;
@@ -28,9 +31,6 @@ const NOUNS_DAO_START_BLOCK = 12985451;
 const CONFIRMATION_BLOCKS = 500;
 const BLOCK_RANGE = 50000;
 const MAX_PROPOSALS = 60;
-const DEFAULT_INDEXER_SCHEMA = "ponder_live_camp";
-const INDEXER_SCHEMA =
-  process.env.NOUNS_DAO_INDEXER_SCHEMA || DEFAULT_INDEXER_SCHEMA;
 const RPC_URLS = [
   process.env.NEXT_PUBLIC_MAINNET_RPC_URL,
   "https://ethereum.publicnode.com",
@@ -68,8 +68,6 @@ type NounsDaoProposalRow = {
   abstain_votes: string | number | null;
   tx_hash: string | null;
 };
-
-let indexerPool: Pool | null = null;
 
 const stripMarkdownTitle = (value: string) =>
   value
@@ -129,38 +127,11 @@ export const getNounsDaoProposalByNumber = async (proposalNumber: number) => {
   );
 };
 
-const getIndexerConnectionString = () =>
-  process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
-
-const getIndexerPool = () => {
-  const connectionString = getIndexerConnectionString();
-  if (!connectionString) return null;
-
-  if (!indexerPool) {
-    indexerPool = new Pool({
-      connectionString,
-      connectionTimeoutMillis: 8000,
-      idleTimeoutMillis: 10000,
-      max: 2,
-      ssl: connectionString.includes("railway.internal")
-        ? undefined
-        : { rejectUnauthorized: false },
-    });
-  }
-
-  return indexerPool;
-};
-
-const getSafeIndexerSchema = () => {
-  if (/^[a-zA-Z0-9_]+$/.test(INDEXER_SCHEMA)) return INDEXER_SCHEMA;
-  throw new Error("Invalid NOUNS_DAO_INDEXER_SCHEMA value");
-};
-
 const getNounsDaoProposalsFromIndexer = async () => {
-  const pool = getIndexerPool();
+  const pool = getNounsDaoIndexerPool();
   if (!pool) return [];
 
-  const schema = getSafeIndexerSchema();
+  const schema = getNounsDaoIndexerSchema();
   const { rows } = await pool.query<NounsDaoProposalRow>(
     `
       select
@@ -197,10 +168,10 @@ const getNounsDaoProposalsFromIndexer = async () => {
 const getNounsDaoProposalByNumberFromIndexer = async (
   proposalNumber: number
 ) => {
-  const pool = getIndexerPool();
+  const pool = getNounsDaoIndexerPool();
   if (!pool) return undefined;
 
-  const schema = getSafeIndexerSchema();
+  const schema = getNounsDaoIndexerSchema();
   const { rows } = await pool.query<NounsDaoProposalRow>(
     `
       select

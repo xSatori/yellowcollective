@@ -84,7 +84,6 @@ module.exports = {
       },
       fontFamily: {
         pally: ["var(--font-pally)", "sans-serif"],
-        nns: ["var(--font-nns)", "sans-serif"],
         heading: ["var(--font-pally)", "sans-serif"],
         body: ["var(--font-pally)", "sans-serif"],
       },
