@@ -111,7 +111,7 @@ export default function CommunityDetailPage({
           <aside className="h-fit rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm">
             <dl className="flex flex-col gap-4 text-base">
               <div>
-                <dt className="font-heading text-xl">Project</dt>
+                <dt className="font-heading text-xl">Category</dt>
                 <dd className="mt-1 text-secondary">{project.category}</dd>
               </div>
               <div>
