@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import { shortenAddress } from "@/utils/shortenAddress";
 import {
+  getNounsDaoProposalByNumber,
   getNounsDaoProposals,
   type NounsDaoProposal,
 } from "data/nouns-dao/proposals";
@@ -81,10 +82,10 @@ export const getStaticProps = async ({
   params?: { proposalNumber?: string };
 }): Promise<GetStaticPropsResult<NounsProposalDetailProps>> => {
   try {
-    const proposals = await getNounsDaoProposals();
-    const proposal = proposals.find(
-      (item) => String(item.proposalNumber) === params?.proposalNumber
-    );
+    const proposalNumber = Number(params?.proposalNumber);
+    const proposal = Number.isFinite(proposalNumber)
+      ? await getNounsDaoProposalByNumber(proposalNumber)
+      : undefined;
 
     if (!proposal) return { notFound: true, revalidate: 60 };
 
@@ -93,7 +94,10 @@ export const getStaticProps = async ({
       revalidate: 60,
     };
   } catch (error) {
-    console.warn("Unable to load Nouns DAO proposal detail", error);
+    console.warn(
+      `Unable to load Nouns DAO proposal detail ${params?.proposalNumber}`,
+      error
+    );
     return { notFound: true, revalidate: 60 };
   }
 };
