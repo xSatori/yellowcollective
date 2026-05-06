@@ -1,0 +1,102 @@
+import { ETHER_ACTOR_BASEURL, ETHERSCAN_BASEURL } from "constants/urls";
+import { BigNumber, ethers } from "ethers";
+import Link from "next/link";
+import useSWR from "swr";
+
+export type ProposalTransactionItem = {
+  target: string;
+  value: string | number;
+  calldata?: string;
+  signature?: string;
+};
+
+type EtherActorResponse = {
+  name: string;
+  decoded: string[];
+  functionName: string;
+  isVerified: boolean;
+};
+
+export default function ProposalTransactions({
+  transactions,
+  className = "",
+}: {
+  transactions: ProposalTransactionItem[];
+  className?: string;
+}) {
+  return (
+    <section
+      className={`${className} rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8`}
+    >
+      <div className="text-2xl font-heading text-skin-base font-bold">
+        Proposed Transactions
+      </div>
+      {transactions.length > 0 ? (
+        transactions.map((transaction, index) => (
+          <ProposalTransaction
+            key={`${transaction.target}-${index}`}
+            transaction={transaction}
+          />
+        ))
+      ) : (
+        <p className="mt-4 text-base text-secondary">
+          No transactions are attached to this proposal.
+        </p>
+      )}
+    </section>
+  );
+}
+
+const ProposalTransaction = ({
+  transaction,
+}: {
+  transaction: ProposalTransactionItem;
+}) => {
+  const { target, value, calldata, signature } = transaction;
+  const { data, error } = useSWR<EtherActorResponse>(
+    calldata && !signature
+      ? `${ETHER_ACTOR_BASEURL}/decode/${target}/${calldata}`
+      : undefined
+  );
+  const valueBN = BigNumber.from(value || 0);
+  const functionName = signature || data?.functionName || "transfer";
+
+  const linkIfAddress = (value: string) => {
+    if (ethers.utils.isAddress(value)) {
+      return (
+        <Link
+          href={`${ETHERSCAN_BASEURL}/address/${value}`}
+          rel="noopener noreferrer"
+          target="_blank"
+          className="text-skin-highlighted underline"
+        >
+          {value}
+        </Link>
+      );
+    }
+
+    return value;
+  };
+
+  return (
+    <div className="mt-4 w-full rounded-xl border border-skin-stroke bg-white p-4">
+      <div className="break-words">
+        {linkIfAddress(target)}
+        <span>{`.${functionName}(`}</span>
+      </div>
+      {!valueBN.isZero() && (
+        <div className="ml-4">{`${ethers.utils.formatEther(valueBN)} ETH`}</div>
+      )}
+      {(!data?.decoded || error || signature) &&
+        calldata &&
+        calldata !== "0x" && <div className="ml-4 break-words">{calldata}</div>}
+      {!signature &&
+        data?.decoded?.map((decoded, index) => (
+          <div className="ml-4" key={index}>
+            {linkIfAddress(decoded)}
+          </div>
+        ))}
+      <div>{")"}</div>
+    </div>
+  );
+};

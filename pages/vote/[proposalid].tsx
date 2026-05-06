@@ -11,14 +11,18 @@ import { shortenAddress } from "@/utils/shortenAddress";
 import { getProposalDescription } from "@/utils/getProposalDescription";
 import ModalWrapper from "@/components/ModalWrapper";
 import VoteModal from "@/components/VoteModal";
+import ProposalTabs from "@/components/ProposalTabs";
+import ProposalTransactions from "@/components/ProposalTransactions";
+import ProposalPropdates from "@/components/ProposalPropdates";
+import ProposalVoteList, { ProposalVote } from "@/components/ProposalVoteList";
+import ProposalVoteSummary from "@/components/ProposalVoteSummary";
 import { Fragment, useState } from "react";
 import {
   PREVIEW_PROPOSAL_ID,
   Proposal,
 } from "@/services/nouns-builder/governor";
 import useSWR from "swr";
-import { ETHERSCAN_BASEURL, ETHER_ACTOR_BASEURL } from "constants/urls";
-import { BigNumber, ethers } from "ethers";
+import { ETHERSCAN_BASEURL } from "constants/urls";
 import { useUserVotes } from "@/hooks/fetch/useUserVotes";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -42,6 +46,13 @@ export default function ProposalComponent() {
     : 0;
 
   const proposal = proposals?.find((x) => x.proposalId === proposalid);
+  const { data: proposalVotes, isLoading: proposalVotesLoading } = useSWR<
+    ProposalVote[]
+  >(
+    addresses?.governor && proposal?.proposalId
+      ? `/api/governor/${addresses.governor}/proposals/${proposal.proposalId}/votes`
+      : undefined
+  );
 
   if (!proposal)
     return (
@@ -118,150 +129,107 @@ export default function ProposalComponent() {
         <VoteButton proposal={proposal} proposalNumber={proposalNumber} />
       </div>
 
-      <div className="items-center w-full grid grid-cols-3 gap-4 mt-12">
-        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6">
-          <ProgressBar
-            label="For"
-            type="success"
-            value={forVotes}
-            percentage={getVotePercentage(forVotes)}
-          />
-        </div>
-        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6">
-          <ProgressBar
-            label="Against"
-            type="danger"
-            value={againstVotes}
-            percentage={getVotePercentage(againstVotes)}
-          />
-        </div>
-        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6">
-          <ProgressBar
-            label="Abstain"
-            type="muted"
-            value={abstainVotes}
-            percentage={getVotePercentage(abstainVotes)}
-          />
-        </div>
+      <ProposalVoteSummary
+        votes={[
+          {
+            label: "For",
+            type: "success",
+            value: forVotes,
+            percentage: getVotePercentage(forVotes),
+          },
+          {
+            label: "Against",
+            type: "danger",
+            value: againstVotes,
+            percentage: getVotePercentage(againstVotes),
+          },
+          {
+            label: "Abstain",
+            type: "muted",
+            value: abstainVotes,
+            percentage: getVotePercentage(abstainVotes),
+          },
+        ]}
+        metrics={[
+          {
+            label: "Threshold",
+            eyebrow: "Current Threshold",
+            value: `${proposal.proposal.quorumVotes || 1} Quorum`,
+          },
+          {
+            label: "Ends",
+            eyebrow: getTime(voteEnd),
+            value: getDate(voteEnd),
+          },
+          {
+            label: "Snapshot",
+            eyebrow: getTime(voteStart),
+            value: getDate(voteStart),
+          },
+        ]}
+      />
+
+      <div>
+        <ProposalTabs
+          items={[
+            {
+              id: "description",
+              label: "Description",
+              content: (
+                <>
+                  <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+                    <div className="text-2xl font-heading text-skin-base font-bold">
+                      Description
+                    </div>
+
+                    <ReactMarkdown
+                      className="prose prose-skin mt-4 prose-img:w-auto break-words max-w-[90vw] sm:max-w-[1000px]"
+                      rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                      remarkPlugins={[remarkGfm]}
+                    >
+                      {getProposalDescription(proposal.description)}
+                    </ReactMarkdown>
+                  </section>
+
+                  <ProposalTransactions
+                    className="mt-6"
+                    transactions={proposal.targets.map((target, index) => ({
+                      target,
+                      value: proposal.values[index],
+                      calldata: proposal.calldatas[index],
+                    }))}
+                  />
+                </>
+              ),
+            },
+            {
+              id: "votes",
+              label: "Votes",
+              content: (
+                <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+                  <div className="text-2xl font-heading text-skin-base font-bold">
+                    Votes
+                  </div>
+                  <div className="mt-4">
+                    <ProposalVoteList
+                      votes={proposalVotes}
+                      isLoading={proposalVotesLoading}
+                    />
+                  </div>
+                </section>
+              ),
+            },
+            {
+              id: "propdates",
+              label: "Propdates",
+              content: <ProposalPropdates proposalId={proposal.proposalId} />,
+            },
+          ]}
+        />
       </div>
-
-      <div className="items-center w-full grid sm:grid-cols-3 gap-4 mt-4">
-        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
-          <div className="font-heading text-xl text-skin-muted">Threshold</div>
-          <div className="text-right">
-            <div className="text-skin-muted">Current Threshold</div>
-            <div className="font-semibold">
-              {proposal.proposal.quorumVotes || 1} Quorum
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
-          <div className="font-heading text-xl text-skin-muted">Ends</div>
-          <div className="text-right">
-            <div className="text-skin-muted">{getTime(voteEnd)}</div>
-            <div className="font-semibold">{getDate(voteEnd)}</div>
-          </div>
-        </div>
-
-        <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
-          <div className="font-heading text-xl text-skin-muted">Snapshot</div>
-          <div className="text-right">
-            <div className="text-skin-muted">{getTime(voteStart)}</div>
-            <div className="font-semibold">{getDate(voteStart)}</div>
-          </div>
-        </div>
-      </div>
-
-      <section className="mt-12 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
-        <div className="text-2xl font-heading text-skin-base font-bold">
-          Description
-        </div>
-
-        <ReactMarkdown
-          className="prose prose-skin mt-4 prose-img:w-auto break-words max-w-[90vw] sm:max-w-[1000px]"
-          rehypePlugins={[rehypeRaw, rehypeSanitize]}
-          remarkPlugins={[remarkGfm]}
-        >
-          {getProposalDescription(proposal.description)}
-        </ReactMarkdown>
-      </section>
-
-      <section className="mt-8 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
-        <div className="text-2xl font-heading text-skin-base font-bold">
-          Proposed Transactions
-        </div>
-        {proposal.targets.map((_, index) => (
-          <ProposedTransactions
-            key={index}
-            target={proposal.targets[index]}
-            value={proposal.values[index]}
-            calldata={proposal.calldatas[index]}
-          />
-        ))}
-      </section>
     </Layout>
   );
 }
-
-type EtherActorResponse = {
-  name: string;
-  decoded: string[];
-  functionName: string;
-  isVerified: boolean;
-};
-
-const ProposedTransactions = ({
-  target,
-  value,
-  calldata,
-}: {
-  target: string;
-  value: string | number;
-  calldata: string;
-}) => {
-  const { data, error } = useSWR<EtherActorResponse>(
-    calldata ? `${ETHER_ACTOR_BASEURL}/decode/${target}/${calldata}` : undefined
-  );
-  const valueBN = BigNumber.from(value);
-
-  const linkIfAddress = (value: string) => {
-    if (ethers.utils.isAddress(value))
-      return (
-        <Link
-          href={`${ETHERSCAN_BASEURL}/address/${value}`}
-          rel="noopener noreferrer"
-          target="_blank"
-          className="text-skin-highlighted underline"
-        >
-          {value}
-        </Link>
-      );
-
-    return value;
-  };
-
-  return (
-    <div className="mt-4 w-full rounded-xl border border-skin-stroke bg-white p-4">
-      <div className="break-words">
-        {linkIfAddress(target)}
-        <span>{`.${data?.functionName || "transfer"}(`}</span>
-      </div>
-      {(!data?.decoded || error) && !valueBN.isZero() && (
-        <div className="ml-4">{`${ethers.utils.formatEther(valueBN)} ETH`}</div>
-      )}
-      {(!data?.decoded || error) && calldata && calldata !== "0x" && (
-        <div className="ml-4 break-words">{calldata}</div>
-      )}
-      {data?.decoded?.map((decoded, index) => (
-        <div className="ml-4" key={index}>
-          {linkIfAddress(decoded)}
-        </div>
-      ))}
-      <div>{")"}</div>
-    </div>
-  );
-};
 
 const VoteButton = ({
   proposal,
@@ -302,56 +270,5 @@ const VoteButton = ({
         Submit vote
       </button>
     </Fragment>
-  );
-};
-
-const ProgressBar = ({
-  label,
-  type,
-  value,
-  percentage,
-}: {
-  label: string;
-  value: number;
-  percentage: number;
-  type: "success" | "danger" | "muted";
-}) => {
-  let textColor;
-  let baseColor;
-  let bgColor;
-
-  switch (type) {
-    case "success":
-      textColor = "text-skin-proposal-success";
-      baseColor = "bg-skin-proposal-success";
-      bgColor = "bg-skin-proposal-success bg-opacity-10";
-      break;
-    case "danger":
-      textColor = "text-skin-proposal-danger";
-      baseColor = "bg-skin-proposal-danger";
-      bgColor = "bg-skin-proposal-danger bg-opacity-10";
-      break;
-    case "muted":
-      textColor = "text-skin-proposal-muted";
-      baseColor = "bg-skin-proposal-muted";
-      bgColor = "bg-skin-proposal-muted bg-opacity-10";
-      break;
-  }
-
-  return (
-    <div className="w-full">
-      <div className="flex flex-col items-center sm:items-start sm:flex-row justify-between mb-1">
-        <div className={`${textColor} font-heading text-xl`}>{label}</div>
-        <div className="font-semibold text-xl mt-4 sm:mt-0 text-center sm:text-left">
-          {value}
-        </div>
-      </div>
-      <div className={`w-full ${bgColor} rounded-full h-4 mt-4 sm:mt-0`}>
-        <div
-          className={`${baseColor} h-4 rounded-full`}
-          style={{ width: `${percentage}%` }}
-        ></div>
-      </div>
-    </div>
   );
 };

@@ -72,7 +72,7 @@ export default function CommunityDetailPage({
         />
 
         <div className="grid gap-8 md:grid-cols-[1fr_280px]">
-          <section className="flex flex-col gap-5">
+          <section className="flex flex-col gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-7">
             <div className="caption font-semibold text-secondary">
               {project.category} / {project.date}
             </div>

@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import Head from "next/head";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 
 const repoUrl = "https://github.com/Yellow-Collective/yellow-collective";
 
@@ -26,8 +26,27 @@ const initialValues = {
   links: [{ title: "", href: "" }],
 };
 
+type UploadedImage = {
+  name: string;
+  type: string;
+  dataUrl: string;
+};
+
+const imageExtensionByType: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
 export default function SubmitCommunityProjectPage() {
   const [values, setValues] = useState(initialValues);
+  const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
+    null
+  );
+  const [submissionError, setSubmissionError] = useState("");
+  const [submissionUrl, setSubmissionUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const slug = slugify(values.title);
   const details = values.details
     .split("\n")
@@ -39,26 +58,32 @@ export default function SubmitCommunityProjectPage() {
   const links = values.links
     .map((link) => ({ title: link.title.trim(), href: link.href.trim() }))
     .filter((link) => link.title && link.href);
+  const uploadedImagePath =
+    uploadedImage && slug
+      ? `/community-projects/${slug}/${slugify(
+          uploadedImage.name.replace(/\.[^.]+$/, "")
+        )}.${imageExtensionByType[uploadedImage.type] || "png"}`
+      : "";
+  const imageValue = uploadedImagePath || values.image;
+  const projectData = useMemo(
+    () => ({
+      slug,
+      title: values.title,
+      description: values.description,
+      details,
+      artist: values.artist,
+      category: values.category,
+      date: values.date,
+      href: values.href,
+      image: imageValue,
+      galleryImages,
+      links,
+    }),
+    [details, galleryImages, imageValue, links, slug, values]
+  );
   const projectJson = useMemo(
-    () =>
-      JSON.stringify(
-        {
-          slug,
-          title: values.title,
-          description: values.description,
-          details,
-          artist: values.artist,
-          category: values.category,
-          date: values.date,
-          href: values.href,
-          image: values.image,
-          galleryImages,
-          links,
-        },
-        null,
-        2
-      ),
-    [details, galleryImages, links, slug, values]
+    () => JSON.stringify(projectData, null, 2),
+    [projectData]
   );
   const canSubmit = Boolean(
     slug &&
@@ -69,7 +94,7 @@ export default function SubmitCommunityProjectPage() {
       values.category &&
       values.date &&
       values.href &&
-      values.image
+      imageValue
   );
   const githubUrl = `${repoUrl}/new/main/data/community-projects?filename=${encodeURIComponent(
     `${slug || "project-slug"}.json`
@@ -111,6 +136,74 @@ export default function SubmitCommunityProjectPage() {
       ...currentValues,
       links: [...currentValues.links, { title: "", href: "" }],
     }));
+  };
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSubmissionError("");
+    setSubmissionUrl("");
+
+    if (!file) {
+      setUploadedImage(null);
+      return;
+    }
+
+    if (
+      !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
+        file.type
+      )
+    ) {
+      setSubmissionError("Upload a PNG, JPG, WEBP, or GIF image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setSubmissionError("Image uploads must be smaller than 5MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUploadedImage({
+        name: file.name,
+        type: file.type,
+        dataUrl: String(reader.result),
+      });
+    };
+    reader.onerror = () => setSubmissionError("Unable to read image file.");
+    reader.readAsDataURL(file);
+  };
+  const handleSubmitWithUpload = async () => {
+    if (!canSubmit || !uploadedImage) return;
+
+    setIsSubmitting(true);
+    setSubmissionError("");
+    setSubmissionUrl("");
+
+    try {
+      const response = await fetch("/api/community/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project: projectData,
+          image: uploadedImage,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Submission failed.");
+      }
+
+      setSubmissionUrl(result.pullRequestUrl);
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error ? error.message : "Submission failed."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -251,6 +344,35 @@ export default function SubmitCommunityProjectPage() {
             className="mt-5"
           />
 
+          <div className="mt-5 rounded-xl border border-skin-stroke bg-skin-muted p-4">
+            <label className="block font-heading text-base text-skin-base">
+              Or upload banner image
+            </label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleImageUpload}
+              className="mt-2 block w-full text-base text-skin-base file:mr-4 file:rounded-xl file:border-0 file:bg-accent file:px-4 file:py-2 file:font-heading file:text-skin-base"
+            />
+            {uploadedImage && (
+              <div className="mt-3 flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={uploadedImage.dataUrl}
+                  alt="Uploaded banner preview"
+                  className="h-20 w-20 rounded-xl border border-skin-stroke object-cover"
+                />
+                <div className="text-sm text-secondary">
+                  This image will be committed to{" "}
+                  <span className="font-mono text-skin-base">
+                    public{uploadedImagePath}
+                  </span>{" "}
+                  when the PR is created.
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="mt-5">
             <label className="block font-heading text-base text-skin-base">
               Additional image URLs
@@ -278,19 +400,34 @@ export default function SubmitCommunityProjectPage() {
           </div>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row">
-            <a
-              href={canSubmit ? githubUrl : undefined}
-              target="_blank"
-              rel="noreferrer"
-              aria-disabled={!canSubmit}
-              className={`flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
-                canSubmit
-                  ? "bg-accent text-skin-base hover:bg-[#ffd84d]"
-                  : "pointer-events-none bg-skin-button-muted text-skin-inverted opacity-70"
-              }`}
-            >
-              Open prefilled PR
-            </a>
+            {uploadedImage ? (
+              <button
+                type="button"
+                onClick={handleSubmitWithUpload}
+                disabled={!canSubmit || isSubmitting}
+                className={`flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
+                  canSubmit && !isSubmitting
+                    ? "bg-accent text-skin-base hover:bg-[#ffd84d]"
+                    : "bg-skin-button-muted text-skin-inverted opacity-70"
+                }`}
+              >
+                {isSubmitting ? "Creating PR..." : "Create PR with upload"}
+              </button>
+            ) : (
+              <a
+                href={canSubmit ? githubUrl : undefined}
+                target="_blank"
+                rel="noreferrer"
+                aria-disabled={!canSubmit}
+                className={`flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
+                  canSubmit
+                    ? "bg-accent text-skin-base hover:bg-[#ffd84d]"
+                    : "pointer-events-none bg-skin-button-muted text-skin-inverted opacity-70"
+                }`}
+              >
+                Open prefilled PR
+              </a>
+            )}
             <a
               href={`${repoUrl}/tree/main/data/community-projects`}
               target="_blank"
@@ -300,6 +437,24 @@ export default function SubmitCommunityProjectPage() {
               View submissions folder
             </a>
           </div>
+          {submissionError && (
+            <p className="mt-4 rounded-xl border border-skin-proposal-danger bg-skin-proposal-danger bg-opacity-10 p-3 text-sm text-skin-proposal-danger">
+              {submissionError}
+            </p>
+          )}
+          {submissionUrl && (
+            <p className="mt-4 rounded-xl border border-skin-proposal-success bg-skin-proposal-success bg-opacity-10 p-3 text-sm text-skin-proposal-success">
+              PR created:{" "}
+              <a
+                href={submissionUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                {submissionUrl}
+              </a>
+            </p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
