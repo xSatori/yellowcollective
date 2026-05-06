@@ -118,26 +118,31 @@ const getTrackedTokens = async (
   treasuryAddress: string,
   zoraPriceUsd: number | null
 ) => {
-  const zora = new Contract(ZORA_TOKEN_ADDRESS, erc20Abi, DefaultProvider);
-  const [rawBalance, decimals, name, symbol] = await Promise.all([
-    zora.balanceOf(treasuryAddress),
-    zora.decimals(),
-    zora.name(),
-    zora.symbol(),
-  ]);
-  const balance = Number(utils.formatUnits(rawBalance, decimals));
+  try {
+    const zora = new Contract(ZORA_TOKEN_ADDRESS, erc20Abi, DefaultProvider);
+    const [rawBalance, decimals, name, symbol] = await Promise.all([
+      zora.balanceOf(treasuryAddress),
+      zora.decimals(),
+      zora.name(),
+      zora.symbol(),
+    ]);
+    const balance = Number(utils.formatUnits(rawBalance, decimals));
 
-  if (balance <= 0) return [];
+    if (balance <= 0) return [];
 
-  return [
-    {
-      name,
-      symbol,
-      balance: balance.toString(),
-      balanceLabel: `${formatTokenBalance(balance)} ${symbol}`,
-      valueUsd: zoraPriceUsd ? balance * zoraPriceUsd : 0,
-    },
-  ] as TreasuryToken[];
+    return [
+      {
+        name,
+        symbol,
+        balance: balance.toString(),
+        balanceLabel: `${formatTokenBalance(balance)} ${symbol}`,
+        valueUsd: zoraPriceUsd ? balance * zoraPriceUsd : 0,
+      },
+    ] as TreasuryToken[];
+  } catch (error) {
+    console.warn("Unable to load tracked treasury tokens", error);
+    return [];
+  }
 };
 
 export const getStaticProps = async (): Promise<
