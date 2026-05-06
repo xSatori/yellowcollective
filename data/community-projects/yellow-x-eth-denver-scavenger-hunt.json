@@ -1,0 +1,24 @@
+{
+  "slug": "yellow-x-eth-denver-scavenger-hunt",
+  "title": "Yellow x ETH Denver Scavenger Hunt",
+  "description": "Yellow x ETH Denver Scavenger Hunt is the third edition of a Web3 scavenger hunt series, bringing crypto communities together during ETH Boulder and ETH Denver through GPS POAPs, IYK discs, food challenges, prizes, and creative onchain participation.",
+  "details": [
+    "Yellow x ETH Denver Scavenger Hunt is a citywide Web3 experience taking place from February 11 to February 25, 2026 during ETH Boulder and ETH Denver, building on previous scavenger hunts at FarCon and Devconnect Buenos Aires. Designed to bring crypto communities together beyond traditional event settings, the hunt will guide participants through a curated exploration of the city using GPS POAPs, IYK discs, food challenges, completionist rewards, and content-based prizes. The project will feature POAP artwork from Yellow Collective artists and broader community rounds, with content shared through dedicated social channels, livestream updates, and an organized media archive that preserves the experience as evergreen onchain culture. By blending IRL adventure, public art, playful challenges, and social storytelling, the scavenger hunt gives Collective Nouns and Yellow artists a visible presence during one of crypto’s major gathering moments while helping participants connect with each other, the city, and the broader Nounish ecosystem."
+  ],
+  "artist": "Gramajo",
+  "category": "Event",
+  "date": "February 2026",
+  "href": "https://www.yellowcollective.art/proposals/0x6ec55e7395d0ebecbc8c2145d4f7d23ad2eb3c5accc7821e61c76d3463a0772d",
+  "image": "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/a0705613-cf47-439b-089a-91dfde03a100/original",
+  "galleryImages": [],
+  "links": [
+    {
+      "title": "Lil Quest Channel",
+      "href": "https://farcaster.xyz/~/channel/lilquest"
+    },
+    {
+      "title": "Announcement",
+      "href": "https://farcaster.xyz/gramajo.eth/0x2508b6bd"
+    }
+  ]
+}
