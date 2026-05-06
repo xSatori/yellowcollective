@@ -53,6 +53,16 @@ const getFallbackAddresses = (): DAOAddresses => ({
   governor: YELLOW_COLLECTIVE_CONTRACTS.governor.address,
 });
 
+const getFallbackContract = (): ContractInfo => ({
+  name: "Yellow Collective",
+  description:
+    "The Yellow Collective is an onchain club on the Base Ethereum L2 network, designed to support and empower artists and creatives in the Nouns and Superchain ecosystems.",
+  image: "",
+  external_url: "https://yellowcollective.xyz",
+  total_supply: "0",
+  auction: YELLOW_COLLECTIVE_CONTRACTS.auctionHouse.address,
+});
+
 const getNumber = (value: unknown): number => {
   if (Array.isArray(value)) return value.length;
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
@@ -189,7 +199,12 @@ export const getStaticProps = async (): Promise<
   GetStaticPropsResult<AboutPageProps>
 > => {
   const tokenContract = TOKEN_CONTRACT as `0x${string}`;
-  const contract = await getContractInfo({ address: tokenContract });
+  let contract = getFallbackContract();
+  try {
+    contract = await getContractInfo({ address: tokenContract });
+  } catch (error) {
+    console.warn("Unable to load contract info", error);
+  }
   const totalSupply = getTotalSupply(contract);
 
   const [addressesResult, foundersResult, delegates] = await Promise.allSettled(
