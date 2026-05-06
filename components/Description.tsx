@@ -22,12 +22,7 @@ export default function Description() {
               </ExternalLink>{" "}
               ecosystems. One Collective Noun will be auctioned off here every
               day, forever. Auction proceeds will be used to host art contests
-              and pay commissions to creatives in our communities, in
-              collaboration with{" "}
-              <ExternalLink href="https://tns.wtf">
-                The Noun Square Onchain Media Collective
-              </ExternalLink>
-              .
+              and pay commissions to creatives in our communities.
             </p>
             <video
               controls
@@ -64,10 +59,6 @@ export default function Description() {
               Collective Nouns are made in the image of the original{" "}
               <ExternalLink href="https://nouns.wtf">Nouns DAO</ExternalLink>,
               except that all of the Head Traits were drawn by community members
-              at{" "}
-              <ExternalLink href="https://x.com/thenounsquare">
-                The Noun Square
-              </ExternalLink>{" "}
               in a{" "}
               <ExternalLink href="https://offchain.prop.house/the-yellow-collective/the-yellow-collective-trait-contest-1:-best-noun-heads">
                 Prop House contest

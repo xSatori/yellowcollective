@@ -5,7 +5,7 @@ import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 import { publicProvider } from "wagmi/providers/public";
 import { zoraTestnet, zora, base, baseGoerli } from "@wagmi/chains";
 
-import { createPublicClient, http } from "viem";
+import { createPublicClient, fallback, http } from "viem";
 import { baseSepolia, mainnet as mainnetViem } from "viem/chains";
 import { TOKEN_NETWORK } from "constants/addresses";
 
@@ -20,14 +20,25 @@ const selectedChain = {
 }[TOKEN_NETWORK]!;
 
 const ALCHEMY_KEY = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
+const CONFIGURED_MAINNET_RPC_URL =
+  process.env.MAINNET_RPC_URL || process.env.NEXT_PUBLIC_MAINNET_RPC_URL;
 const getAlchemyUrl = (baseUrl: string, fallbackUrl: string) =>
   ALCHEMY_KEY ? `${baseUrl}/${ALCHEMY_KEY}` : fallbackUrl;
 
+const MAINNET_RPC_URLS = Array.from(
+  new Set(
+    [
+      CONFIGURED_MAINNET_RPC_URL,
+      ALCHEMY_KEY ? `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "",
+      "https://eth.llamarpc.com",
+      "https://ethereum.publicnode.com",
+      "https://cloudflare-eth.com",
+    ].filter((url): url is string => Boolean(url))
+  )
+);
+
 export const RPC_URLS: { [chainId: string]: string } = {
-  "1": getAlchemyUrl(
-    "https://eth-mainnet.g.alchemy.com/v2",
-    "https://eth.llamarpc.com"
-  ),
+  "1": MAINNET_RPC_URLS[0],
   "5": getAlchemyUrl(
     "https://eth-goerli.g.alchemy.com/v2",
     "https://ethereum-goerli.publicnode.com"
@@ -87,7 +98,16 @@ const wagmiClient = createClient({
 
 const viemMainnetClient = createPublicClient({
   chain: mainnetViem,
-  transport: http(RPC_URLS["1"]),
+  transport: fallback(
+    MAINNET_RPC_URLS.map((url) =>
+      http(url, {
+        timeout: 4000,
+      })
+    ),
+    {
+      retryCount: 1,
+    }
+  ),
 });
 
 export { wagmiClient, chains, viemMainnetClient };

@@ -11,14 +11,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
+  const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
   const ensAvatar = await getEnsAvatar({
     address: getAddress(requestedAddress),
   });
-
-  const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
   res.setHeader(
     "Cache-Control",
-    `s-maxage=${ONE_DAY_IN_SECONDS}, stale-while-revalidate=${ONE_DAY_IN_SECONDS}`
+    ensAvatar.ensAvatar
+      ? `s-maxage=${ONE_DAY_IN_SECONDS}, stale-while-revalidate=${ONE_DAY_IN_SECONDS}`
+      : "s-maxage=60, stale-while-revalidate=300"
   );
   res.send(ensAvatar);
 };

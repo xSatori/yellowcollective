@@ -11,12 +11,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const ensName = await getEnsName({ address: getAddress(requestedAddress) });
-
   const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+  const ensName = await getEnsName({ address: getAddress(requestedAddress) });
   res.setHeader(
     "Cache-Control",
-    `s-maxage=${ONE_DAY_IN_SECONDS}, stale-while-revalidate=${ONE_DAY_IN_SECONDS}`
+    ensName.ensName
+      ? `s-maxage=${ONE_DAY_IN_SECONDS}, stale-while-revalidate=${ONE_DAY_IN_SECONDS}`
+      : "s-maxage=60, stale-while-revalidate=300"
   );
   res.send(ensName);
 };
