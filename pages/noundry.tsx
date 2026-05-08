@@ -1,0 +1,1848 @@
+import Layout from "@/components/Layout";
+import type {
+  PlaygroundArtwork,
+  PlaygroundImage,
+} from "data/nouns-builder/artwork";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAccount } from "wagmi";
+import useSWR from "swr";
+
+type NoundryTab = "studio" | "gallery";
+type EditorTool =
+  | "brush"
+  | "eraser"
+  | "eyedropper"
+  | "fill"
+  | "line"
+  | "rect"
+  | "rectFill"
+  | "circle"
+  | "circleFill"
+  | "selectRect"
+  | "selectCircle"
+  | "move";
+
+type NoundrySubmission = {
+  id: string;
+  title: string;
+  artist: string;
+  traitType: string;
+  pixels: string[];
+  createdAt: string;
+};
+
+type SubmitDraft = {
+  title: string;
+  artist: string;
+  traitType: string;
+  pixels: string[];
+  selectedTraits: Record<string, string>;
+};
+type SelectionBounds = {
+  type: "rect" | "circle";
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+const GRID_SIZE = 32;
+const DEFAULT_COLOR = "#f8d21c";
+const EMPTY_PIXEL = "transparent";
+const EDITABLE_TRAIT_EXCLUSIONS = new Set(["glasses"]);
+const brushSizes = [1, 2, 3, 4, 6, 8];
+const starterPalette = [
+  "#f8d21c",
+  "#181818",
+  "#ffffff",
+  "#d63c2f",
+  "#2f80ed",
+  "#27ae60",
+  "#9b51e0",
+  "#f2994a",
+  "#7d5a3c",
+  "#bdbdbd",
+];
+
+const checkerColors = ["#9a9a9a", "#858585"] as const;
+
+const toolLabels: Record<EditorTool, string> = {
+  brush: "Brush",
+  eraser: "Eraser",
+  eyedropper: "Ink dropper",
+  fill: "Fill",
+  line: "Line",
+  rect: "Square outline",
+  rectFill: "Square fill",
+  circle: "Circle outline",
+  circleFill: "Circle fill",
+  selectRect: "Square selection",
+  selectCircle: "Circle selection",
+  move: "Move",
+};
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to load artwork.");
+  }
+
+  return data;
+};
+
+const createBlankPixels = () =>
+  Array.from({ length: GRID_SIZE * GRID_SIZE }, () => EMPTY_PIXEL);
+
+const getRandomItem = <T,>(items: T[]) =>
+  items[Math.floor(Math.random() * items.length)];
+
+const getTraitImage = (
+  images: PlaygroundImage[],
+  trait: string,
+  selectedName?: string
+) =>
+  images.find((image) => image.trait === trait && image.name === selectedName);
+
+const layerLabels: Record<string, string> = {
+  accessories: "Accessory",
+  backgrounds: "Background",
+  bodies: "Body",
+  glasses: "Noggles",
+  heads: "Head",
+};
+
+const getLayerLabel = (trait: string) =>
+  layerLabels[trait] || trait.replace(/[-_]+/g, " ");
+
+const isEditableLayer = (trait: string) => !EDITABLE_TRAIT_EXCLUSIONS.has(trait);
+
+const getCheckerColor = (index: number) => {
+  const x = index % GRID_SIZE;
+  const y = Math.floor(index / GRID_SIZE);
+  return checkerColors[(x + y) % checkerColors.length];
+};
+
+const getPixelPoint = (index: number) => ({
+  x: index % GRID_SIZE,
+  y: Math.floor(index / GRID_SIZE),
+});
+
+const toHexColor = (red: number, green: number, blue: number) =>
+  `#${[red, green, blue]
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("")}`;
+
+const loadHtmlImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+
+const imageToPixels = async (src: string) => {
+  const image = await loadHtmlImage(src);
+  const canvas = document.createElement("canvas");
+  canvas.width = GRID_SIZE;
+  canvas.height = GRID_SIZE;
+  const context = canvas.getContext("2d");
+  if (!context) return createBlankPixels();
+
+  context.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
+  context.drawImage(image, 0, 0, GRID_SIZE, GRID_SIZE);
+  const imageData = context.getImageData(0, 0, GRID_SIZE, GRID_SIZE).data;
+
+  return Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => {
+    const offset = index * 4;
+    const alpha = imageData[offset + 3];
+    if (alpha < 16) return EMPTY_PIXEL;
+
+    return toHexColor(imageData[offset], imageData[offset + 1], imageData[offset + 2]);
+  });
+};
+
+const collectPreviewColors = async (
+  collectionLayers: PlaygroundImage[],
+  pixels: string[]
+) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = GRID_SIZE;
+  canvas.height = GRID_SIZE;
+  const context = canvas.getContext("2d");
+  if (!context) return [];
+
+  context.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
+
+  for (const layer of collectionLayers) {
+    try {
+      const image = await loadHtmlImage(layer.uri);
+      context.drawImage(image, 0, 0, GRID_SIZE, GRID_SIZE);
+    } catch (error) {
+      console.error("Unable to read preview layer colors", error);
+    }
+  }
+
+  pixels.forEach((color, index) => {
+    if (color === EMPTY_PIXEL) return;
+    context.fillStyle = color;
+    context.fillRect(index % GRID_SIZE, Math.floor(index / GRID_SIZE), 1, 1);
+  });
+
+  const imageData = context.getImageData(0, 0, GRID_SIZE, GRID_SIZE).data;
+  const colorCounts = new Map<string, number>();
+
+  for (let offset = 0; offset < imageData.length; offset += 4) {
+    if (imageData[offset + 3] < 16) continue;
+    const color = toHexColor(imageData[offset], imageData[offset + 1], imageData[offset + 2]);
+    colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+  }
+
+  return Array.from(colorCounts.entries())
+    .sort((first, second) => second[1] - first[1])
+    .map(([color]) => color)
+    .slice(0, 18);
+};
+
+const downloadCanvas = async ({
+  fileName,
+  collectionLayers = [],
+  pixels,
+}: {
+  fileName: string;
+  collectionLayers?: PlaygroundImage[];
+  pixels: string[];
+}) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = GRID_SIZE;
+  canvas.height = GRID_SIZE;
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
+  context.imageSmoothingEnabled = false;
+  context.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
+
+  for (const layer of collectionLayers) {
+    const image = await loadHtmlImage(layer.uri);
+    context.drawImage(image, 0, 0, GRID_SIZE, GRID_SIZE);
+  }
+
+  pixels.forEach((color, index) => {
+    if (color === EMPTY_PIXEL) return;
+    context.fillStyle = color;
+    context.fillRect(index % GRID_SIZE, Math.floor(index / GRID_SIZE), 1, 1);
+  });
+
+  const link = document.createElement("a");
+  link.download = fileName;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+};
+
+export default function NoundryPage() {
+  const router = useRouter();
+  const { address } = useAccount();
+  const { data: artwork, error, isLoading } = useSWR<PlaygroundArtwork>(
+    "/api/playground/artwork",
+    fetcher
+  );
+  const [activeTab, setActiveTab] = useState<NoundryTab>("studio");
+  const [title, setTitle] = useState("New Yellow Trait");
+  const [traitType, setTraitType] = useState("heads");
+  const [selectedTraits, setSelectedTraits] = useState<Record<string, string>>(
+    {}
+  );
+  const [visibleTraits, setVisibleTraits] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [tool, setTool] = useState<EditorTool>("brush");
+  const [brushSize, setBrushSize] = useState(2);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
+  const [pixels, setPixels] = useState(createBlankPixels);
+  const [isPainting, setIsPainting] = useState(false);
+  const [shapeStart, setShapeStart] = useState<number | null>(null);
+  const [undoStack, setUndoStack] = useState<string[][]>([]);
+  const [redoStack, setRedoStack] = useState<string[][]>([]);
+  const [previewColors, setPreviewColors] = useState<string[]>([]);
+  const [submissions, setSubmissions] = useState<NoundrySubmission[]>([]);
+  const [hoveredPixel, setHoveredPixel] = useState<number | null>(null);
+  const [selectionBounds, setSelectionBounds] = useState<SelectionBounds | null>(
+    null
+  );
+  const [isCircleCropEnabled, setIsCircleCropEnabled] = useState(false);
+  const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
+  const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
+  const selectedTraitName = selectedTraits[traitType];
+
+  const editableLayers = useMemo(
+    () => artwork?.orderedLayers.filter((layer) => isEditableLayer(layer.trait)) || [],
+    [artwork]
+  );
+
+  useEffect(() => {
+    if (!artwork || Object.keys(selectedTraits).length > 0) return;
+
+    setSelectedTraits(
+      Object.fromEntries(
+        artwork.orderedLayers.map((layer) => [layer.trait, layer.properties[0]])
+      )
+    );
+    setVisibleTraits(
+      Object.fromEntries(artwork.orderedLayers.map((layer) => [layer.trait, true]))
+    );
+    setTraitType(
+      editableLayers.find((layer) => layer.trait === "heads")?.trait ||
+        editableLayers[0]?.trait ||
+        "heads"
+    );
+  }, [artwork, editableLayers, selectedTraits]);
+
+  useEffect(() => {
+    const stopPainting = () => {
+      setIsPainting(false);
+      setShapeStart(null);
+    };
+    window.addEventListener("mouseup", stopPainting);
+    return () => window.removeEventListener("mouseup", stopPainting);
+  }, []);
+
+  useEffect(() => {
+    const loadSelectedTrait = async () => {
+      if (!artwork || !isEditableLayer(traitType)) return;
+
+      const selectedImage = getTraitImage(
+        artwork.images,
+        traitType,
+        selectedTraitName
+      );
+      if (!selectedImage) {
+        setPixels(createBlankPixels());
+        return;
+      }
+
+      try {
+        const nextPixels = await imageToPixels(selectedImage.uri);
+        setPixels(nextPixels);
+        setUndoStack([]);
+        setRedoStack([]);
+      } catch (error) {
+        console.error("Unable to load trait into editor", error);
+      }
+    };
+
+    loadSelectedTrait();
+  }, [artwork, selectedTraitName, traitType]);
+
+  const usedColors = useMemo(
+    () => (previewColors.length ? previewColors : starterPalette.slice(0, 8)),
+    [previewColors]
+  );
+  const selectedCollectionLayers = useMemo(() => {
+    if (!artwork) return [];
+
+    const renderTraits = [
+      ...artwork.renderLayers,
+      ...artwork.orderedLayers
+        .map((layer) => layer.trait)
+        .filter((trait) => !artwork.renderLayers.includes(trait)),
+    ];
+
+    return renderTraits
+      .filter((trait) => visibleTraits[trait] !== false)
+      .map((trait) =>
+        getTraitImage(artwork.images, trait, selectedTraits[trait])
+      )
+      .filter((image): image is PlaygroundImage => Boolean(image));
+  }, [artwork, selectedTraits, visibleTraits]);
+  useEffect(() => {
+    let isCurrent = true;
+
+    collectPreviewColors(selectedCollectionLayers, pixels)
+      .then((colors) => {
+        if (isCurrent) setPreviewColors(colors);
+      })
+      .catch((error) => {
+        console.error("Unable to collect preview colors", error);
+        if (isCurrent) {
+          setPreviewColors(
+            Array.from(
+              new Set(pixels.filter((color) => color !== EMPTY_PIXEL))
+            ).slice(0, 18)
+          );
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [pixels, selectedCollectionLayers]);
+  const workingSubmission = useMemo<NoundrySubmission>(
+    () => ({
+      id: "draft",
+      title,
+      artist: address || "",
+      traitType,
+      pixels,
+      createdAt: new Date().toISOString(),
+    }),
+    [address, pixels, title, traitType]
+  );
+  const previewSelectionBounds = useMemo(() => {
+    if (
+      shapeStart === null ||
+      hoveredPixel === null ||
+      !isPainting ||
+      (tool !== "selectRect" && tool !== "selectCircle")
+    ) {
+      return null;
+    }
+
+    return getSelectionBounds(
+      shapeStart,
+      hoveredPixel,
+      tool === "selectRect" ? "rect" : "circle"
+    );
+  }, [hoveredPixel, isPainting, shapeStart, tool]);
+  const displayedSelectionBounds = previewSelectionBounds || selectionBounds;
+
+  const commitPixels = (nextPixels: string[]) => {
+    setUndoStack((currentStack) => [...currentStack.slice(-24), pixels]);
+    setRedoStack([]);
+    setPixels(nextPixels);
+  };
+
+  const applyDrawingTool = (currentPixels: string[], index: number) => {
+    if (tool === "fill") return fillPixels(currentPixels, index, selectedColor);
+
+    const nextPixels = [...currentPixels];
+    const centerX = index % GRID_SIZE;
+    const centerY = Math.floor(index / GRID_SIZE);
+    const radius = Math.max(0, Math.floor(brushSize / 2));
+    const color = tool === "eraser" ? EMPTY_PIXEL : selectedColor;
+
+    for (let y = centerY - radius; y <= centerY + radius; y += 1) {
+      for (let x = centerX - radius; x <= centerX + radius; x += 1) {
+        if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) continue;
+        nextPixels[y * GRID_SIZE + x] = color;
+      }
+    }
+
+    return nextPixels;
+  };
+
+  const beginPixelAction = (index: number) => {
+    if (tool === "eyedropper") {
+      const color = pixels[index];
+      if (color !== EMPTY_PIXEL) setSelectedColor(color);
+      return;
+    }
+
+    if (isShapeTool(tool)) {
+      if (tool === "selectRect" || tool === "selectCircle") {
+        setSelectionBounds(null);
+      }
+      setShapeStart(index);
+      setIsPainting(true);
+      return;
+    }
+
+    setSelectionBounds(null);
+    setIsPainting(true);
+    commitPixels(applyDrawingTool(pixels, index));
+  };
+
+  const continuePixelAction = (index: number) => {
+    if (!isPainting || isShapeTool(tool) || tool === "eyedropper") return;
+    setPixels((currentPixels) => applyDrawingTool(currentPixels, index));
+  };
+
+  const endPixelAction = (index: number) => {
+    setIsPainting(false);
+
+    if (!isShapeTool(tool) || shapeStart === null) return;
+
+    if (tool === "selectRect" || tool === "selectCircle") {
+      setSelectionBounds(
+        getSelectionBounds(
+          shapeStart,
+          index,
+          tool === "selectRect" ? "rect" : "circle"
+        )
+      );
+      setShapeStart(null);
+      return;
+    }
+
+    if (tool === "move") {
+      commitPixels(movePixels(pixels, shapeStart, index, selectionBounds));
+      setSelectionBounds(null);
+      setShapeStart(null);
+      return;
+    }
+
+    setSelectionBounds(null);
+    commitPixels(drawShape(pixels, shapeStart, index, tool, selectedColor));
+    setShapeStart(null);
+  };
+
+  const undoCanvas = () => {
+    const previousPixels = undoStack[undoStack.length - 1];
+    if (!previousPixels) return;
+
+    setRedoStack((currentStack) => [...currentStack, pixels]);
+    setPixels(previousPixels);
+    setUndoStack((currentStack) => currentStack.slice(0, -1));
+  };
+
+  const redoCanvas = () => {
+    const nextPixels = redoStack[redoStack.length - 1];
+    if (!nextPixels) return;
+
+    setUndoStack((currentStack) => [...currentStack, pixels]);
+    setPixels(nextPixels);
+    setRedoStack((currentStack) => currentStack.slice(0, -1));
+  };
+
+  const clearCanvas = () => commitPixels(createBlankPixels());
+
+  const exportEditedTrait = () => {
+    downloadCanvas({
+      fileName: `${getLayerLabel(traitType).toLowerCase()}-${
+        selectedTraitName || "draft"
+      }.png`,
+      pixels,
+    }).catch((error) => console.error("Unable to export trait", error));
+  };
+
+  const exportFullPreview = () => {
+    downloadCanvas({
+      fileName: "yellow-collective-noundry-preview.png",
+      collectionLayers: selectedCollectionLayers,
+      pixels,
+    }).catch((error) => console.error("Unable to export preview", error));
+  };
+
+  const updateCollectionTrait = (trait: string, value: string) => {
+    setSelectedTraits((currentTraits) => ({
+      ...currentTraits,
+      [trait]: value,
+    }));
+  };
+
+  const randomizeTrait = (trait: string) => {
+    const layer = artwork?.orderedLayers.find((item) => item.trait === trait);
+    if (!layer) return;
+    updateCollectionTrait(trait, getRandomItem(layer.properties));
+  };
+
+  const randomizeAllTraits = () => {
+    if (!artwork) return;
+
+    setSelectedTraits(
+      Object.fromEntries(
+        artwork.orderedLayers.map((layer) => [
+          layer.trait,
+          getRandomItem(layer.properties),
+        ])
+      )
+    );
+  };
+
+  const loadCollectiveNounById = async () => {
+    if (!artwork) return;
+
+    const requestedId = window.prompt("Collective Noun ID");
+    if (!requestedId) return;
+
+    try {
+      const response = await fetch("/api/probe/tokens");
+      const data = await response.json();
+      const token = data.tokens?.find(
+        (item: { id: number }) => String(item.id) === requestedId.trim()
+      );
+
+      if (!response.ok || !token) return;
+
+      setSelectedTraits((currentTraits) => {
+        const nextTraits = { ...currentTraits };
+
+        artwork.orderedLayers.forEach((layer) => {
+          const tokenValue =
+            token.attributes?.[layer.trait] ||
+            token.attributes?.[getLayerLabel(layer.trait)] ||
+            token.attributes?.[getLayerLabel(layer.trait).toLowerCase()];
+
+          if (tokenValue && layer.properties.includes(tokenValue)) {
+            nextTraits[layer.trait] = tokenValue;
+          }
+        });
+
+        return nextTraits;
+      });
+    } catch (error) {
+      console.error("Unable to load Collective Noun by ID", error);
+    }
+  };
+
+  const loadSubmission = (submission: NoundrySubmission) => {
+    setTitle(`Remix: ${submission.title}`);
+    setTraitType(submission.traitType);
+    setPixels(submission.pixels);
+    setActiveTab("studio");
+  };
+
+  const submitToGallery = () => {
+    const draft: SubmitDraft = {
+      title,
+      artist: address || "",
+      traitType,
+      pixels,
+      selectedTraits,
+    };
+
+    window.sessionStorage.setItem("noundry-submit-draft", JSON.stringify(draft));
+    router.push("/noundry/submit");
+  };
+
+  return (
+    <Layout>
+      <Head>
+        <title>Noundry | Yellow Collective</title>
+      </Head>
+
+      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
+        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
+                Noundry
+              </h1>
+              <p className="mt-4 max-w-3xl text-base leading-snug text-secondary md:text-lg">
+                Create fresh Yellow Collective traits, remix community
+                submissions, and assemble them against the live collection.
+              </p>
+            </div>
+            <div className="flex w-full gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6] lg:w-fit">
+              {(["studio", "gallery"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 rounded-lg px-5 py-3 font-heading text-base capitalize transition lg:flex-none ${
+                    activeTab === tab
+                      ? "translate-y-[-1px] bg-accent text-skin-base shadow-[0px_4px_0px_0px_#b89400]"
+                      : "text-secondary shadow-[inset_0px_-2px_0px_0px_#d6d6d6] hover:bg-[#fff7bf] hover:text-skin-base"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {isLoading && (
+          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm">
+            Loading artwork...
+          </section>
+        )}
+
+        {error && (
+          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
+            {error.message}
+          </section>
+        )}
+
+        {activeTab === "studio" && artwork && (
+          <section className="grid items-stretch gap-6 xl:grid-cols-[118px_minmax(420px,1fr)_380px]">
+            <ToolRail
+              tool={tool}
+              brushSize={brushSize}
+              selectedColor={selectedColor}
+              usedColors={usedColors}
+              canUndo={undoStack.length > 0}
+              canRedo={redoStack.length > 0}
+              onToolChange={setTool}
+              onBrushSizeChange={setBrushSize}
+              onColorChange={setSelectedColor}
+              onUndo={undoCanvas}
+              onRedo={redoCanvas}
+            />
+
+            <div className="relative h-full rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+              <div
+                className="grid aspect-square w-full overflow-hidden rounded-xl border border-skin-stroke bg-[#909090]"
+                style={{
+                  gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                }}
+                onMouseLeave={() => setHoveredPixel(null)}
+              >
+                {pixels.map((color, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Pixel ${index + 1}`}
+                    onMouseDown={() => {
+                      beginPixelAction(index);
+                    }}
+                    onMouseEnter={() => {
+                      setHoveredPixel(index);
+                      continuePixelAction(index);
+                    }}
+                    onMouseUp={() => endPixelAction(index)}
+                    className="relative aspect-square"
+                    style={{
+                      backgroundColor:
+                        color === EMPTY_PIXEL ? getCheckerColor(index) : color,
+                    }}
+                  >
+                    {displayedSelectionBounds &&
+                      isPixelInSelection(index, displayedSelectionBounds) && (
+                        <span
+                          className="pointer-events-none absolute inset-0 bg-[#d9d9d9]/55"
+                          style={getSelectionEdgeStyle(
+                            index,
+                            displayedSelectionBounds
+                          )}
+                        />
+                      )}
+                    {hoveredPixel === index && (
+                      <span className="pointer-events-none absolute inset-0 bg-[#e6e6e6]/95" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              {openTraitPicker && (
+                <TraitPickerOverlay
+                  layer={editableLayers.find(
+                    (layer) => layer.trait === openTraitPicker
+                  )}
+                  images={artwork.images.filter(
+                    (image) => image.trait === openTraitPicker
+                  )}
+                  value={selectedTraits[openTraitPicker] || ""}
+                  onClose={() => setOpenTraitPicker(null)}
+                  onSelect={(value) => {
+                    updateCollectionTrait(openTraitPicker, value);
+                    setTraitType(openTraitPicker);
+                    setOpenTraitPicker(null);
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-heading text-2xl leading-none text-skin-base">
+                  Preview
+                </h2>
+              </div>
+              <div
+                className={`mt-5 aspect-square overflow-hidden border border-skin-stroke bg-[#ffcc00] ${
+                  isCircleCropEnabled ? "rounded-full" : "rounded-xl"
+                }`}
+              >
+                <FullCharacterPreview
+                  collectionLayers={selectedCollectionLayers}
+                  submission={workingSubmission}
+                  showEditedTrait={visibleTraits[traitType] !== false}
+                />
+              </div>
+              <PreviewActionBar
+                isCircleCropEnabled={isCircleCropEnabled}
+                onRandomizeAll={randomizeAllTraits}
+                onLoadById={loadCollectiveNounById}
+                onToggleCircleCrop={() =>
+                  setIsCircleCropEnabled((isEnabled) => !isEnabled)
+                }
+                onExport={exportFullPreview}
+              />
+              <div className="mt-5 overflow-hidden rounded-xl border border-[#b89400] bg-accent shadow-[0px_4px_0px_0px_#b89400]">
+                {editableLayers.map((layer) => (
+                  <LayerControl
+                    key={layer.trait}
+                    layer={layer}
+                    images={artwork.images.filter(
+                      (image) => image.trait === layer.trait
+                    )}
+                    value={selectedTraits[layer.trait] || ""}
+                    isVisible={visibleTraits[layer.trait] !== false}
+                    isEditing={traitType === layer.trait}
+                    isMenuOpen={openLayerMenu === layer.trait}
+                    onEdit={() => setTraitType(layer.trait)}
+                    onTogglePicker={() =>
+                      setOpenTraitPicker((currentTrait) =>
+                        currentTrait === layer.trait ? null : layer.trait
+                      )
+                    }
+                    onToggleMenu={() =>
+                      setOpenLayerMenu((currentTrait) =>
+                        currentTrait === layer.trait ? null : layer.trait
+                      )
+                    }
+                    onToggleVisible={() =>
+                      setVisibleTraits((currentTraits) => ({
+                        ...currentTraits,
+                        [layer.trait]: currentTraits[layer.trait] === false,
+                      }))
+                    }
+                    onRandomize={() => randomizeTrait(layer.trait)}
+                    onChange={(value) =>
+                      updateCollectionTrait(layer.trait, value)
+                    }
+                    onClear={() => {
+                      setTraitType(layer.trait);
+                      clearCanvas();
+                    }}
+                    onLoad={() => {
+                      setTraitType(layer.trait);
+                      setOpenLayerMenu(null);
+                    }}
+                    onExport={() => {
+                      setTraitType(layer.trait);
+                      exportEditedTrait();
+                    }}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={submitToGallery}
+                className="mt-5 w-full rounded-[18px] bg-accent px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+              >
+                Submit to gallery
+              </button>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "gallery" && (
+          <GalleryView submissions={submissions} onRemix={loadSubmission} />
+        )}
+      </div>
+    </Layout>
+  );
+}
+
+const fillPixels = (pixels: string[], index: number, color: string) => {
+  const targetColor = pixels[index];
+  if (targetColor === color) return pixels;
+
+  const nextPixels = [...pixels];
+  const queue = [index];
+  const visited = new Set<number>();
+
+  while (queue.length > 0) {
+    const currentIndex = queue.shift();
+    if (currentIndex === undefined || visited.has(currentIndex)) continue;
+    if (nextPixels[currentIndex] !== targetColor) continue;
+
+    visited.add(currentIndex);
+    nextPixels[currentIndex] = color;
+
+    const x = currentIndex % GRID_SIZE;
+    const y = Math.floor(currentIndex / GRID_SIZE);
+    if (x > 0) queue.push(currentIndex - 1);
+    if (x < GRID_SIZE - 1) queue.push(currentIndex + 1);
+    if (y > 0) queue.push(currentIndex - GRID_SIZE);
+    if (y < GRID_SIZE - 1) queue.push(currentIndex + GRID_SIZE);
+  }
+
+  return nextPixels;
+};
+
+const isShapeTool = (tool: EditorTool) =>
+  [
+    "line",
+    "rect",
+    "rectFill",
+    "circle",
+    "circleFill",
+    "selectRect",
+    "selectCircle",
+    "move",
+  ].includes(tool);
+
+const getSelectionBounds = (
+  startIndex: number,
+  endIndex: number,
+  type: SelectionBounds["type"]
+) => {
+  const start = getPixelPoint(startIndex);
+  const end = getPixelPoint(endIndex);
+
+  return {
+    type,
+    left: Math.min(start.x, end.x),
+    right: Math.max(start.x, end.x),
+    top: Math.min(start.y, end.y),
+    bottom: Math.max(start.y, end.y),
+  };
+};
+
+const isPixelInSelection = (index: number, selection: SelectionBounds) => {
+  const { x, y } = getPixelPoint(index);
+  if (
+    x < selection.left ||
+    x > selection.right ||
+    y < selection.top ||
+    y > selection.bottom
+  ) {
+    return false;
+  }
+
+  if (selection.type === "rect") return true;
+
+  const radiusX = Math.max(1, (selection.right - selection.left) / 2);
+  const radiusY = Math.max(1, (selection.bottom - selection.top) / 2);
+  const centerX = selection.left + radiusX;
+  const centerY = selection.top + radiusY;
+
+  return (
+    Math.pow((x - centerX) / radiusX, 2) +
+      Math.pow((y - centerY) / radiusY, 2) <=
+    1
+  );
+};
+
+const getSelectionEdgeStyle = (
+  index: number,
+  selection: SelectionBounds
+): CSSProperties => {
+  const { x, y } = getPixelPoint(index);
+  const border = "2px solid #111827";
+  const style: CSSProperties = {};
+  const hasNeighbor = (nextX: number, nextY: number) =>
+    nextX >= 0 &&
+    nextX < GRID_SIZE &&
+    nextY >= 0 &&
+    nextY < GRID_SIZE &&
+    isPixelInSelection(nextY * GRID_SIZE + nextX, selection);
+
+  if (!hasNeighbor(x, y - 1)) style.borderTop = border;
+  if (!hasNeighbor(x + 1, y)) style.borderRight = border;
+  if (!hasNeighbor(x, y + 1)) style.borderBottom = border;
+  if (!hasNeighbor(x - 1, y)) style.borderLeft = border;
+
+  return style;
+};
+
+const movePixels = (
+  pixels: string[],
+  startIndex: number,
+  endIndex: number,
+  selection: SelectionBounds | null
+) => {
+  const start = getPixelPoint(startIndex);
+  const end = getPixelPoint(endIndex);
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  if (deltaX === 0 && deltaY === 0) return pixels;
+
+  const nextPixels = [...pixels];
+  const selectedIndexes = pixels
+    .map((color, index) => ({ color, index }))
+    .filter(
+      ({ color, index }) =>
+        color !== EMPTY_PIXEL && (!selection || isPixelInSelection(index, selection))
+    );
+
+  selectedIndexes.forEach(({ index }) => {
+    nextPixels[index] = EMPTY_PIXEL;
+  });
+
+  selectedIndexes.forEach(({ color, index }) => {
+    const { x, y } = getPixelPoint(index);
+    const nextX = x + deltaX;
+    const nextY = y + deltaY;
+    if (nextX < 0 || nextX >= GRID_SIZE || nextY < 0 || nextY >= GRID_SIZE) {
+      return;
+    }
+    nextPixels[nextY * GRID_SIZE + nextX] = color;
+  });
+
+  return nextPixels;
+};
+
+const drawShape = (
+  pixels: string[],
+  startIndex: number,
+  endIndex: number,
+  tool: EditorTool,
+  color: string
+) => {
+  const nextPixels = [...pixels];
+  const setPixel = (x: number, y: number) => {
+    if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
+    nextPixels[y * GRID_SIZE + x] = color;
+  };
+  const startX = startIndex % GRID_SIZE;
+  const startY = Math.floor(startIndex / GRID_SIZE);
+  const endX = endIndex % GRID_SIZE;
+  const endY = Math.floor(endIndex / GRID_SIZE);
+  const left = Math.min(startX, endX);
+  const right = Math.max(startX, endX);
+  const top = Math.min(startY, endY);
+  const bottom = Math.max(startY, endY);
+
+  if (tool === "line") {
+    const distanceX = Math.abs(endX - startX);
+    const distanceY = -Math.abs(endY - startY);
+    const stepX = startX < endX ? 1 : -1;
+    const stepY = startY < endY ? 1 : -1;
+    let error = distanceX + distanceY;
+    let x = startX;
+    let y = startY;
+
+    while (true) {
+      setPixel(x, y);
+      if (x === endX && y === endY) break;
+      const doubledError = error * 2;
+      if (doubledError >= distanceY) {
+        error += distanceY;
+        x += stepX;
+      }
+      if (doubledError <= distanceX) {
+        error += distanceX;
+        y += stepY;
+      }
+    }
+
+    return nextPixels;
+  }
+
+  if (tool === "rect" || tool === "rectFill") {
+    for (let y = top; y <= bottom; y += 1) {
+      for (let x = left; x <= right; x += 1) {
+        const isEdge = x === left || x === right || y === top || y === bottom;
+        if (tool === "rectFill" || isEdge) setPixel(x, y);
+      }
+    }
+
+    return nextPixels;
+  }
+
+  const radiusX = Math.max(1, (right - left) / 2);
+  const radiusY = Math.max(1, (bottom - top) / 2);
+  const centerX = left + radiusX;
+  const centerY = top + radiusY;
+
+  for (let y = top; y <= bottom; y += 1) {
+    for (let x = left; x <= right; x += 1) {
+      const normalized =
+        Math.pow((x - centerX) / radiusX, 2) +
+        Math.pow((y - centerY) / radiusY, 2);
+      if (tool === "circleFill" && normalized <= 1) setPixel(x, y);
+      if (tool === "circle" && normalized <= 1 && normalized >= 0.72) {
+        setPixel(x, y);
+      }
+    }
+  }
+
+  return nextPixels;
+};
+
+const ToolRail = ({
+  tool,
+  brushSize,
+  selectedColor,
+  usedColors,
+  canUndo,
+  canRedo,
+  onToolChange,
+  onBrushSizeChange,
+  onColorChange,
+  onUndo,
+  onRedo,
+}: {
+  tool: EditorTool;
+  brushSize: number;
+  selectedColor: string;
+  usedColors: string[];
+  canUndo: boolean;
+  canRedo: boolean;
+  onToolChange: (tool: EditorTool) => void;
+  onBrushSizeChange: (size: number) => void;
+  onColorChange: (color: string) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+}) => (
+  <div className="h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4px_0px_0px_#c9c9c9]">
+    <div className="grid grid-cols-3 items-end justify-items-center gap-2">
+      {brushSizes.map((size) => (
+        <button
+          key={size}
+          type="button"
+          aria-label={`Brush size ${size}`}
+          onClick={() => onBrushSizeChange(size)}
+          className={`flex h-10 w-10 items-center justify-center rounded-md border transition ${
+            brushSize === size
+              ? "border-transparent bg-[#fff2a3] shadow-[0px_3px_0px_0px_#d8c25f]"
+              : "border-transparent hover:bg-[#f3f4f6]"
+          }`}
+        >
+          <span
+            className="block aspect-square bg-[#5f6368]"
+            style={{ width: size * 4, height: size * 4 }}
+          />
+        </button>
+      ))}
+    </div>
+
+    <div className="mt-5 grid grid-cols-2 gap-3">
+      {(Object.keys(toolLabels) as EditorTool[]).map((toolId) => (
+        <button
+          key={toolId}
+          type="button"
+          title={toolLabels[toolId]}
+          onClick={() => onToolChange(toolId)}
+          className={`flex h-11 items-center justify-center rounded-lg border text-2xl transition ${
+            tool === toolId
+              ? "border-transparent bg-[#fff2a3] text-skin-base shadow-[0px_3px_0px_0px_#d8c25f]"
+              : "border-transparent text-[#5f6368] hover:bg-[#f3f4f6] hover:text-skin-base"
+          }`}
+        >
+          <ToolIcon tool={toolId} />
+        </button>
+      ))}
+      <button
+        type="button"
+        title="Transparent"
+        onClick={() => onColorChange(EMPTY_PIXEL)}
+        className="h-11 rounded-lg border border-dashed border-[#5f6368] bg-[linear-gradient(135deg,transparent_0_45%,#5f6368_45%_55%,transparent_55%)] transition hover:bg-[#f3f4f6]"
+      />
+    </div>
+
+    <div className="mt-4 grid grid-cols-2 gap-3">
+      <button
+        type="button"
+        title="Undo"
+        disabled={!canUndo}
+        onClick={onUndo}
+        className="flex h-10 items-center justify-center rounded-lg text-[#5f6368] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <UndoGlyph />
+      </button>
+      <button
+        type="button"
+        title="Redo"
+        disabled={!canRedo}
+        onClick={onRedo}
+        className="flex h-10 items-center justify-center rounded-lg text-[#5f6368] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <RedoGlyph />
+      </button>
+    </div>
+
+    <label className="mt-6 block">
+      <span className="block text-right font-heading text-xs uppercase text-secondary">
+        Color
+      </span>
+      <input
+        type="color"
+        value={selectedColor === EMPTY_PIXEL ? "#000000" : selectedColor}
+        onChange={(event) => onColorChange(event.target.value)}
+        className="mt-2 h-20 w-full cursor-pointer border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6]"
+      />
+    </label>
+
+    <div className="mt-5 border-t border-skin-stroke pt-4">
+      <div className="font-heading text-xs uppercase text-secondary">
+        Used
+      </div>
+      <div className="mt-2 grid grid-cols-4 gap-1">
+        {(usedColors.length ? usedColors : starterPalette.slice(0, 8)).map(
+          (color) => (
+            <button
+              key={color}
+              type="button"
+              aria-label={`Use color ${color}`}
+              onClick={() => onColorChange(color)}
+              className="aspect-square border border-[#d1d5db] shadow-[0px_1px_0px_0px_#c9c9c9]"
+              style={{ backgroundColor: color }}
+            />
+          )
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+const ToolIcon = ({ tool }: { tool: EditorTool }) => {
+  switch (tool) {
+    case "brush":
+      return <BrushGlyph />;
+    case "eraser":
+      return <EraserGlyph />;
+    case "eyedropper":
+      return <DropperGlyph />;
+    case "fill":
+      return <BucketGlyph />;
+    case "line":
+      return <LineGlyph />;
+    case "rect":
+      return <SquareGlyph filled={false} />;
+    case "rectFill":
+      return <SquareGlyph filled />;
+    case "circle":
+      return <CircleGlyph filled={false} />;
+    case "circleFill":
+      return <CircleGlyph filled />;
+    case "selectRect":
+      return <SelectionGlyph shape="rect" />;
+    case "selectCircle":
+      return <SelectionGlyph shape="circle" />;
+    case "move":
+      return <MoveGlyph />;
+    default:
+      return <PixelToolIcon kind={tool} />;
+  }
+};
+
+const pixelIconPatterns: Record<string, string[]> = {
+  brush: ["00001", "00010", "00110", "01100", "11000"],
+  eraser: ["01110", "11110", "11100", "11000", "00000"],
+  eyedropper: ["00011", "00110", "01100", "11000", "10000"],
+  fill: ["00110", "01110", "11100", "01100", "00110"],
+  line: ["00001", "00010", "00100", "01000", "10000"],
+  rect: ["11111", "10001", "10001", "10001", "11111"],
+  rectFill: ["11111", "11111", "11111", "11111", "11111"],
+  circle: ["01110", "10001", "10001", "10001", "01110"],
+  circleFill: ["01110", "11111", "11111", "11111", "01110"],
+  selectRect: ["11111", "10000", "10101", "00001", "11111"],
+  selectCircle: ["01110", "10000", "10101", "00001", "01110"],
+  move: ["00100", "01110", "11111", "01110", "00100"],
+  dice: ["11111", "10101", "11011", "10101", "11111"],
+  load: ["11111", "10001", "10101", "10001", "11111"],
+  crop: ["00111", "00100", "11100", "10100", "11100"],
+  export: ["11111", "10001", "10101", "10001", "11111"],
+  trait: ["11111", "10001", "10111", "10001", "11111"],
+  dots: ["00000", "10001", "00000", "10001", "00000"],
+  clear: ["11000", "11100", "01110", "00111", "00011"],
+  folder: ["11000", "11111", "10001", "10001", "11111"],
+  save: ["11111", "10101", "11111", "10001", "11111"],
+};
+
+const PixelToolIcon = ({
+  kind,
+  size = 22,
+}: {
+  kind: string;
+  size?: number;
+}) => {
+  const pattern = pixelIconPatterns[kind] || pixelIconPatterns.trait;
+
+  return (
+    <span
+      className="grid"
+      style={{
+        gridTemplateColumns: `repeat(5, ${size / 5}px)`,
+        gridAutoRows: `${size / 5}px`,
+      }}
+    >
+      {pattern.flatMap((row, y) =>
+        row.split("").map((cell, x) => (
+          <span
+            key={`${kind}-${x}-${y}`}
+            className={cell === "1" ? "bg-current" : "bg-transparent"}
+          />
+        ))
+      )}
+    </span>
+  );
+};
+
+const PreviewActionBar = ({
+  isCircleCropEnabled,
+  onRandomizeAll,
+  onLoadById,
+  onToggleCircleCrop,
+  onExport,
+}: {
+  isCircleCropEnabled: boolean;
+  onRandomizeAll: () => void;
+  onLoadById: () => void;
+  onToggleCircleCrop: () => void;
+  onExport: () => void;
+}) => {
+  const actions = [
+    ["dice", "Randomize entire noun", onRandomizeAll],
+    ["load", "Load Collective Noun by ID", onLoadById],
+    ["crop", "Circle crop", onToggleCircleCrop],
+    ["export", "Export", onExport],
+  ] as const;
+
+  return (
+    <div className="mt-3 flex justify-center gap-3 rounded-xl bg-accent px-3 py-2 shadow-[0px_4px_0px_0px_#b89400]">
+      {actions.map(([kind, label, onClick]) => (
+        <button
+          key={kind}
+          type="button"
+          title={label}
+          aria-label={label}
+          onClick={onClick}
+          className={`flex h-8 w-8 items-center justify-center rounded-sm text-skin-base transition hover:bg-[#ffd84d] ${
+            kind === "crop" && isCircleCropEnabled ? "bg-[#fff2a3]" : ""
+          }`}
+        >
+          <ActionIcon kind={kind} />
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const BrushGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M7 20c2.9 0 5-1.9 5-4.6 0-1.4-1.1-2.5-2.6-2.5C6.9 12.9 5 14.8 5 17.3c0 .9-.8 1.5-2 1.7 1.1.7 2.5 1 4 1Zm4.9-7.9 7.9-7.9c.5-.5.5-1.2 0-1.7l-.3-.3c-.5-.5-1.2-.5-1.7 0L9.9 10.1l2 2Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const EraserGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M16.2 3.3 21 8.1c.8.8.8 2 0 2.8l-8.8 8.8H6.4L3 16.3c-.8-.8-.8-2 0-2.8L13.4 3.3c.8-.8 2-.8 2.8 0Zm-7 14.4h2.1l4.2-4.2-4.8-4.8-5.6 5.6 4.1 3.4Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const DropperGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M15.2 2.8a2.1 2.1 0 0 1 3 0l3 3a2.1 2.1 0 0 1 0 3l-2 2 1.2 1.2-2.1 2.1L9.9 5.7 12 3.6l1.2 1.2 2-2Z"
+      fill="currentColor"
+    />
+    <path
+      d="m8.6 7 8.4 8.4-6.6 6.6H3v-7.4L8.6 7Zm.1 11.8 4.1-4.1-3.5-3.5-4.1 4.1v3.5h3.5Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const BucketGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M7.8 3 18 13.2 11.2 20H4.4L2 17.6V10.8l6.2-6.2L7.8 3Zm1.7 4.8-4.8 4.8v3.8l.9.9h4.2l5.4-5.4-5.7-4.1Z"
+      fill="currentColor"
+    />
+    <path
+      d="M4.8 13h11.4l-5.4 5.4H6.4l-1.6-1.6V13Z"
+      fill="currentColor"
+    />
+    <path
+      d="M19 15.4c1.4 1.6 2.2 2.9 2.2 4 0 1.4-1 2.4-2.2 2.4s-2.2-1-2.2-2.4c0-1.1.8-2.4 2.2-4Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const LineGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path d="M5 19 19 5" stroke="currentColor" strokeWidth="2.5" />
+  </svg>
+);
+
+const SquareGlyph = ({ filled }: { filled: boolean }) => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <rect
+      x="5"
+      y="5"
+      width="14"
+      height="14"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+const CircleGlyph = ({ filled }: { filled: boolean }) => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <circle
+      cx="12"
+      cy="12"
+      r="7"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+const SelectionGlyph = ({ shape }: { shape: "rect" | "circle" }) => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    {shape === "rect" ? (
+      <rect
+        x="4"
+        y="4"
+        width="16"
+        height="16"
+        fill="none"
+        stroke="currentColor"
+        strokeDasharray="2 2"
+        strokeWidth="2"
+        shapeRendering="crispEdges"
+      />
+    ) : (
+      <circle
+        cx="12"
+        cy="12"
+        r="7"
+        fill="none"
+        stroke="currentColor"
+        strokeDasharray="3 2"
+        strokeWidth="2"
+      />
+    )}
+  </svg>
+);
+
+const MoveGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M12 3 8 7h3v4H7V8l-4 4 4 4v-3h4v4H8l4 4 4-4h-3v-4h4v3l4-4-4-4v3h-4V7h3l-4-4Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const UndoGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M12 5c-3 0-5.7 1.4-7.4 3.6L2 6v7h7L6.8 10.8A6.9 6.9 0 0 1 12 8c3.2 0 5.8 2.1 6.7 5l2.8-.9C20.1 7.9 16.3 5 12 5Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const RedoGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-7 w-7" aria-hidden="true">
+    <path
+      d="M12 5c3 0 5.7 1.4 7.4 3.6L22 6v7h-7l2.2-2.2A6.9 6.9 0 0 0 12 8c-3.2 0-5.8 2.1-6.7 5l-2.8-.9C3.9 7.9 7.7 5 12 5Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const DiceGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="3" />
+    <circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" />
+    <circle cx="15.5" cy="8.5" r="1.6" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+    <circle cx="8.5" cy="15.5" r="1.6" fill="currentColor" />
+    <circle cx="15.5" cy="15.5" r="1.6" fill="currentColor" />
+  </svg>
+);
+
+const LoadNounGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" />
+    <rect x="7" y="7" width="4" height="4" fill="currentColor" />
+    <rect x="13" y="7" width="4" height="4" fill="currentColor" />
+    <rect x="7" y="13" width="10" height="4" fill="currentColor" />
+  </svg>
+);
+
+const CropMaskGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <circle
+      cx="12"
+      cy="12"
+      r="7"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+    />
+    <circle cx="12" cy="12" r="3" fill="currentColor" />
+  </svg>
+);
+
+const SaveGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <path d="M5 3h12l2 2v16H5V3Zm3 2v5h8V5H8Zm0 10v4h8v-4H8Z" fill="currentColor" />
+  </svg>
+);
+
+const FolderGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <path d="M3 6h7l2 2h9v3H3V6Zm0 6h18l-2 7H5l-2-7Z" fill="currentColor" />
+  </svg>
+);
+
+const DotsGlyph = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <circle cx="6" cy="12" r="2" fill="currentColor" />
+    <circle cx="12" cy="12" r="2" fill="currentColor" />
+    <circle cx="18" cy="12" r="2" fill="currentColor" />
+  </svg>
+);
+
+const ActionIcon = ({ kind }: { kind: string }) => {
+  switch (kind) {
+    case "dice":
+      return <DiceGlyph />;
+    case "load":
+      return <LoadNounGlyph />;
+    case "crop":
+      return <CropMaskGlyph />;
+    case "export":
+    case "save":
+      return <SaveGlyph />;
+    case "folder":
+      return <FolderGlyph />;
+    case "clear":
+      return <EraserGlyph />;
+    case "dots":
+      return <DotsGlyph />;
+    default:
+      return <PixelToolIcon kind={kind} size={20} />;
+  }
+};
+
+const EyeGlyph = ({ isVisible }: { isVisible: boolean }) => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <path
+      d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+    <circle cx="12" cy="12" r="3" fill="currentColor" />
+    {!isVisible && (
+      <path d="M4 20 20 4" stroke="currentColor" strokeWidth="2.5" />
+    )}
+  </svg>
+);
+
+const FullCharacterPreview = ({
+  collectionLayers,
+  submission,
+  showEditedTrait,
+}: {
+  collectionLayers: PlaygroundImage[];
+  submission: NoundrySubmission;
+  showEditedTrait: boolean;
+}) => {
+  const glassesLayers = collectionLayers.filter(
+    (image) => image.trait === "glasses"
+  );
+  const baseLayers = collectionLayers.filter(
+    (image) => image.trait !== "glasses"
+  );
+
+  return (
+    <div className="relative h-full w-full">
+      {baseLayers.map((image) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={`${image.trait}-${image.name}`}
+          src={image.uri}
+          alt={`${image.trait} ${image.name}`}
+          className="absolute inset-0 h-full w-full object-contain"
+        />
+      ))}
+      {showEditedTrait && (
+        <div className="absolute inset-0">
+          <PixelPreview submission={submission} />
+        </div>
+      )}
+      {glassesLayers.map((image) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={`${image.trait}-${image.name}`}
+          src={image.uri}
+          alt={`${image.trait} ${image.name}`}
+          className="absolute inset-0 h-full w-full object-contain"
+        />
+      ))}
+    </div>
+  );
+};
+
+const PixelPreview = ({ submission }: { submission: NoundrySubmission }) => (
+  <div
+    className="grid h-full w-full"
+    style={{
+      gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+    }}
+  >
+    {submission.pixels.map((color, index) => (
+      <div
+        key={index}
+        className="aspect-square"
+        style={{
+          backgroundColor: color === EMPTY_PIXEL ? "transparent" : color,
+        }}
+      />
+    ))}
+  </div>
+);
+
+const layerPartIconSrc: Record<string, string> = {
+  accessories: "/noundry-icons/accessory.svg",
+  backgrounds: "/noundry-icons/background.svg",
+  bodies: "/noundry-icons/body.svg",
+  glasses: "/noundry-icons/noggles.svg",
+  heads: "/noundry-icons/head.svg",
+};
+
+const LayerPartIcon = ({ trait }: { trait: string }) => (
+  <span
+    className="block h-7 w-7 bg-current"
+    aria-hidden="true"
+    style={{
+      maskImage: `url(${layerPartIconSrc[trait] || layerPartIconSrc.accessories})`,
+      maskPosition: "center",
+      maskRepeat: "no-repeat",
+      maskSize: "contain",
+      WebkitMaskImage: `url(${
+        layerPartIconSrc[trait] || layerPartIconSrc.accessories
+      })`,
+      WebkitMaskPosition: "center",
+      WebkitMaskRepeat: "no-repeat",
+      WebkitMaskSize: "contain",
+    }}
+  />
+);
+
+const TraitPickerOverlay = ({
+  layer,
+  images,
+  value,
+  onClose,
+  onSelect,
+}: {
+  layer?: PlaygroundArtwork["orderedLayers"][number];
+  images: PlaygroundImage[];
+  value: string;
+  onClose: () => void;
+  onSelect: (value: string) => void;
+}) => {
+  if (!layer) return null;
+
+  return (
+    <div className="absolute inset-5 z-30 flex items-center justify-center rounded-xl bg-black/45 p-5">
+      <div className="max-h-full w-full overflow-hidden rounded-xl border border-[#555] bg-[#303030] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#555] px-4 py-3">
+          <div className="font-heading text-lg text-[#d8d8d8]">
+            Select {getLayerLabel(layer.trait)}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="font-heading text-sm text-[#9a9a9a] transition hover:text-white"
+          >
+            Close
+          </button>
+        </div>
+        <div className="grid max-h-[min(68vh,680px)] grid-cols-4 gap-3 overflow-y-auto p-4 sm:grid-cols-5 md:grid-cols-6">
+          {images.map((image) => (
+            <button
+              key={image.name}
+              type="button"
+              onClick={() => onSelect(image.name)}
+              className={`rounded-sm border bg-[#4a4a4a] p-2 text-left transition hover:border-white ${
+                image.name === value ? "border-white" : "border-[#555]"
+              }`}
+              title={image.name}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.uri}
+                alt={image.name}
+                className="aspect-square w-full object-contain [image-rendering:pixelated]"
+              />
+              <div className="mt-1 truncate text-xs text-[#d8d8d8]">
+                {image.name}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LayerControl = ({
+  layer,
+  images,
+  value,
+  isVisible,
+  isEditing,
+  isMenuOpen,
+  onEdit,
+  onTogglePicker,
+  onToggleMenu,
+  onToggleVisible,
+  onRandomize,
+  onChange,
+  onClear,
+  onLoad,
+  onExport,
+}: {
+  layer: PlaygroundArtwork["orderedLayers"][number];
+  images: PlaygroundImage[];
+  value: string;
+  isVisible: boolean;
+  isEditing: boolean;
+  isMenuOpen: boolean;
+  onEdit: () => void;
+  onTogglePicker: () => void;
+  onToggleMenu: () => void;
+  onToggleVisible: () => void;
+  onRandomize: () => void;
+  onChange: (value: string) => void;
+  onClear: () => void;
+  onLoad: () => void;
+  onExport: () => void;
+}) => {
+  const selectedImage = images.find((image) => image.name === value);
+
+  return (
+    <div
+      className={`relative border-b border-[#b89400]/50 last:border-b-0 ${
+        isEditing ? "bg-[#fff2a3]" : "bg-[#ffd84d]"
+      }`}
+    >
+      <div className="grid grid-cols-[34px_42px_1fr_34px_34px] items-center gap-2 p-2">
+        <button
+          type="button"
+          onClick={onToggleVisible}
+          className="flex h-8 w-8 items-center justify-center rounded-sm text-[#7d6500] transition hover:bg-[#ffef8a] hover:text-skin-base"
+          aria-label={isVisible ? "Hide layer" : "Show layer"}
+        >
+          <EyeGlyph isVisible={isVisible} />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onEdit();
+            onTogglePicker();
+          }}
+          className="flex h-10 w-10 items-center justify-center border border-[#b89400] bg-[#fff7bf] text-[#7d6500] transition hover:bg-white hover:text-skin-base"
+          aria-label={`Choose ${getLayerLabel(layer.trait)}`}
+        >
+          {selectedImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={selectedImage.uri}
+              alt=""
+              className="h-full w-full object-contain [image-rendering:pixelated]"
+            />
+          ) : (
+            <LayerPartIcon trait={layer.trait} />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="min-w-0 text-left"
+        >
+          <div className="font-heading text-base leading-tight text-skin-base transition hover:text-[#6a5400]">
+            {getLayerLabel(layer.trait)}
+          </div>
+          <div className="truncate text-sm text-[#6a5400]">{value}</div>
+        </button>
+        <button
+          type="button"
+          onClick={onRandomize}
+          className="flex h-8 w-8 items-center justify-center rounded-sm text-[#7d6500] transition hover:bg-[#ffef8a] hover:text-skin-base"
+          aria-label={`Randomize ${layer.trait}`}
+        >
+          <ActionIcon kind="dice" />
+        </button>
+        <button
+          type="button"
+          onClick={onToggleMenu}
+          className="flex h-8 w-8 items-center justify-center rounded-sm text-skin-base transition hover:bg-[#ffef8a]"
+          aria-label={`${getLayerLabel(layer.trait)} menu`}
+        >
+          <ActionIcon kind="dots" />
+        </button>
+      </div>
+
+      {isMenuOpen && (
+        <div className="absolute right-3 top-10 z-20 w-44 rounded-2xl border border-skin-stroke bg-skin-muted p-2 shadow-lg">
+          {[
+            ["clear", "Clear", onClear],
+            ["folder", "Load", onLoad],
+            ["save", "Export", onExport],
+          ].map(([kind, label, onClick]) => (
+            <button
+              key={label as string}
+              type="button"
+              onClick={onClick as () => void}
+              className="grid w-full grid-cols-[32px_1fr] items-center gap-3 rounded-xl px-3 py-2.5 text-left font-heading text-sm text-primary transition hover:bg-[#fff7bf]"
+            >
+              <ActionIcon kind={kind as string} />
+              {label as string}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const GalleryView = ({
+  submissions,
+  onRemix,
+}: {
+  submissions: NoundrySubmission[];
+  onRemix: (submission: NoundrySubmission) => void;
+}) => {
+  if (submissions.length === 0) {
+    return (
+      <section className="rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
+        <h2 className="font-heading text-3xl leading-none text-skin-base">
+          No submissions yet
+        </h2>
+        <p className="mx-auto mt-3 max-w-xl text-base leading-snug text-secondary">
+          The gallery is fresh. Submit a trait from the studio to add the first
+          draft here for review and remixing.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {submissions.map((submission) => (
+        <div
+          key={submission.id}
+          className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm"
+        >
+          <div className="aspect-square bg-[#ffcc00] p-8">
+            <PixelPreview submission={submission} />
+          </div>
+          <div className="border-t border-skin-stroke p-4">
+            <div className="font-heading text-xl leading-tight text-skin-base">
+              {submission.title}
+            </div>
+            <div className="mt-1 text-sm leading-snug text-secondary">
+              {submission.traitType}
+              {submission.artist ? ` by ${submission.artist}` : ""}
+            </div>
+            <button
+              type="button"
+              onClick={() => onRemix(submission)}
+              className="mt-4 w-full rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base transition hover:bg-[#fff7bf]"
+            >
+              Remix
+            </button>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+};

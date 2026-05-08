@@ -27,7 +27,8 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment } from "react";
+import { useRouter } from "next/router";
+import { Fragment, useMemo } from "react";
 import {
   useContractWrite,
   usePrepareContractWrite,
@@ -249,10 +250,57 @@ const getEmptyTransaction = (type: TransactionType): Transaction => ({
   notes: "",
 });
 
+const getInitialProposalValues = (template?: string | string[]): Values => {
+  const defaultValues: Values = {
+    title: "",
+    summary: "",
+    transactions: [getEmptyTransaction("send-tokens")],
+  };
+
+  if (
+    template !== "noundry" ||
+    typeof window === "undefined" ||
+    !window.sessionStorage
+  ) {
+    return defaultValues;
+  }
+
+  try {
+    const draft = JSON.parse(
+      window.sessionStorage.getItem("yellow-noundry-proposal-draft") || "{}"
+    );
+    const transaction = getEmptyTransaction("add-artwork");
+
+    transaction.notes = [
+      `Trait slot: ${draft.traitType || ""}`,
+      `Trait name: ${draft.traitName || ""}`,
+      `Artist: ${draft.artist || ""}`,
+      "Exported image data is stored in this browser session from Noundry.",
+      draft.imageData ? "Image export: ready" : "Image export: missing",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return {
+      title: draft.title || defaultValues.title,
+      summary: draft.summary || defaultValues.summary,
+      transactions: [transaction],
+    };
+  } catch (error) {
+    console.warn("Unable to load Noundry proposal draft", error);
+    return defaultValues;
+  }
+};
+
 export default function CreateProposalPage() {
+  const router = useRouter();
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
+  const initialValues = useMemo(
+    () => getInitialProposalValues(router.query.template),
+    [router.query.template]
+  );
 
   return (
     <Layout>
@@ -282,11 +330,8 @@ export default function CreateProposalPage() {
         </div>
 
         <Formik
-          initialValues={{
-            title: "",
-            summary: "",
-            transactions: [getEmptyTransaction("send-tokens")],
-          }}
+          enableReinitialize
+          initialValues={initialValues}
           onSubmit={() => {}}
         >
           {({ values, setFieldValue }) => (

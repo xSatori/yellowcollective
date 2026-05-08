@@ -18,7 +18,13 @@ const daoItems = [
   { label: "Proposals", href: "/proposals" },
   { label: "Treasury", href: "/treasury" },
   { label: "Contracts", href: "/contracts" },
+];
+
+const artItems = [
+  { label: "Community", href: "/community" },
   { label: "Playground", href: "/playground" },
+  { label: "Probe", href: "/probe" },
+  { label: "Noundry", href: "/noundry" },
 ];
 
 export default function Header() {
@@ -104,34 +110,9 @@ export default function Header() {
           >
             <h6>Home</h6>
           </Link>
-          <Link
-            href="/community"
-            className="rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
-          >
-            <h6>Community</h6>
-          </Link>
+          <NavDropdown label="Art" items={artItems} />
 
-          <div className="group relative">
-            <button
-              type="button"
-              className="flex items-center gap-1 rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
-            >
-              <h6>DAO</h6>
-              <ChevronDownIcon className="h-4 w-4 stroke-[3]" />
-            </button>
-
-            <div className="invisible absolute right-0 top-full z-50 flex w-48 translate-y-2 flex-col rounded-2xl border border-skin-stroke bg-skin-muted p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-              {daoItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
-                >
-                  <h6>{item.label}</h6>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <NavDropdown label="DAO" items={daoItems} />
         </div>
 
         <div className="hidden lg:block">
@@ -171,13 +152,11 @@ export default function Header() {
           >
             Home
           </Link>
-          <Link
-            href="/community"
+          <MobileNavGroup
+            label="Art"
+            items={artItems}
             onClick={() => setIsMobileMenuOpen(false)}
-            className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
-          >
-            Community
-          </Link>
+          />
           <div className="border-t border-skin-stroke pt-2">
             <div className="px-4 pb-1 font-heading text-sm text-secondary">
               DAO
@@ -201,3 +180,59 @@ export default function Header() {
     </header>
   );
 }
+
+const NavDropdown = ({
+  label,
+  items,
+}: {
+  label: string;
+  items: { label: string; href: string }[];
+}) => (
+  <div className="group relative">
+    <button
+      type="button"
+      className="flex items-center gap-1 rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
+    >
+      <h6>{label}</h6>
+      <ChevronDownIcon className="h-4 w-4 stroke-[3]" />
+    </button>
+
+    <div className="invisible absolute right-0 top-full z-50 flex w-48 translate-y-2 flex-col rounded-2xl border border-skin-stroke bg-skin-muted p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+      {items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+        >
+          <h6>{item.label}</h6>
+        </Link>
+      ))}
+    </div>
+  </div>
+);
+
+const MobileNavGroup = ({
+  label,
+  items,
+  onClick,
+}: {
+  label: string;
+  items: { label: string; href: string }[];
+  onClick: () => void;
+}) => (
+  <div className="border-t border-skin-stroke pt-2">
+    <div className="px-4 pb-1 font-heading text-sm text-secondary">
+      {label}
+    </div>
+    {items.map((item) => (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onClick}
+        className="block rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+      >
+        {item.label}
+      </Link>
+    ))}
+  </div>
+);
