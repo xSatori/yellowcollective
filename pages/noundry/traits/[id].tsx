@@ -1,3 +1,4 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import {
   NoundrySubmission,
@@ -8,7 +9,6 @@ import {
   getLayerLabel,
   getSubmissionPreviewTraits,
   getTraitPath,
-  shortenAddress,
 } from "@/components/noundry/NoundryPreview";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type { PlaygroundArtwork } from "data/nouns-builder/artwork";
@@ -181,7 +181,7 @@ export default function NoundryTraitPage() {
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate font-heading text-base text-skin-base">
-                      {shortenAddress(submission.artist)}
+                    <AddressLink address={submission.artist} link={false} />
                     </span>
                     <span className="block text-xs text-secondary">
                       {artistSubmissions.length} submission

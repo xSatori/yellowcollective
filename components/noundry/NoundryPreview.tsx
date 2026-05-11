@@ -2,6 +2,7 @@ import type {
   PlaygroundArtwork,
   PlaygroundImage,
 } from "data/nouns-builder/artwork";
+import AddressLink from "@/components/AddressLink";
 import Link from "next/link";
 import type React from "react";
 
@@ -251,7 +252,7 @@ export const SubmissionGalleryCard = ({
         href={getArtistPath(submission.artist)}
         className="mt-2 block truncate font-heading text-sm text-skin-base transition hover:text-[#b89400]"
       >
-        {shortenAddress(submission.artist)}
+        <AddressLink address={submission.artist} link={false} />
       </Link>
       {footer}
     </div>

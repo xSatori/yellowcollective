@@ -312,7 +312,7 @@ export default function CreateProposalPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/proposals"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
+            className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
             aria-label="Back to proposals"
           >
             <ArrowLeftIcon className="h-5" />

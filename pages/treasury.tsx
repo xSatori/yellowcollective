@@ -1,6 +1,6 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import DefaultProvider from "@/utils/DefaultProvider";
-import { shortenAddress } from "@/utils/shortenAddress";
 import { TOKEN_CONTRACT } from "constants/addresses";
 import { ETHERSCAN_BASEURL, SUBGRAPH_ENDPOINT } from "constants/urls";
 import { YELLOW_COLLECTIVE_CONTRACTS } from "data/contracts";
@@ -211,7 +211,11 @@ export default function TreasuryPage({
           <h1 className="text-[36px] leading-none md:text-[44px]">Treasury</h1>
 
           <div className="flex items-center gap-4 rounded-2xl border border-skin-stroke bg-skin-muted px-5 py-4 text-base shadow-sm md:text-lg">
-            <span>{shortenAddress(treasuryAddress, 8)}</span>
+            <AddressLink
+              address={treasuryAddress}
+              fallbackAmount={8}
+              link={false}
+            />
             <a
               href={`${ETHERSCAN_BASEURL}/address/${treasuryAddress}`}
               target="_blank"

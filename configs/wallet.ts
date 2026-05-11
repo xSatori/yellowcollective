@@ -1,6 +1,7 @@
 import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { mainnet, goerli, configureChains, createClient } from "wagmi";
+import type { Chain } from "wagmi";
 import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 import { publicProvider } from "wagmi/providers/public";
 import { zoraTestnet, zora, base, baseGoerli } from "@wagmi/chains";
@@ -22,23 +23,27 @@ const selectedChain = {
 const ALCHEMY_KEY = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
 const CONFIGURED_MAINNET_RPC_URL =
   process.env.MAINNET_RPC_URL || process.env.NEXT_PUBLIC_MAINNET_RPC_URL;
+const PUBLIC_RPC_AGGREGATOR_BASE_URL = "https://evm.stupidtech.net/v1";
+const getPublicRpcAggregatorUrl = (chainId: string) =>
+  `${PUBLIC_RPC_AGGREGATOR_BASE_URL}/${chainId}`;
 const getAlchemyUrl = (baseUrl: string, fallbackUrl: string) =>
   ALCHEMY_KEY ? `${baseUrl}/${ALCHEMY_KEY}` : fallbackUrl;
 
-const MAINNET_RPC_URLS = Array.from(
-  new Set(
-    [
-      CONFIGURED_MAINNET_RPC_URL,
-      ALCHEMY_KEY ? `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "",
-      "https://eth.llamarpc.com",
-      "https://ethereum.publicnode.com",
-      "https://cloudflare-eth.com",
-    ].filter((url): url is string => Boolean(url))
-  )
-);
+export type ChainId =
+  | "1"
+  | "5"
+  | "999"
+  | "7777777"
+  | "8453"
+  | "84531"
+  | "84532";
 
-export const RPC_URLS: { [chainId: string]: string } = {
-  "1": MAINNET_RPC_URLS[0],
+const CURRENT_RPC_URLS: { [chainId in ChainId]: string } = {
+  "1":
+    CONFIGURED_MAINNET_RPC_URL ||
+    (ALCHEMY_KEY
+      ? `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+      : "https://eth.llamarpc.com"),
   "5": getAlchemyUrl(
     "https://eth-goerli.g.alchemy.com/v2",
     "https://ethereum-goerli.publicnode.com"
@@ -59,29 +64,61 @@ export const RPC_URLS: { [chainId: string]: string } = {
   ),
 };
 
+const MAINNET_FALLBACK_RPC_URLS = Array.from(
+  new Set(
+    [
+      CONFIGURED_MAINNET_RPC_URL,
+      ALCHEMY_KEY ? `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "",
+      "https://eth.llamarpc.com",
+      "https://ethereum.publicnode.com",
+      "https://cloudflare-eth.com",
+    ].filter((url): url is string => Boolean(url))
+  )
+);
+
+export const MAINNET_RPC_URLS = Array.from(
+  new Set([getPublicRpcAggregatorUrl("1"), ...MAINNET_FALLBACK_RPC_URLS])
+);
+
+export const RPC_URLS: { [chainId in ChainId]: string } = {
+  "1": MAINNET_RPC_URLS[0],
+  "5": getPublicRpcAggregatorUrl("5"),
+  "999": getPublicRpcAggregatorUrl("999"),
+  "7777777": getPublicRpcAggregatorUrl("7777777"),
+  "8453": getPublicRpcAggregatorUrl("8453"),
+  "84531": getPublicRpcAggregatorUrl("84531"),
+  "84532": getPublicRpcAggregatorUrl("84532"),
+};
+
+export const RPC_URL_LISTS: { [chainId in ChainId]: string[] } = {
+  "1": MAINNET_RPC_URLS,
+  "5": Array.from(new Set([RPC_URLS["5"], CURRENT_RPC_URLS["5"]])),
+  "999": Array.from(new Set([RPC_URLS["999"], CURRENT_RPC_URLS["999"]])),
+  "7777777": Array.from(
+    new Set([RPC_URLS["7777777"], CURRENT_RPC_URLS["7777777"]])
+  ),
+  "8453": Array.from(new Set([RPC_URLS["8453"], CURRENT_RPC_URLS["8453"]])),
+  "84531": Array.from(new Set([RPC_URLS["84531"], CURRENT_RPC_URLS["84531"]])),
+  "84532": Array.from(new Set([RPC_URLS["84532"], CURRENT_RPC_URLS["84532"]])),
+};
+
 export const MAINNET_RPC_URL = RPC_URLS["1"];
 export const RPC_URL = RPC_URLS[TOKEN_NETWORK]!;
+export const RPC_URL_LIST = RPC_URL_LISTS[TOKEN_NETWORK]!;
+export const RPC_CHAIN_ID = Number(TOKEN_NETWORK);
 
-export type ChainId =
-  | "1"
-  | "5"
-  | "999"
-  | "7777777"
-  | "8453"
-  | "84531"
-  | "84532";
+const rpcProviders = RPC_URL_LIST.map((rpcUrl) =>
+  jsonRpcProvider({
+    rpc: (_) => {
+      return { http: rpcUrl };
+    },
+    stallTimeout: 1000,
+  })
+);
 
 const { chains, provider } = configureChains(
-  [selectedChain],
-  [
-    jsonRpcProvider({
-      rpc: (_) => {
-        return { http: RPC_URL };
-      },
-      stallTimeout: 1000,
-    }),
-    publicProvider(),
-  ]
+  [selectedChain as Chain],
+  [...rpcProviders, publicProvider()]
 );
 
 const { connectors } = getDefaultWallets({

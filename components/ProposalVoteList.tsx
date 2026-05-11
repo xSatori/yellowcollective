@@ -1,14 +1,27 @@
 import { shortenAddress } from "@/utils/shortenAddress";
-import useEnsName from "@/hooks/fetch/useEnsName";
+import useEnsNames from "@/hooks/fetch/useEnsNames";
 import { ETHERSCAN_BASEURL } from "constants/urls";
 import Link from "next/link";
-import { Address, getAddress, isAddress } from "viem";
+import { useMemo } from "react";
+import { getAddress, isAddress } from "viem";
 
 export type ProposalVote = {
   voter: string;
   support: number;
   weight: string | number;
   reason?: string | null;
+  timestamp?: string | number | null;
+  blockNumber?: string | number | null;
+};
+
+const getVoteSortValue = (vote: ProposalVote) => {
+  const timestamp = Number(vote.timestamp || 0);
+  if (Number.isFinite(timestamp) && timestamp > 0) return timestamp;
+
+  const blockNumber = Number(vote.blockNumber || 0);
+  if (Number.isFinite(blockNumber) && blockNumber > 0) return blockNumber;
+
+  return 0;
 };
 
 const supportLabel = (support: number) => {
@@ -47,6 +60,33 @@ export default function ProposalVoteList({
   votes?: ProposalVote[];
   isLoading?: boolean;
 }) {
+  const sortedVotes = useMemo(
+    () =>
+      (votes || [])
+        .map((vote, index) => ({ vote, index }))
+        .sort((a, b) => {
+          const sortDiff = getVoteSortValue(b.vote) - getVoteSortValue(a.vote);
+          if (sortDiff) return sortDiff;
+          return a.index - b.index;
+        })
+        .map(({ vote }) => vote),
+    [votes]
+  );
+  const voteAddresses = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          sortedVotes
+            .map((vote) => vote.voter)
+            .filter((voter) => isAddress(voter))
+            .map((voter) => getAddress(voter))
+        )
+      ),
+    [sortedVotes]
+  );
+  const { data: ensNamesResp } = useEnsNames(voteAddresses);
+  const ensNames = ensNamesResp?.names || {};
+
   if (isLoading) {
     return <p className="text-base text-secondary">Loading votes...</p>;
   }
@@ -61,38 +101,51 @@ export default function ProposalVoteList({
 
   return (
     <div className="flex flex-col gap-3">
-      {votes.map((vote) => (
+      {sortedVotes.map((vote) => (
         <ProposalVoteRow
-          key={`${vote.voter}-${vote.support}-${vote.weight}-${vote.reason}`}
+          key={`${vote.voter}-${vote.support}-${vote.weight}-${vote.reason}-${vote.timestamp || ""}-${vote.blockNumber || ""}`}
           vote={vote}
+          ensNames={ensNames}
         />
       ))}
     </div>
   );
 }
 
-const ProposalVoteRow = ({ vote }: { vote: ProposalVote }) => {
+const ProposalVoteRow = ({
+  vote,
+  ensNames,
+}: {
+  vote: ProposalVote;
+  ensNames: Record<string, string>;
+}) => {
   const support = supportLabel(vote.support);
   const normalizedAddress = isAddress(vote.voter)
     ? getAddress(vote.voter)
     : undefined;
-  const { data: ensNameResp } = useEnsName(normalizedAddress as Address);
   const voterLabel =
-    ensNameResp?.ensName || shortenAddress(normalizedAddress || vote.voter, 4);
+    (normalizedAddress && ensNames[normalizedAddress.toLowerCase()]) ||
+    shortenAddress(normalizedAddress || vote.voter, 4);
 
   return (
     <div
       className={`rounded-xl border-2 ${support.borderClassName} bg-white p-4`}
     >
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-        <Link
-          href={`${ETHERSCAN_BASEURL}/address/${vote.voter}`}
-          rel="noopener noreferrer"
-          target="_blank"
-          className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
-        >
-          {voterLabel}
-        </Link>
+        {normalizedAddress ? (
+          <Link
+            href={`${ETHERSCAN_BASEURL}/address/${normalizedAddress}`}
+            rel="noopener noreferrer"
+            target="_blank"
+            className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
+          >
+            {voterLabel}
+          </Link>
+        ) : (
+          <span className="font-heading text-base font-bold text-skin-base">
+            {voterLabel}
+          </span>
+        )}
         <div className="flex items-center gap-3 text-sm text-skin-base">
           <span className={`font-heading font-bold ${support.textClassName}`}>
             {support.label}

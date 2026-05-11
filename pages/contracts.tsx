@@ -1,3 +1,4 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import {
   getExplorerAddressUrl,
@@ -66,7 +67,11 @@ export default function ContractsPage() {
 
               <div className="flex min-h-[88px] items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted px-6 py-5 shadow-sm">
                 <div className="min-w-0 break-all text-base text-skin-base md:text-lg">
-                  {contract.address}
+                  <AddressLink
+                    address={contract.address}
+                    fallback="full"
+                    link={false}
+                  />
                 </div>
 
                 <div className="flex shrink-0 items-center gap-4 text-secondary">

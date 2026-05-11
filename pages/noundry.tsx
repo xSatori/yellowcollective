@@ -2,8 +2,8 @@ import Layout from "@/components/Layout";
 import {
   SubmissionGalleryCard,
   getArtistPath,
-  shortenAddress,
 } from "@/components/noundry/NoundryPreview";
+import AddressLink from "@/components/AddressLink";
 import { isAdminAddress } from "@/utils/admin";
 import type {
   PlaygroundArtwork,
@@ -2010,7 +2010,7 @@ const GalleryView = ({
                 </div>
                 <div className="min-w-0 self-center">
                   <div className="truncate font-heading text-2xl leading-none text-skin-base">
-                    {shortenAddress(artist.address)}
+                    <AddressLink address={artist.address} link={false} />
                   </div>
                   <div className="mt-2 text-sm leading-snug text-secondary">
                     {artist.submissions.length} trait

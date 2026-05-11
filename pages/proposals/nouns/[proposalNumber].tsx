@@ -1,17 +1,16 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import ProposalPropdates from "@/components/ProposalPropdates";
 import ProposalTabs from "@/components/ProposalTabs";
 import ProposalTransactions from "@/components/ProposalTransactions";
 import ProposalVoteList, { ProposalVote } from "@/components/ProposalVoteList";
 import ProposalVoteSummary from "@/components/ProposalVoteSummary";
-import { shortenAddress } from "@/utils/shortenAddress";
 import {
   getNounsDaoProposalByNumber,
   getNounsDaoProposals,
   type NounsDaoProposal,
 } from "data/nouns-dao/proposals";
 import { NOUNS_TOKEN_CONTRACT } from "constants/addresses";
-import { ETHERSCAN_BASEURL } from "constants/urls";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type {
   GetStaticPaths,
@@ -142,7 +141,7 @@ export default function NounsProposalDetailPage({
           <div className="flex items-baseline">
             <Link
               href="/proposals/nouns"
-              className="mr-4 flex h-10 min-h-10 w-10 min-w-10 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+              className="mr-4 flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
               aria-label="Back to Nouns DAO proposals"
             >
               <ArrowLeftIcon className="h-4 text-skin-base" />
@@ -164,14 +163,10 @@ export default function NounsProposalDetailPage({
               </h1>
               <div className="mt-4 text-2xl font-heading text-skin-muted">
                 Proposed by{" "}
-                <Link
-                  href={`${ETHERSCAN_BASEURL}/address/${proposal.proposer}`}
-                  rel="noopener noreferrer"
-                  target="_blank"
+                <AddressLink
+                  address={proposal.proposer}
                   className="text-skin-highlighted underline"
-                >
-                  {shortenAddress(proposal.proposer)}
-                </Link>
+                />
               </div>
             </div>
           </div>

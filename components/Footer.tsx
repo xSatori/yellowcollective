@@ -8,6 +8,12 @@ const navItems = [
   {
     href: "https://warpcast.com/~/channel/yellow",
     src: "/farcaster.svg",
+    label: "Farcaster",
+  },
+  {
+    href: "https://github.com/Yellow-Collective",
+    src: "/github.svg",
+    label: "GitHub",
   },
 ];
 
@@ -22,7 +28,8 @@ export default function Footer() {
             <Link
               href={item.href}
               target="_blank"
-              rel="noreferer noopener noreferrer"
+              rel="noreferrer noopener"
+              aria-label={item.label}
             >
               <Image src={item.src} width={24} height={24} alt="" />
             </Link>

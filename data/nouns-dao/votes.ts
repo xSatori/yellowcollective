@@ -8,11 +8,19 @@ export type NounsDaoProposalVote = {
   support: number;
   weight: number;
   reason: string;
+  timestamp: number | null;
+  blockNumber: number | null;
 };
 
 type ColumnRow = {
   table_name: string;
   column_name: string;
+  data_type: string;
+};
+
+type VoteColumn = {
+  name: string;
+  dataType: string;
 };
 
 type VoteTableConfig = {
@@ -22,6 +30,8 @@ type VoteTableConfig = {
   supportColumn: string;
   weightColumn?: string;
   reasonColumn?: string;
+  timestampColumn?: VoteColumn;
+  blockNumberColumn?: VoteColumn;
 };
 
 const VOTE_TABLE_CANDIDATES = [
@@ -44,11 +54,60 @@ const VOTER_COLUMN_CANDIDATES = ["voter", "address", "account", "delegate"];
 const SUPPORT_COLUMN_CANDIDATES = ["support", "choice", "vote"];
 const WEIGHT_COLUMN_CANDIDATES = ["weight", "votes", "amount"];
 const REASON_COLUMN_CANDIDATES = ["reason", "comment", "comments", "message"];
+const TIMESTAMP_COLUMN_CANDIDATES = [
+  "timestamp",
+  "created_timestamp",
+  "block_timestamp",
+  "blockTimestamp",
+  "createdAt",
+  "created_at",
+  "timeCreated",
+];
+const BLOCK_NUMBER_COLUMN_CANDIDATES = [
+  "block_number",
+  "blockNumber",
+  "block",
+];
 
 const quoteIdent = (value: string) => `"${value.replace(/"/g, '""')}"`;
 
 const findColumn = (columns: string[], candidates: string[]) =>
   candidates.find((candidate) => columns.includes(candidate));
+
+const findColumnMetadata = (
+  columns: ColumnRow[],
+  candidates: string[]
+): VoteColumn | undefined => {
+  const name = findColumn(
+    columns.map((column) => column.column_name),
+    candidates
+  );
+  const column = columns.find((item) => item.column_name === name);
+  return column
+    ? { name: column.column_name, dataType: column.data_type }
+    : undefined;
+};
+
+const getNumericColumnExpression = (column?: VoteColumn) => {
+  if (!column) return undefined;
+
+  const quotedColumn = quoteIdent(column.name);
+  const dataType = column.dataType.toLowerCase();
+
+  if (dataType.includes("timestamp") || dataType.includes("date")) {
+    return `extract(epoch from ${quotedColumn})`;
+  }
+
+  if (
+    dataType.includes("char") ||
+    dataType.includes("text") ||
+    dataType.includes("json")
+  ) {
+    return `nullif(regexp_replace(${quotedColumn}::text, '[^0-9]', '', 'g'), '')::numeric`;
+  }
+
+  return `${quotedColumn}::numeric`;
+};
 
 const normalizeSupport = (value: unknown) => {
   if (typeof value === "number") return value;
@@ -75,7 +134,7 @@ const getVoteTableConfig = async () => {
   const schema = getNounsDaoIndexerSchema();
   const { rows } = await pool.query<ColumnRow>(
     `
-      select table_name, column_name
+      select table_name, column_name, data_type
       from information_schema.columns
       where table_schema = $1
         and table_name = any($2)
@@ -83,19 +142,20 @@ const getVoteTableConfig = async () => {
     [schema, VOTE_TABLE_CANDIDATES]
   );
 
-  const tableColumns = rows.reduce<Record<string, string[]>>((acc, row) => {
+  const tableColumns = rows.reduce<Record<string, ColumnRow[]>>((acc, row) => {
     acc[row.table_name] = acc[row.table_name] || [];
-    acc[row.table_name].push(row.column_name);
+    acc[row.table_name].push(row);
     return acc;
   }, {});
 
   for (const tableName of VOTE_TABLE_CANDIDATES) {
     const columns = tableColumns[tableName];
     if (!columns) continue;
+    const columnNames = columns.map((column) => column.column_name);
 
-    const proposalColumn = findColumn(columns, PROPOSAL_COLUMN_CANDIDATES);
-    const voterColumn = findColumn(columns, VOTER_COLUMN_CANDIDATES);
-    const supportColumn = findColumn(columns, SUPPORT_COLUMN_CANDIDATES);
+    const proposalColumn = findColumn(columnNames, PROPOSAL_COLUMN_CANDIDATES);
+    const voterColumn = findColumn(columnNames, VOTER_COLUMN_CANDIDATES);
+    const supportColumn = findColumn(columnNames, SUPPORT_COLUMN_CANDIDATES);
 
     if (!proposalColumn || !voterColumn || !supportColumn) continue;
 
@@ -104,8 +164,13 @@ const getVoteTableConfig = async () => {
       proposalColumn,
       voterColumn,
       supportColumn,
-      weightColumn: findColumn(columns, WEIGHT_COLUMN_CANDIDATES),
-      reasonColumn: findColumn(columns, REASON_COLUMN_CANDIDATES),
+      weightColumn: findColumn(columnNames, WEIGHT_COLUMN_CANDIDATES),
+      reasonColumn: findColumn(columnNames, REASON_COLUMN_CANDIDATES),
+      timestampColumn: findColumnMetadata(columns, TIMESTAMP_COLUMN_CANDIDATES),
+      blockNumberColumn: findColumnMetadata(
+        columns,
+        BLOCK_NUMBER_COLUMN_CANDIDATES
+      ),
     } satisfies VoteTableConfig;
   }
 
@@ -132,6 +197,11 @@ export const getNounsDaoProposalVotes = async (
   const reasonColumn = config.reasonColumn
     ? quoteIdent(config.reasonColumn)
     : undefined;
+  const timestampExpression = getNumericColumnExpression(config.timestampColumn);
+  const blockNumberExpression = getNumericColumnExpression(
+    config.blockNumberColumn
+  );
+  const orderColumn = timestampExpression || blockNumberExpression;
 
   const { rows } = await pool.query<Record<string, unknown>>(
     `
@@ -139,10 +209,12 @@ export const getNounsDaoProposalVotes = async (
         ${voterColumn} as voter,
         ${supportColumn} as support,
         ${weightColumn ? `${weightColumn} as weight` : "0 as weight"},
-        ${reasonColumn ? `${reasonColumn} as reason` : "'' as reason"}
+        ${reasonColumn ? `${reasonColumn} as reason` : "'' as reason"},
+        ${timestampExpression ? `${timestampExpression} as timestamp` : "null as timestamp"},
+        ${blockNumberExpression ? `${blockNumberExpression} as "blockNumber"` : "null as \"blockNumber\""}
       from ${table}
       where ${proposalColumn}::text = $1
-      order by ${weightColumn ? `${weightColumn}::numeric desc nulls last` : voterColumn}
+      order by ${orderColumn ? `${orderColumn} desc nulls last` : weightColumn ? `${weightColumn}::numeric desc nulls last` : voterColumn}
       limit 1000
     `,
     [String(proposalNumber)]
@@ -153,5 +225,13 @@ export const getNounsDaoProposalVotes = async (
     support: normalizeSupport(row.support),
     weight: Number(row.weight || 0),
     reason: String(row.reason || ""),
+    timestamp:
+      row.timestamp === null || row.timestamp === undefined
+        ? null
+        : Number(row.timestamp),
+    blockNumber:
+      row.blockNumber === null || row.blockNumber === undefined
+        ? null
+        : Number(row.blockNumber),
   }));
 };

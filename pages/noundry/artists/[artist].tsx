@@ -1,4 +1,6 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
+import useEnsName from "@/hooks/fetch/useEnsName";
 import {
   NoundrySubmission,
   SubmissionGalleryCard,
@@ -13,6 +15,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
 import useSWR from "swr";
+import type { Address } from "viem";
+import { getAddress, isAddress } from "viem";
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -29,6 +33,10 @@ export default function NoundryArtistPage() {
   const router = useRouter();
   const artist =
     typeof router.query.artist === "string" ? router.query.artist : "";
+  const normalizedArtist = isAddress(artist) ? getAddress(artist) : undefined;
+  const { data: artistEnsName } = useEnsName(normalizedArtist as Address);
+  const artistDisplayName =
+    artistEnsName?.ensName || (artist ? shortenAddress(artist) : "");
   const { data: artwork, error: artworkError } = useSWR<PlaygroundArtwork>(
     "/api/playground/artwork",
     fetcher
@@ -57,7 +65,7 @@ export default function NoundryArtistPage() {
   return (
     <Layout>
       <Head>
-        <title>{shortenAddress(artist)} | Noundry Artists</title>
+        <title>{artistDisplayName || "Noundry Artist"} | Noundry Artists</title>
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
@@ -78,10 +86,10 @@ export default function NoundryArtistPage() {
                 Noundry artist
               </div>
               <h1 className="mt-2 truncate font-heading text-[40px] leading-none text-skin-base md:text-[58px]">
-                {shortenAddress(artist)}
+                {artistDisplayName}
               </h1>
               <p className="mt-3 max-w-3xl break-all text-sm leading-snug text-secondary md:text-base">
-                {artist}
+                <AddressLink address={artist} fallback="full" link={false} />
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

@@ -1,3 +1,4 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import { type CommunityProject } from "data/community";
 import {
@@ -125,7 +126,13 @@ export default function CommunityDetailPage({
               </div>
               <div>
                 <dt className="font-heading text-xl">Artist</dt>
-                <dd className="mt-1 text-secondary">{project.artist}</dd>
+                <dd className="mt-1 text-secondary">
+                  <AddressLink
+                    address={project.artist}
+                    fallback="full"
+                    link={false}
+                  />
+                </dd>
               </div>
             </dl>
 

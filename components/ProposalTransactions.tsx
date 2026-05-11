@@ -1,6 +1,6 @@
-import { ETHER_ACTOR_BASEURL, ETHERSCAN_BASEURL } from "constants/urls";
+import AddressLink from "@/components/AddressLink";
+import { ETHER_ACTOR_BASEURL } from "constants/urls";
 import { BigNumber, ethers } from "ethers";
-import Link from "next/link";
 import useSWR from "swr";
 
 export type ProposalTransactionItem = {
@@ -64,14 +64,11 @@ const ProposalTransaction = ({
   const linkIfAddress = (value: string) => {
     if (ethers.utils.isAddress(value)) {
       return (
-        <Link
-          href={`${ETHERSCAN_BASEURL}/address/${value}`}
-          rel="noopener noreferrer"
-          target="_blank"
+        <AddressLink
+          address={value}
+          fallback="full"
           className="text-skin-highlighted underline"
-        >
-          {value}
-        </Link>
+        />
       );
     }
 

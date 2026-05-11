@@ -88,7 +88,7 @@ export default function ProposalsPage() {
           </div>
           <Link
             href="/create-proposal"
-            className="rounded-[18px] bg-skin-base px-6 py-3 font-heading text-lg leading-none text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none md:text-xl"
+            className="rounded-[18px] bg-[#1d9bf0] px-6 py-3 font-heading text-lg leading-none text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none md:text-xl"
           >
             Create proposal
           </Link>

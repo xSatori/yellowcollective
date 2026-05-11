@@ -62,7 +62,6 @@ export default function NoundrySubmitPage() {
     if (storedDraft) {
       const parsedDraft = JSON.parse(storedDraft) as SubmitDraft;
       setDraft(parsedDraft);
-      setSubmissionTitle(parsedDraft.title);
       setSelectedTraits(parsedDraft.selectedTraits);
     }
 
@@ -76,7 +75,9 @@ export default function NoundrySubmitPage() {
     if (!artwork || !draft) return [];
 
     return artwork.renderLayers
-      .map((trait) => getTraitImage(artwork.images, trait, selectedTraits[trait]))
+      .map((trait) =>
+        getTraitImage(artwork.images, trait, selectedTraits[trait])
+      )
       .filter((image): image is PlaygroundImage => Boolean(image));
   }, [artwork, draft, selectedTraits]);
 
@@ -84,8 +85,7 @@ export default function NoundrySubmitPage() {
     if (!artwork || !draft) return [];
 
     return artwork.orderedLayers.filter(
-      (layer) =>
-        layer.trait !== LOCKED_TRAIT && layer.trait !== draft.traitType
+      (layer) => layer.trait !== LOCKED_TRAIT && layer.trait !== draft.traitType
     );
   }, [artwork, draft]);
 
@@ -163,7 +163,8 @@ export default function NoundrySubmitPage() {
 
       <div className="mx-auto flex w-full max-w-[620px] flex-col items-center gap-8 pb-12">
         <h1 className="font-heading text-[52px] leading-none text-skin-base">
-          Submit {draft ? getLayerLabel(draft.traitType).toLowerCase() : "trait"}
+          Submit{" "}
+          {draft ? getLayerLabel(draft.traitType).toLowerCase() : "trait"}
         </h1>
 
         <section className="relative w-full border border-[#e1e1e1] bg-white p-8 shadow-sm">
@@ -171,8 +172,8 @@ export default function NoundrySubmitPage() {
             <input
               value={submissionTitle}
               onChange={(event) => setSubmissionTitle(event.target.value)}
-              placeholder="Name goes here"
-              className="min-w-0 flex-1 bg-transparent font-heading text-3xl leading-none text-[#d8d8df] underline outline-none placeholder:text-[#d8d8df]"
+              placeholder={draft?.title || "Name goes here"}
+              className="min-w-0 flex-1 bg-transparent font-heading text-3xl leading-none text-skin-base underline outline-none placeholder:text-skin-base"
             />
             <div className="text-right">
               <div className="ml-auto flex h-12 w-12 items-center justify-center bg-[#d8d8df] text-white">
@@ -241,8 +242,9 @@ export default function NoundrySubmitPage() {
                       .map((trait) =>
                         getTraitImage(artwork.images, trait, variation[trait])
                       )
-                      .filter((image): image is PlaygroundImage => Boolean(image)) ||
-                    [];
+                      .filter((image): image is PlaygroundImage =>
+                        Boolean(image)
+                      ) || [];
 
                   return (
                     <button
@@ -300,15 +302,15 @@ export default function NoundrySubmitPage() {
             disabled={!isConnected || !draft || isSubmitting}
             className={`rounded-[18px] px-4 py-4 font-heading text-xl text-white transition active:translate-y-1 active:shadow-none ${
               isConnected && draft && !isSubmitting
-                ? "bg-[#c73535] shadow-[0px_4px_0px_0px_#8f2222] hover:bg-[#b92f2f]"
-                : "cursor-not-allowed bg-[#f7bfd4] shadow-[0px_4px_0px_0px_#df9ab5]"
+                ? "bg-[#1d9bf0] shadow-[0px_4px_0px_0px_#0f5f99] hover:bg-[#45adf5]"
+                : "cursor-not-allowed bg-[#9bd3f8] shadow-[0px_4px_0px_0px_#6aa9d2]"
             }`}
           >
             {isSubmitting
               ? "Submitting..."
               : isConnected
-              ? "Submit"
-              : "Connect wallet to submit"}
+                ? "Submit"
+                : "Connect wallet to submit"}
           </button>
         </div>
       </div>
@@ -442,7 +444,9 @@ const TraitPickerPopup = ({
   <div className="absolute inset-8 z-20 flex items-center justify-center bg-white/85 p-4">
     <div className="max-h-full w-full overflow-hidden border border-[#d8d8df] bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-[#d8d8df] px-4 py-3">
-        <div className="font-heading text-lg text-[#777780]">Select {title}</div>
+        <div className="font-heading text-lg text-[#777780]">
+          Select {title}
+        </div>
         <button
           type="button"
           onClick={onClose}
