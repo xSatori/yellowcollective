@@ -1,9 +1,16 @@
 import Layout from "@/components/Layout";
+import {
+  SubmissionGalleryCard,
+  getArtistPath,
+  shortenAddress,
+} from "@/components/noundry/NoundryPreview";
+import { isAdminAddress } from "@/utils/admin";
 import type {
   PlaygroundArtwork,
   PlaygroundImage,
 } from "data/nouns-builder/artwork";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -31,7 +38,13 @@ type NoundrySubmission = {
   artist: string;
   traitType: string;
   pixels: string[];
+  selectedTraits: Record<string, string>;
+  previewTraits: Record<string, string>;
+  status: "pending" | "approved" | "removed";
   createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  removedAt?: string;
 };
 
 type SubmitDraft = {
@@ -68,6 +81,12 @@ const starterPalette = [
 ];
 
 const checkerColors = ["#9a9a9a", "#858585"] as const;
+const checkerboardBackground = `conic-gradient(
+  ${checkerColors[0]} 25%,
+  ${checkerColors[1]} 0 50%,
+  ${checkerColors[0]} 0 75%,
+  ${checkerColors[1]} 0
+)`;
 
 const toolLabels: Record<EditorTool, string> = {
   brush: "Brush",
@@ -83,6 +102,7 @@ const toolLabels: Record<EditorTool, string> = {
   selectCircle: "Circle selection",
   move: "Move",
 };
+const toolbarTools = Object.keys(toolLabels) as EditorTool[];
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -108,6 +128,28 @@ const getTraitImage = (
 ) =>
   images.find((image) => image.trait === trait && image.name === selectedName);
 
+const getArtworkRenderTraits = (artwork: PlaygroundArtwork) => [
+  ...artwork.renderLayers,
+  ...artwork.orderedLayers
+    .map((layer) => layer.trait)
+    .filter((trait) => !artwork.renderLayers.includes(trait)),
+];
+
+const getCollectionLayers = (
+  artwork: PlaygroundArtwork,
+  traits: Record<string, string>,
+  visibleTraits?: Record<string, boolean>
+) =>
+  getArtworkRenderTraits(artwork)
+    .filter((trait) => visibleTraits?.[trait] !== false)
+    .map((trait) => getTraitImage(artwork.images, trait, traits[trait]))
+    .filter((image): image is PlaygroundImage => Boolean(image));
+
+const getSubmissionPreviewTraits = (submission: NoundrySubmission) =>
+  Object.keys(submission.previewTraits || {}).length > 0
+    ? submission.previewTraits
+    : submission.selectedTraits || {};
+
 const layerLabels: Record<string, string> = {
   accessories: "Accessory",
   backgrounds: "Background",
@@ -120,12 +162,6 @@ const getLayerLabel = (trait: string) =>
   layerLabels[trait] || trait.replace(/[-_]+/g, " ");
 
 const isEditableLayer = (trait: string) => !EDITABLE_TRAIT_EXCLUSIONS.has(trait);
-
-const getCheckerColor = (index: number) => {
-  const x = index % GRID_SIZE;
-  const y = Math.floor(index / GRID_SIZE);
-  return checkerColors[(x + y) % checkerColors.length];
-};
 
 const getPixelPoint = (index: number) => ({
   x: index % GRID_SIZE,
@@ -247,10 +283,13 @@ const downloadCanvas = async ({
 export default function NoundryPage() {
   const router = useRouter();
   const { address } = useAccount();
-  const { data: artwork, error, isLoading } = useSWR<PlaygroundArtwork>(
+  const { data: artwork, error: artworkError, isLoading } = useSWR<PlaygroundArtwork>(
     "/api/playground/artwork",
     fetcher
   );
+  const { data: submissionData, error: submissionsError } = useSWR<{
+    submissions: NoundrySubmission[];
+  }>("/api/noundry/submissions", fetcher);
   const [activeTab, setActiveTab] = useState<NoundryTab>("studio");
   const [title, setTitle] = useState("New Yellow Trait");
   const [traitType, setTraitType] = useState("heads");
@@ -269,7 +308,6 @@ export default function NoundryPage() {
   const [undoStack, setUndoStack] = useState<string[][]>([]);
   const [redoStack, setRedoStack] = useState<string[][]>([]);
   const [previewColors, setPreviewColors] = useState<string[]>([]);
-  const [submissions, setSubmissions] = useState<NoundrySubmission[]>([]);
   const [hoveredPixel, setHoveredPixel] = useState<number | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<SelectionBounds | null>(
     null
@@ -278,11 +316,19 @@ export default function NoundryPage() {
   const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
   const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
   const selectedTraitName = selectedTraits[traitType];
+  const submissions = submissionData?.submissions || [];
+  const isAdmin = isAdminAddress(address);
 
   const editableLayers = useMemo(
     () => artwork?.orderedLayers.filter((layer) => isEditableLayer(layer.trait)) || [],
     [artwork]
   );
+
+  useEffect(() => {
+    if (router.query.tab === "gallery") {
+      setActiveTab("gallery");
+    }
+  }, [router.query.tab]);
 
   useEffect(() => {
     if (!artwork || Object.keys(selectedTraits).length > 0) return;
@@ -345,19 +391,7 @@ export default function NoundryPage() {
   const selectedCollectionLayers = useMemo(() => {
     if (!artwork) return [];
 
-    const renderTraits = [
-      ...artwork.renderLayers,
-      ...artwork.orderedLayers
-        .map((layer) => layer.trait)
-        .filter((trait) => !artwork.renderLayers.includes(trait)),
-    ];
-
-    return renderTraits
-      .filter((trait) => visibleTraits[trait] !== false)
-      .map((trait) =>
-        getTraitImage(artwork.images, trait, selectedTraits[trait])
-      )
-      .filter((image): image is PlaygroundImage => Boolean(image));
+    return getCollectionLayers(artwork, selectedTraits, visibleTraits);
   }, [artwork, selectedTraits, visibleTraits]);
   useEffect(() => {
     let isCurrent = true;
@@ -388,9 +422,13 @@ export default function NoundryPage() {
       artist: address || "",
       traitType,
       pixels,
+      selectedTraits,
+      previewTraits: selectedTraits,
+      status: "approved",
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }),
-    [address, pixels, title, traitType]
+    [address, pixels, selectedTraits, title, traitType]
   );
   const previewSelectionBounds = useMemo(() => {
     if (
@@ -593,6 +631,7 @@ export default function NoundryPage() {
     setTitle(`Remix: ${submission.title}`);
     setTraitType(submission.traitType);
     setPixels(submission.pixels);
+    setSelectedTraits(getSubmissionPreviewTraits(submission));
     setActiveTab("studio");
   };
 
@@ -635,8 +674,8 @@ export default function NoundryPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`flex-1 rounded-lg px-5 py-3 font-heading text-base capitalize transition lg:flex-none ${
                     activeTab === tab
-                      ? "translate-y-[-1px] bg-accent text-skin-base shadow-[0px_4px_0px_0px_#b89400]"
-                      : "text-secondary shadow-[inset_0px_-2px_0px_0px_#d6d6d6] hover:bg-[#fff7bf] hover:text-skin-base"
+                      ? "translate-y-[-1px] bg-accent text-skin-base shadow-[0px_3px_0px_0px_#b89400]"
+                      : "text-secondary hover:bg-[#fff7bf] hover:text-skin-base"
                   }`}
                 >
                   {tab}
@@ -652,9 +691,9 @@ export default function NoundryPage() {
           </section>
         )}
 
-        {error && (
+        {artworkError && (
           <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
-            {error.message}
+            {artworkError.message}
           </section>
         )}
 
@@ -679,6 +718,9 @@ export default function NoundryPage() {
                 className="grid aspect-square w-full overflow-hidden rounded-xl border border-skin-stroke bg-[#909090]"
                 style={{
                   gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                  gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                  backgroundImage: checkerboardBackground,
+                  backgroundSize: `${200 / GRID_SIZE}% ${200 / GRID_SIZE}%`,
                 }}
                 onMouseLeave={() => setHoveredPixel(null)}
               >
@@ -695,10 +737,10 @@ export default function NoundryPage() {
                       continuePixelAction(index);
                     }}
                     onMouseUp={() => endPixelAction(index)}
-                    className="relative aspect-square"
+                    className="relative min-h-0 min-w-0 appearance-none overflow-hidden p-0"
                     style={{
                       backgroundColor:
-                        color === EMPTY_PIXEL ? getCheckerColor(index) : color,
+                        color === EMPTY_PIXEL ? "transparent" : color,
                     }}
                   >
                     {displayedSelectionBounds &&
@@ -743,9 +785,19 @@ export default function NoundryPage() {
                 </h2>
               </div>
               <div
-                className={`mt-5 aspect-square overflow-hidden border border-skin-stroke bg-[#ffcc00] ${
-                  isCircleCropEnabled ? "rounded-full" : "rounded-xl"
-                }`}
+                className={`mt-5 aspect-square overflow-hidden border border-skin-stroke ${
+                  visibleTraits.backgrounds === false
+                    ? "bg-[#909090]"
+                    : "bg-[#ffcc00]"
+                } ${isCircleCropEnabled ? "rounded-full" : "rounded-xl"}`}
+                style={
+                  visibleTraits.backgrounds === false
+                    ? {
+                        backgroundImage: checkerboardBackground,
+                        backgroundSize: "32px 32px",
+                      }
+                    : undefined
+                }
               >
                 <FullCharacterPreview
                   collectionLayers={selectedCollectionLayers}
@@ -813,7 +865,7 @@ export default function NoundryPage() {
               <button
                 type="button"
                 onClick={submitToGallery}
-                className="mt-5 w-full rounded-[18px] bg-accent px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+                className="mt-5 w-full rounded-[18px] bg-[#1d9bf0] px-4 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
               >
                 Submit to gallery
               </button>
@@ -822,7 +874,13 @@ export default function NoundryPage() {
         )}
 
         {activeTab === "gallery" && (
-          <GalleryView submissions={submissions} onRemix={loadSubmission} />
+          <GalleryView
+            artwork={artwork}
+            submissions={submissions}
+            error={submissionsError?.message}
+            onRemix={loadSubmission}
+            isAdmin={isAdmin}
+          />
         )}
       </div>
     </Layout>
@@ -1095,7 +1153,7 @@ const ToolRail = ({
     </div>
 
     <div className="mt-5 grid grid-cols-2 gap-3">
-      {(Object.keys(toolLabels) as EditorTool[]).map((toolId) => (
+      {toolbarTools.map((toolId) => (
         <button
           key={toolId}
           type="button"
@@ -1110,12 +1168,6 @@ const ToolRail = ({
           <ToolIcon tool={toolId} />
         </button>
       ))}
-      <button
-        type="button"
-        title="Transparent"
-        onClick={() => onColorChange(EMPTY_PIXEL)}
-        className="h-11 rounded-lg border border-dashed border-[#5f6368] bg-[linear-gradient(135deg,transparent_0_45%,#5f6368_45%_55%,transparent_55%)] transition hover:bg-[#f3f4f6]"
-      />
     </div>
 
     <div className="mt-4 grid grid-cols-2 gap-3">
@@ -1795,54 +1847,193 @@ const LayerControl = ({
 };
 
 const GalleryView = ({
+  artwork,
   submissions,
+  error,
   onRemix,
+  isAdmin,
 }: {
+  artwork?: PlaygroundArtwork;
   submissions: NoundrySubmission[];
+  error?: string;
   onRemix: (submission: NoundrySubmission) => void;
+  isAdmin: boolean;
 }) => {
+  const [activeGalleryTab, setActiveGalleryTab] = useState<
+    "traits" | "artists"
+  >("traits");
+  const artists = useMemo(
+    () =>
+      Object.values(
+        submissions.reduce<
+          Record<
+            string,
+            {
+              address: string;
+              submissions: NoundrySubmission[];
+              traitTypes: Set<string>;
+            }
+          >
+        >((artistMap, submission) => {
+          const address = submission.artist;
+          const key = address.toLowerCase();
+          if (!artistMap[key]) {
+            artistMap[key] = {
+              address,
+              submissions: [],
+              traitTypes: new Set<string>(),
+            };
+          }
+
+          artistMap[key].submissions.push(submission);
+          artistMap[key].traitTypes.add(submission.traitType);
+          return artistMap;
+        }, {})
+      ).sort(
+        (first, second) =>
+          second.submissions.length - first.submissions.length ||
+          first.address.localeCompare(second.address)
+      ),
+    [submissions]
+  );
+
+  if (error) {
+    return (
+      <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
+        {error}
+      </section>
+    );
+  }
+
+  const galleryTabs = [
+    ["traits", `Trait submissions (${submissions.length})`],
+    ["artists", `Artists (${artists.length})`],
+  ] as const;
+
   if (submissions.length === 0) {
     return (
-      <section className="rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
-        <h2 className="font-heading text-3xl leading-none text-skin-base">
-          No submissions yet
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-base leading-snug text-secondary">
-          The gallery is fresh. Submit a trait from the studio to add the first
-          draft here for review and remixing.
-        </p>
+      <section className="flex flex-col gap-4">
+        <div className="flex w-full gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6] sm:w-fit">
+          {galleryTabs.map(([tab, label]) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveGalleryTab(tab)}
+              className={`flex-1 rounded-lg px-4 py-2 font-heading text-sm transition sm:flex-none ${
+                activeGalleryTab === tab
+                  ? "translate-y-[-1px] bg-accent text-skin-base shadow-[0px_3px_0px_0px_#b89400]"
+                  : "text-secondary hover:bg-[#fff7bf] hover:text-skin-base"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
+          <h2 className="font-heading text-3xl leading-none text-skin-base">
+            No submissions yet
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-base leading-snug text-secondary">
+            The gallery is fresh. Submit a trait from the studio to add the
+            first draft here for review and remixing.
+          </p>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {submissions.map((submission) => (
-        <div
-          key={submission.id}
-          className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm"
-        >
-          <div className="aspect-square bg-[#ffcc00] p-8">
-            <PixelPreview submission={submission} />
-          </div>
-          <div className="border-t border-skin-stroke p-4">
-            <div className="font-heading text-xl leading-tight text-skin-base">
-              {submission.title}
-            </div>
-            <div className="mt-1 text-sm leading-snug text-secondary">
-              {submission.traitType}
-              {submission.artist ? ` by ${submission.artist}` : ""}
-            </div>
-            <button
-              type="button"
-              onClick={() => onRemix(submission)}
-              className="mt-4 w-full rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base transition hover:bg-[#fff7bf]"
-            >
-              Remix
-            </button>
-          </div>
+    <section className="flex flex-col gap-4">
+      <div className="flex w-full gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6] sm:w-fit">
+        {galleryTabs.map(([tab, label]) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveGalleryTab(tab)}
+            className={`flex-1 rounded-lg px-4 py-2 font-heading text-sm transition sm:flex-none ${
+              activeGalleryTab === tab
+                ? "translate-y-[-1px] bg-accent text-skin-base shadow-[0px_3px_0px_0px_#b89400]"
+                : "text-secondary hover:bg-[#fff7bf] hover:text-skin-base"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {activeGalleryTab === "traits" && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {submissions.map((submission) => (
+            <SubmissionGalleryCard
+              key={submission.id}
+              artwork={artwork}
+              submission={submission}
+              footer={
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onRemix(submission)}
+                    className="mt-4 w-full rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base transition hover:bg-[#fff7bf]"
+                  >
+                    Remix
+                  </button>
+                  {isAdmin && (
+                    <Link
+                      href={`/admin/dashboard?section=noundry&submission=${submission.id}`}
+                      className="mt-3 flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-accent px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#a98700] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+                    >
+                      Admin edit
+                    </Link>
+                  )}
+                </>
+              }
+            />
+          ))}
         </div>
-      ))}
+      )}
+
+      {activeGalleryTab === "artists" && (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {artists.map((artist) => {
+            const latestSubmission = artist.submissions[0];
+
+            return (
+              <Link
+                key={artist.address}
+                href={getArtistPath(artist.address)}
+                className="grid gap-4 rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:grid-cols-[108px_1fr]"
+              >
+                <div className="aspect-square rounded-xl bg-[#ffcc00] p-3">
+                  {latestSubmission && (
+                    <PixelPreview submission={latestSubmission} />
+                  )}
+                </div>
+                <div className="min-w-0 self-center">
+                  <div className="truncate font-heading text-2xl leading-none text-skin-base">
+                    {shortenAddress(artist.address)}
+                  </div>
+                  <div className="mt-2 text-sm leading-snug text-secondary">
+                    {artist.submissions.length} trait
+                    {artist.submissions.length === 1 ? "" : "s"} submitted
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {Array.from(artist.traitTypes)
+                      .slice(0, 4)
+                      .map((traitType) => (
+                        <span
+                          key={traitType}
+                          className="rounded-full bg-[#fff7bf] px-2.5 py-1 font-heading text-xs text-skin-base"
+                        >
+                          {getLayerLabel(traitType)}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

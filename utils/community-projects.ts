@@ -1,4 +1,8 @@
 import { communityProjects, type CommunityProject } from "data/community";
+import {
+  getApprovedCommunityProjectBySlug,
+  listApprovedCommunityProjects,
+} from "data/community-project-submissions";
 import fs from "fs";
 import path from "path";
 
@@ -60,7 +64,7 @@ const isCommunityProject = (value: unknown): value is CommunityProject => {
   );
 };
 
-export const getCommunityProjects = async (): Promise<CommunityProject[]> => {
+const getLocalCommunityProjects = (): CommunityProject[] => {
   if (!fs.existsSync(communityProjectsDirectory)) return communityProjects;
 
   const submittedProjects = fs
@@ -80,4 +84,37 @@ export const getCommunityProjects = async (): Promise<CommunityProject[]> => {
     .filter((project): project is CommunityProject => Boolean(project));
 
   return [...communityProjects, ...submittedProjects];
+};
+
+const dedupeProjects = (projects: CommunityProject[]) => {
+  const projectBySlug = new Map<string, CommunityProject>();
+
+  projects.forEach((project) => {
+    projectBySlug.set(project.slug, project);
+  });
+
+  return Array.from(projectBySlug.values());
+};
+
+export const getCommunityProjects = async (): Promise<CommunityProject[]> => {
+  const localProjects = getLocalCommunityProjects();
+
+  try {
+    const approvedProjects = await listApprovedCommunityProjects();
+    return dedupeProjects([...localProjects, ...approvedProjects]);
+  } catch (error) {
+    console.warn("Unable to load approved community projects", error);
+    return localProjects;
+  }
+};
+
+export const getCommunityProject = async (slug: string) => {
+  try {
+    const approvedProject = await getApprovedCommunityProjectBySlug(slug);
+    if (approvedProject) return approvedProject;
+  } catch (error) {
+    console.warn(`Unable to load approved community project ${slug}`, error);
+  }
+
+  return getLocalCommunityProjects().find((project) => project.slug === slug);
 };
