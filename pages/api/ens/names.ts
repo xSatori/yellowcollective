@@ -2,6 +2,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getEnsName } from "data/ens";
 import { getAddress, isAddress } from "viem";
 
+export type GetEnsNamesReturnType = {
+  names: Record<string, string>;
+};
+
 const chunk = <T,>(items: T[], size: number) =>
   Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
     items.slice(index * size, index * size + size)

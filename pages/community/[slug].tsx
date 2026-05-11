@@ -1,6 +1,11 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import { type CommunityProject } from "data/community";
-import { getCommunityProjects } from "@/utils/community-projects";
+import {
+  getCommunityProject,
+  getCommunityProjects,
+} from "@/utils/community-projects";
+import { isAdminAddress } from "@/utils/admin";
 import type {
   GetStaticPaths,
   GetStaticPropsResult,
@@ -10,6 +15,7 @@ import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import Head from "next/head";
 import Link from "next/link";
 import { useState } from "react";
+import { useAccount } from "wagmi";
 
 type CommunityDetailProps = {
   project: CommunityProject;
@@ -22,7 +28,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     paths: projects.map((project) => ({
       params: { slug: project.slug },
     })),
-    fallback: false,
+    fallback: "blocking",
   };
 };
 
@@ -31,13 +37,15 @@ export const getStaticProps = async ({
 }: {
   params?: { slug?: string };
 }): Promise<GetStaticPropsResult<CommunityDetailProps>> => {
-  const projects = await getCommunityProjects();
-  const project = projects.find((item) => item.slug === params?.slug);
+  const project = params?.slug
+    ? await getCommunityProject(params.slug)
+    : undefined;
 
-  if (!project) return { notFound: true };
+  if (!project) return { notFound: true, revalidate: 60 };
 
   return {
     props: { project },
+    revalidate: 60,
   };
 };
 
@@ -45,6 +53,8 @@ export default function CommunityDetailPage({
   project,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const isExternal = project.href.startsWith("http");
+  const { address } = useAccount();
+  const isAdmin = isAdminAddress(address);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   return (
@@ -116,7 +126,13 @@ export default function CommunityDetailPage({
               </div>
               <div>
                 <dt className="font-heading text-xl">Artist</dt>
-                <dd className="mt-1 text-secondary">{project.artist}</dd>
+                <dd className="mt-1 text-secondary">
+                  <AddressLink
+                    address={project.artist}
+                    fallback="full"
+                    link={false}
+                  />
+                </dd>
               </div>
             </dl>
 
@@ -128,6 +144,14 @@ export default function CommunityDetailPage({
             >
               View source
             </Link>
+            {isAdmin && (
+              <Link
+                href={`/admin/dashboard?section=community&project=${project.slug}`}
+                className="mt-3 flex w-full items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+              >
+                Admin edit
+              </Link>
+            )}
             {project.links && project.links.length > 0 && (
               <div className="mt-5 flex flex-col gap-3">
                 {project.links.map((link) => {
@@ -164,7 +188,7 @@ export default function CommunityDetailPage({
               className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
               aria-label="Close image"
             >
-              ×
+              X
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

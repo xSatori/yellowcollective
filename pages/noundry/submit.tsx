@@ -43,8 +43,9 @@ const getTraitImage = (
 
 export default function NoundrySubmitPage() {
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const [draft, setDraft] = useState<SubmitDraft | null>(null);
+  const [submissionTitle, setSubmissionTitle] = useState("");
   const [artwork, setArtwork] = useState<PlaygroundArtwork | null>(null);
   const [selectedTraits, setSelectedTraits] = useState<Record<string, string>>(
     {}
@@ -53,6 +54,8 @@ export default function NoundrySubmitPage() {
   const [activeTraitPicker, setActiveTraitPicker] = useState<string | null>(
     null
   );
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const storedDraft = window.sessionStorage.getItem("noundry-submit-draft");
@@ -72,7 +75,9 @@ export default function NoundrySubmitPage() {
     if (!artwork || !draft) return [];
 
     return artwork.renderLayers
-      .map((trait) => getTraitImage(artwork.images, trait, selectedTraits[trait]))
+      .map((trait) =>
+        getTraitImage(artwork.images, trait, selectedTraits[trait])
+      )
       .filter((image): image is PlaygroundImage => Boolean(image));
   }, [artwork, draft, selectedTraits]);
 
@@ -80,8 +85,7 @@ export default function NoundrySubmitPage() {
     if (!artwork || !draft) return [];
 
     return artwork.orderedLayers.filter(
-      (layer) =>
-        layer.trait !== LOCKED_TRAIT && layer.trait !== draft.traitType
+      (layer) => layer.trait !== LOCKED_TRAIT && layer.trait !== draft.traitType
     );
   }, [artwork, draft]);
 
@@ -113,6 +117,44 @@ export default function NoundrySubmitPage() {
       ? artwork.images.filter((image) => image.trait === activeTraitPicker)
       : [];
 
+  const handleSubmit = async () => {
+    if (!draft || !address) return;
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      const submittedTraits = { ...draft.selectedTraits, ...selectedTraits };
+      const response = await fetch("/api/noundry/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: submissionTitle || draft.title,
+          artist: address,
+          traitType: draft.traitType,
+          pixels: draft.pixels,
+          selectedTraits: submittedTraits,
+          previewTraits: submittedTraits,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to submit trait.");
+      }
+
+      window.sessionStorage.removeItem("noundry-submit-draft");
+      router.push("/noundry?tab=gallery");
+    } catch (error) {
+      console.error("Unable to submit Noundry trait", error);
+      setSubmitError(
+        error instanceof Error ? error.message : "Unable to submit trait."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       <Head>
@@ -121,15 +163,17 @@ export default function NoundrySubmitPage() {
 
       <div className="mx-auto flex w-full max-w-[620px] flex-col items-center gap-8 pb-12">
         <h1 className="font-heading text-[52px] leading-none text-skin-base">
-          Submit {draft ? getLayerLabel(draft.traitType).toLowerCase() : "trait"}
+          Submit{" "}
+          {draft ? getLayerLabel(draft.traitType).toLowerCase() : "trait"}
         </h1>
 
         <section className="relative w-full border border-[#e1e1e1] bg-white p-8 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <input
-              defaultValue={draft?.title || ""}
-              placeholder="Name goes here"
-              className="min-w-0 flex-1 bg-transparent font-heading text-3xl leading-none text-[#d8d8df] underline outline-none placeholder:text-[#d8d8df]"
+              value={submissionTitle}
+              onChange={(event) => setSubmissionTitle(event.target.value)}
+              placeholder={draft?.title || "Name goes here"}
+              className="min-w-0 flex-1 bg-transparent font-heading text-3xl leading-none text-skin-base underline outline-none placeholder:text-skin-base"
             />
             <div className="text-right">
               <div className="ml-auto flex h-12 w-12 items-center justify-center bg-[#d8d8df] text-white">
@@ -198,8 +242,9 @@ export default function NoundrySubmitPage() {
                       .map((trait) =>
                         getTraitImage(artwork.images, trait, variation[trait])
                       )
-                      .filter((image): image is PlaygroundImage => Boolean(image)) ||
-                    [];
+                      .filter((image): image is PlaygroundImage =>
+                        Boolean(image)
+                      ) || [];
 
                   return (
                     <button
@@ -239,6 +284,11 @@ export default function NoundrySubmitPage() {
         </section>
 
         <div className="grid w-full gap-3">
+          {submitError && (
+            <div className="rounded-2xl border border-skin-stroke bg-white p-4 text-center text-skin-proposal-danger shadow-sm">
+              {submitError}
+            </div>
+          )}
           <button
             type="button"
             onClick={() => router.push("/noundry")}
@@ -248,14 +298,19 @@ export default function NoundrySubmitPage() {
           </button>
           <button
             type="button"
-            disabled={!isConnected}
+            onClick={handleSubmit}
+            disabled={!isConnected || !draft || isSubmitting}
             className={`rounded-[18px] px-4 py-4 font-heading text-xl text-white transition active:translate-y-1 active:shadow-none ${
-              isConnected
-                ? "bg-[#c73535] shadow-[0px_4px_0px_0px_#8f2222] hover:bg-[#b92f2f]"
-                : "cursor-not-allowed bg-[#f7bfd4] shadow-[0px_4px_0px_0px_#df9ab5]"
+              isConnected && draft && !isSubmitting
+                ? "bg-[#1d9bf0] shadow-[0px_4px_0px_0px_#0f5f99] hover:bg-[#45adf5]"
+                : "cursor-not-allowed bg-[#9bd3f8] shadow-[0px_4px_0px_0px_#6aa9d2]"
             }`}
           >
-            {isConnected ? "Submit" : "Connect wallet to submit"}
+            {isSubmitting
+              ? "Submitting..."
+              : isConnected
+                ? "Submit"
+                : "Connect wallet to submit"}
           </button>
         </div>
       </div>
@@ -389,7 +444,9 @@ const TraitPickerPopup = ({
   <div className="absolute inset-8 z-20 flex items-center justify-center bg-white/85 p-4">
     <div className="max-h-full w-full overflow-hidden border border-[#d8d8df] bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-[#d8d8df] px-4 py-3">
-        <div className="font-heading text-lg text-[#777780]">Select {title}</div>
+        <div className="font-heading text-lg text-[#777780]">
+          Select {title}
+        </div>
         <button
           type="button"
           onClick={onClose}

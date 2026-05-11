@@ -1,5 +1,6 @@
 import { formatNumber } from "@/utils/formatNumber";
 import { useNounsBalance } from "@/hooks/fetch/useNounsBalance";
+import { isAdminAddress } from "@/utils/admin";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import Button from "./Button";
@@ -9,9 +10,19 @@ import Link from "next/link";
 import { BASED_AND_YELLOW_MULTISIG, TOKEN_CONTRACT } from "constants/addresses";
 import { BigNumber, ethers } from "ethers";
 import { ETHERSCAN_BASEURL } from "constants/urls";
-import { useBalance } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { useDAOAddresses, useTreasuryBalance } from "hooks";
 import { useEffect, useMemo, useState } from "react";
+
+type NavItem = {
+  label: string;
+  href: string;
+};
+
+const homeItems: NavItem[] = [
+  { label: "Home", href: "/" },
+  { label: "Admin Dashboard", href: "/admin/dashboard" },
+];
 
 const daoItems = [
   { label: "About", href: "/about" },
@@ -28,6 +39,7 @@ const artItems = [
 ];
 
 export default function Header() {
+  const { address } = useAccount();
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: addresses } = useDAOAddresses({
@@ -81,6 +93,8 @@ export default function Header() {
     setIsMounted(true);
   }, []);
 
+  const isAdmin = isMounted && isAdminAddress(address);
+
   const treasuryHref = `${ETHERSCAN_BASEURL}/tokenholdings?a=${addresses?.treasury}`;
 
   return (
@@ -104,12 +118,16 @@ export default function Header() {
         </div>
 
         <div className="hidden flex-1 items-center justify-end gap-2 px-4 lg:flex">
-          <Link
-            href="/"
-            className="rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
-          >
-            <h6>Home</h6>
-          </Link>
+          {isAdmin ? (
+            <NavDropdown label="Home" items={homeItems} />
+          ) : (
+            <Link
+              href="/"
+              className="rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
+            >
+              <h6>Home</h6>
+            </Link>
+          )}
           <NavDropdown label="Art" items={artItems} />
 
           <NavDropdown label="DAO" items={daoItems} />
@@ -145,13 +163,21 @@ export default function Header() {
           >
             &Xi; {balanceLabel}
           </Link>
-          <Link
-            href="/"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
-          >
-            Home
-          </Link>
+          {isAdmin ? (
+            <MobileNavGroup
+              label="Home"
+              items={homeItems}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          ) : (
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+            >
+              Home
+            </Link>
+          )}
           <MobileNavGroup
             label="Art"
             items={artItems}
@@ -181,13 +207,7 @@ export default function Header() {
   );
 }
 
-const NavDropdown = ({
-  label,
-  items,
-}: {
-  label: string;
-  items: { label: string; href: string }[];
-}) => (
+const NavDropdown = ({ label, items }: { label: string; items: NavItem[] }) => (
   <div className="group relative">
     <button
       type="button"
@@ -217,13 +237,11 @@ const MobileNavGroup = ({
   onClick,
 }: {
   label: string;
-  items: { label: string; href: string }[];
+  items: NavItem[];
   onClick: () => void;
 }) => (
   <div className="border-t border-skin-stroke pt-2">
-    <div className="px-4 pb-1 font-heading text-sm text-secondary">
-      {label}
-    </div>
+    <div className="px-4 pb-1 font-heading text-sm text-secondary">{label}</div>
     {items.map((item) => (
       <Link
         key={item.href}

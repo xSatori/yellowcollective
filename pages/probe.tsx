@@ -1,3 +1,4 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import type {
   ProbeToken,
@@ -71,9 +72,16 @@ export default function ProbePage() {
     return owners
       .map((owner) => ({
         address: owner,
-        label: ensNames[owner] || shortenAddress(owner),
+        hasEnsName: Boolean(ensNames[owner]),
+        label: ensNames[owner] || owner,
       }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => {
+        if (a.hasEnsName !== b.hasEnsName) {
+          return a.hasEnsName ? -1 : 1;
+        }
+
+        return a.label.localeCompare(b.label);
+      });
   }, [data?.tokens, ensNames]);
 
   useEffect(() => {
@@ -289,6 +297,7 @@ export default function ProbePage() {
       {selectedToken && (
         <TokenModal
           token={selectedToken}
+          ensNames={ensNames}
           onClose={() => setSelectedToken(null)}
         />
       )}
@@ -381,9 +390,11 @@ const TokenImage = ({ token }: { token: ProbeToken }) => (
 
 const TokenModal = ({
   token,
+  ensNames,
   onClose,
 }: {
   token: ProbeToken;
+  ensNames: Record<string, string>;
   onClose: () => void;
 }) => (
   <div
@@ -422,7 +433,14 @@ const TokenModal = ({
             rel="noreferrer"
             className="mt-5 block rounded-xl border border-skin-stroke bg-skin-muted p-3 text-sm text-secondary transition hover:bg-[#fff7bf]"
           >
-            Owner {token.owner}
+            Owner{" "}
+            <AddressLink
+              address={token.owner}
+              fallback="full"
+              link={false}
+            >
+              {ensNames[token.owner.toLowerCase()]}
+            </AddressLink>
           </Link>
         )}
 

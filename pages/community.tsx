@@ -1,9 +1,11 @@
 import Layout from "@/components/Layout";
 import { type CommunityProject } from "data/community";
+import { isAdminAddress } from "@/utils/admin";
 import { getCommunityProjects } from "@/utils/community-projects";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useAccount } from "wagmi";
 
 type CommunityPageProps = {
   projects: CommunityProject[];
@@ -15,11 +17,15 @@ export const getStaticProps = async (): Promise<
   props: {
     projects: await getCommunityProjects(),
   },
+  revalidate: 60,
 });
 
 export default function CommunityPage({
   projects,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const { address } = useAccount();
+  const isAdmin = isAdminAddress(address);
+
   return (
     <Layout>
       <Head>
@@ -39,7 +45,7 @@ export default function CommunityPage({
           </div>
           <Link
             href="/community/submit"
-            className="flex w-fit shrink-0 items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+            className="flex w-fit shrink-0 items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none"
           >
             Submit project
           </Link>
@@ -48,24 +54,38 @@ export default function CommunityPage({
         {projects.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {projects.map((project) => (
-              <Link
+              <div
                 key={project.slug}
-                href={`/community/${project.slug}`}
-                aria-label={project.title}
-                className="group block overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+                className="group overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="aspect-square w-full bg-skin-muted object-cover transition duration-200 group-hover:scale-[1.03]"
-                />
-                <div className="min-h-[86px] border-t border-skin-stroke bg-white p-4">
-                  <h2 className="font-heading text-xl leading-tight text-skin-base">
-                    {project.title}
-                  </h2>
-                </div>
-              </Link>
+                <Link
+                  href={`/community/${project.slug}`}
+                  aria-label={project.title}
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="aspect-square w-full bg-skin-muted object-cover transition duration-200 group-hover:scale-[1.03]"
+                  />
+                  <div className="min-h-[86px] border-t border-skin-stroke bg-white p-4">
+                    <h2 className="font-heading text-xl leading-tight text-skin-base">
+                      {project.title}
+                    </h2>
+                  </div>
+                </Link>
+                {isAdmin && (
+                  <div className="border-t border-skin-stroke bg-[#fff7bf] p-3">
+                    <Link
+                      href={`/admin/dashboard?section=community&project=${project.slug}`}
+                      className="flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fffdf0] active:translate-y-1 active:shadow-none"
+                    >
+                      Admin edit
+                    </Link>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         ) : (

@@ -134,16 +134,16 @@ export default function NounsProposalsPage({
             <h1 className="text-[36px] leading-none md:text-[44px]">
               Proposals
             </h1>
-            <div className="flex rounded-2xl border border-skin-stroke bg-skin-muted p-1 shadow-sm">
+            <div className="flex gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6]">
               <Link
                 href="/proposals"
-                className="rounded-xl px-4 py-2 font-heading text-base text-secondary transition hover:bg-[#fff7bf] hover:text-skin-base"
+                className="rounded-lg px-5 py-3 font-heading text-base text-secondary transition hover:bg-[#fff7bf] hover:text-skin-base"
               >
                 Yellow Collective
               </Link>
               <Link
                 href="/proposals/nouns"
-                className="rounded-xl bg-[#fff7bf] px-4 py-2 font-heading text-base text-skin-base"
+                className="translate-y-[-1px] rounded-lg bg-accent px-5 py-3 font-heading text-base text-skin-base shadow-[0px_3px_0px_0px_#b89400] transition"
               >
                 Nouns DAO
               </Link>

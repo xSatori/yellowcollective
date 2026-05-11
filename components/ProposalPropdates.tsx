@@ -1,4 +1,4 @@
-import useEnsName from "@/hooks/fetch/useEnsName";
+import AddressLink from "@/components/AddressLink";
 import { TOKEN_CONTRACT, TOKEN_NETWORK } from "constants/addresses";
 import { ETHERSCAN_BASEURL } from "constants/urls";
 import { BigNumber, ethers } from "ethers";
@@ -6,7 +6,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useEffect, useMemo, useState } from "react";
-import { Address, getAddress, isAddress, zeroHash } from "viem";
+import { getAddress, isAddress, zeroHash } from "viem";
 import {
   useContractWrite,
   usePrepareContractWrite,
@@ -384,21 +384,15 @@ const PropdateCreator = ({ address }: { address: string }) => {
   const normalizedAddress = isAddress(address)
     ? getAddress(address)
     : undefined;
-  const { data } = useEnsName(normalizedAddress as Address);
-  const label =
-    data?.ensName ||
-    (normalizedAddress
-      ? `${normalizedAddress.slice(0, 6)}...${normalizedAddress.slice(-4)}`
-      : address);
 
-  return (
-    <Link
-      href={`${ETHERSCAN_BASEURL}/address/${address}`}
-      rel="noopener noreferrer"
-      target="_blank"
+  return normalizedAddress ? (
+    <AddressLink
+      address={normalizedAddress}
       className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
-    >
-      {label}
-    </Link>
+    />
+  ) : (
+    <span className="font-heading text-base font-bold text-skin-base">
+      {address}
+    </span>
   );
 };
