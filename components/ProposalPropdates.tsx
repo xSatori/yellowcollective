@@ -118,7 +118,7 @@ export default function ProposalPropdates({
   };
 
   return (
-    <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+    <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-2xl font-heading text-skin-base font-bold">
           Propdates

@@ -9,7 +9,7 @@ export type VoteSummaryItem = {
 
 export type VoteMetricItem = {
   label: string;
-  eyebrow: string;
+  eyebrow?: string;
   value: React.ReactNode;
 };
 
@@ -21,12 +21,12 @@ export default function ProposalVoteSummary({
   metrics: VoteMetricItem[];
 }) {
   return (
-    <div className="mt-8 flex flex-col gap-4">
-      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
+    <div className="mt-5 flex flex-col gap-4 md:mt-8">
+      <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 md:gap-4">
         {votes.map((vote) => (
           <div
             key={vote.label}
-            className="w-full rounded-xl border border-skin-stroke bg-white p-6"
+            className="w-full rounded-xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 md:p-6"
           >
             <ProgressBar {...vote} />
           </div>
@@ -37,13 +37,15 @@ export default function ProposalVoteSummary({
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="flex w-full items-center justify-between rounded-xl border border-skin-stroke bg-white p-6 sm:items-baseline"
+            className="flex w-full items-center justify-between rounded-xl border border-skin-stroke bg-white p-4 shadow-sm sm:items-baseline md:p-6"
           >
-            <div className="font-heading text-xl text-skin-muted">
+            <div className="font-heading text-lg text-skin-muted md:text-xl">
               {metric.label}
             </div>
             <div className="text-right">
-              <div className="text-skin-muted">{metric.eyebrow}</div>
+              {metric.eyebrow && (
+                <div className="text-skin-muted">{metric.eyebrow}</div>
+              )}
               <div className="font-semibold">{metric.value}</div>
             </div>
           </div>
@@ -78,15 +80,17 @@ const ProgressBar = ({ label, type, value, percentage }: VoteSummaryItem) => {
 
   return (
     <div className="w-full">
-      <div className="mb-1 flex flex-col items-center justify-between sm:flex-row sm:items-start">
-        <div className={`${textColor} font-heading text-xl`}>{label}</div>
-        <div className="mt-4 text-center text-xl font-semibold text-skin-base sm:mt-0 sm:text-left">
+      <div className="mb-2 flex flex-col items-start justify-between gap-1 sm:flex-row sm:items-start">
+        <div className={`${textColor} font-heading text-base leading-none md:text-xl`}>
+          {label}
+        </div>
+        <div className="text-left text-lg font-semibold leading-none text-skin-base md:text-xl">
           {value}
         </div>
       </div>
-      <div className={`mt-4 h-4 w-full rounded-full ${bgColor} sm:mt-0`}>
+      <div className={`h-2.5 w-full rounded-full md:h-4 ${bgColor}`}>
         <div
-          className={`${baseColor} h-4 rounded-full`}
+          className={`${baseColor} h-2.5 rounded-full md:h-4`}
           style={{ width: `${percentage}%` }}
         />
       </div>

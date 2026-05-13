@@ -158,7 +158,7 @@ export default function NounsProposalDetailPage({
                   {status.label}
                 </div>
               </div>
-              <h1 className="mt-2 text-5xl font-heading text-skin-base font-semibold">
+              <h1 className="mt-2 break-words font-heading text-[34px] font-semibold leading-[0.95] text-skin-base sm:text-5xl">
                 {proposal.title}
               </h1>
               <div className="mt-4 text-2xl font-heading text-skin-muted">
@@ -199,7 +199,6 @@ export default function NounsProposalDetailPage({
           metrics={[
             {
               label: "Threshold",
-              eyebrow: "Current Threshold",
               value: `${proposal.quorumVotes || 1} Quorum`,
             },
             {
@@ -222,7 +221,7 @@ export default function NounsProposalDetailPage({
               label: "Description",
               content: (
                 <>
-                  <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+                  <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                     <div className="text-2xl font-heading text-skin-base font-bold">
                       Description
                     </div>
@@ -258,7 +257,7 @@ export default function NounsProposalDetailPage({
               id: "votes",
               label: "Votes",
               content: (
-                <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+                <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                   <div className="text-2xl font-heading text-skin-base font-bold">
                     Votes
                   </div>

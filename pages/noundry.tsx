@@ -12,7 +12,7 @@ import type {
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import type { CSSProperties } from "react";
+import type { CSSProperties, TouchEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import useSWR from "swr";
@@ -61,6 +61,10 @@ type SelectionBounds = {
   top: number;
   bottom: number;
 };
+type PinchGesture = {
+  distance: number;
+  scale: number;
+};
 
 const GRID_SIZE = 32;
 const DEFAULT_COLOR = "#f8d21c";
@@ -103,6 +107,18 @@ const toolLabels: Record<EditorTool, string> = {
   move: "Move",
 };
 const toolbarTools = Object.keys(toolLabels) as EditorTool[];
+
+const getTouchDistance = (touches: TouchEvent<HTMLDivElement>["touches"]) => {
+  const firstTouch = touches.item(0);
+  const secondTouch = touches.item(1);
+
+  if (!firstTouch || !secondTouch) return 0;
+
+  return Math.hypot(
+    secondTouch.clientX - firstTouch.clientX,
+    secondTouch.clientY - firstTouch.clientY
+  );
+};
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -315,6 +331,8 @@ export default function NoundryPage() {
   const [isCircleCropEnabled, setIsCircleCropEnabled] = useState(false);
   const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
   const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
+  const [editorScale, setEditorScale] = useState(1);
+  const [pinchGesture, setPinchGesture] = useState<PinchGesture | null>(null);
   const selectedTraitName = selectedTraits[traitType];
   const submissions = submissionData?.submissions || [];
   const isAdmin = isAdminAddress(address);
@@ -648,6 +666,35 @@ export default function NoundryPage() {
     router.push("/noundry/submit");
   };
 
+  const handleEditorTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2) return;
+
+    setPinchGesture({
+      distance: getTouchDistance(event.touches),
+      scale: editorScale,
+    });
+  };
+
+  const handleEditorTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2 || !pinchGesture) return;
+
+    event.preventDefault();
+    const distance = getTouchDistance(event.touches);
+    if (!distance || !pinchGesture.distance) return;
+
+    const nextScale = Math.min(
+      3,
+      Math.max(1, pinchGesture.scale * (distance / pinchGesture.distance))
+    );
+    setEditorScale(Number(nextScale.toFixed(2)));
+  };
+
+  const handleEditorTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length < 2) {
+      setPinchGesture(null);
+    }
+  };
+
   return (
     <Layout>
       <Head>
@@ -699,66 +746,90 @@ export default function NoundryPage() {
 
         {activeTab === "studio" && artwork && (
           <section className="grid items-stretch gap-6 xl:grid-cols-[118px_minmax(420px,1fr)_380px]">
-            <ToolRail
-              tool={tool}
-              brushSize={brushSize}
-              selectedColor={selectedColor}
-              usedColors={usedColors}
-              canUndo={undoStack.length > 0}
-              canRedo={redoStack.length > 0}
-              onToolChange={setTool}
-              onBrushSizeChange={setBrushSize}
-              onColorChange={setSelectedColor}
-              onUndo={undoCanvas}
-              onRedo={redoCanvas}
-            />
+            <div className="order-2 xl:order-1">
+              <ToolRail
+                tool={tool}
+                brushSize={brushSize}
+                selectedColor={selectedColor}
+                usedColors={usedColors}
+                canUndo={undoStack.length > 0}
+                canRedo={redoStack.length > 0}
+                onToolChange={setTool}
+                onBrushSizeChange={setBrushSize}
+                onColorChange={setSelectedColor}
+                onUndo={undoCanvas}
+                onRedo={redoCanvas}
+              />
+            </div>
 
-            <div className="relative h-full rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+            <div className="relative order-1 h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 xl:order-2">
               <div
-                className="grid aspect-square w-full overflow-hidden rounded-xl border border-skin-stroke bg-[#909090]"
-                style={{
-                  gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                  gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-                  backgroundImage: checkerboardBackground,
-                  backgroundSize: `${200 / GRID_SIZE}% ${200 / GRID_SIZE}%`,
-                }}
-                onMouseLeave={() => setHoveredPixel(null)}
+                className="max-h-[72vh] overflow-auto rounded-xl"
+                onTouchStart={handleEditorTouchStart}
+                onTouchMove={handleEditorTouchMove}
+                onTouchEnd={handleEditorTouchEnd}
+                style={{ touchAction: "pan-x pan-y pinch-zoom" }}
               >
-                {pixels.map((color, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    aria-label={`Pixel ${index + 1}`}
-                    onMouseDown={() => {
-                      beginPixelAction(index);
-                    }}
-                    onMouseEnter={() => {
-                      setHoveredPixel(index);
-                      continuePixelAction(index);
-                    }}
-                    onMouseUp={() => endPixelAction(index)}
-                    className="relative min-h-0 min-w-0 appearance-none overflow-hidden p-0"
+                <div
+                  className="min-w-full transition-[width] duration-150"
+                  style={{ width: `${editorScale * 100}%` }}
+                >
+                  <div
+                    className="grid aspect-square w-full overflow-hidden rounded-xl border border-skin-stroke bg-[#909090]"
                     style={{
-                      backgroundColor:
-                        color === EMPTY_PIXEL ? "transparent" : color,
+                      gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                      gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+                      backgroundImage: checkerboardBackground,
+                      backgroundSize: `${200 / GRID_SIZE}% ${200 / GRID_SIZE}%`,
                     }}
+                    onMouseLeave={() => setHoveredPixel(null)}
                   >
-                    {displayedSelectionBounds &&
-                      isPixelInSelection(index, displayedSelectionBounds) && (
-                        <span
-                          className="pointer-events-none absolute inset-0 bg-[#d9d9d9]/55"
-                          style={getSelectionEdgeStyle(
-                            index,
-                            displayedSelectionBounds
+                    {pixels.map((color, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        aria-label={`Pixel ${index + 1}`}
+                        onMouseDown={() => {
+                          beginPixelAction(index);
+                        }}
+                        onMouseEnter={() => {
+                          setHoveredPixel(index);
+                          continuePixelAction(index);
+                        }}
+                        onMouseUp={() => endPixelAction(index)}
+                        className="relative min-h-0 min-w-0 appearance-none overflow-hidden p-0"
+                        style={{
+                          backgroundColor:
+                            color === EMPTY_PIXEL ? "transparent" : color,
+                        }}
+                      >
+                        {displayedSelectionBounds &&
+                          isPixelInSelection(index, displayedSelectionBounds) && (
+                            <span
+                              className="pointer-events-none absolute inset-0 bg-[#d9d9d9]/55"
+                              style={getSelectionEdgeStyle(
+                                index,
+                                displayedSelectionBounds
+                              )}
+                            />
                           )}
-                        />
-                      )}
-                    {hoveredPixel === index && (
-                      <span className="pointer-events-none absolute inset-0 bg-[#e6e6e6]/95" />
-                    )}
-                  </button>
-                ))}
+                        {hoveredPixel === index && (
+                          <span className="pointer-events-none absolute inset-0 bg-[#e6e6e6]/95" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
+              {editorScale > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setEditorScale(1)}
+                  className="mt-3 rounded-full border border-skin-stroke bg-white px-3 py-1 font-heading text-xs text-skin-base shadow-[0px_2px_0px_0px_#c9c9c9]"
+                >
+                  Reset zoom
+                </button>
+              )}
               {openTraitPicker && (
                 <TraitPickerOverlay
                   layer={editableLayers.find(
@@ -778,7 +849,7 @@ export default function NoundryPage() {
               )}
             </div>
 
-            <div className="flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+            <div className="order-3 flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-heading text-2xl leading-none text-skin-base">
                   Preview
@@ -790,14 +861,14 @@ export default function NoundryPage() {
                     ? "bg-[#909090]"
                     : "bg-[#ffcc00]"
                 } ${isCircleCropEnabled ? "rounded-full" : "rounded-xl"}`}
-                style={
-                  visibleTraits.backgrounds === false
+                style={{
+                  ...(visibleTraits.backgrounds === false
                     ? {
                         backgroundImage: checkerboardBackground,
                         backgroundSize: "32px 32px",
                       }
-                    : undefined
-                }
+                    : undefined),
+                }}
               >
                 <FullCharacterPreview
                   collectionLayers={selectedCollectionLayers}
@@ -1131,14 +1202,14 @@ const ToolRail = ({
   onRedo: () => void;
 }) => (
   <div className="h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4px_0px_0px_#c9c9c9]">
-    <div className="grid grid-cols-3 items-end justify-items-center gap-2">
+    <div className="grid grid-cols-6 items-end justify-items-center gap-1.5 xl:grid-cols-3 xl:gap-2">
       {brushSizes.map((size) => (
         <button
           key={size}
           type="button"
           aria-label={`Brush size ${size}`}
           onClick={() => onBrushSizeChange(size)}
-          className={`flex h-10 w-10 items-center justify-center rounded-md border transition ${
+          className={`flex h-8 w-8 items-center justify-center rounded-md border transition xl:h-10 xl:w-10 ${
             brushSize === size
               ? "border-transparent bg-[#fff2a3] shadow-[0px_3px_0px_0px_#d8c25f]"
               : "border-transparent hover:bg-[#f3f4f6]"
@@ -1152,14 +1223,14 @@ const ToolRail = ({
       ))}
     </div>
 
-    <div className="mt-5 grid grid-cols-2 gap-3">
+    <div className="mt-4 grid grid-cols-6 gap-1.5 sm:grid-cols-8 xl:mt-5 xl:grid-cols-2 xl:gap-3">
       {toolbarTools.map((toolId) => (
         <button
           key={toolId}
           type="button"
           title={toolLabels[toolId]}
           onClick={() => onToolChange(toolId)}
-          className={`flex h-11 items-center justify-center rounded-lg border text-2xl transition ${
+          className={`flex h-9 items-center justify-center rounded-lg border text-xl transition xl:h-11 xl:text-2xl ${
             tool === toolId
               ? "border-transparent bg-[#fff2a3] text-skin-base shadow-[0px_3px_0px_0px_#d8c25f]"
               : "border-transparent text-[#5f6368] hover:bg-[#f3f4f6] hover:text-skin-base"
@@ -1170,13 +1241,13 @@ const ToolRail = ({
       ))}
     </div>
 
-    <div className="mt-4 grid grid-cols-2 gap-3">
+    <div className="mt-3 grid grid-cols-2 gap-2 xl:mt-4 xl:gap-3">
       <button
         type="button"
         title="Undo"
         disabled={!canUndo}
         onClick={onUndo}
-        className="flex h-10 items-center justify-center rounded-lg text-[#5f6368] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-35"
+        className="flex h-8 items-center justify-center rounded-lg text-[#5f6368] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-35 xl:h-10"
       >
         <UndoGlyph />
       </button>
@@ -1185,13 +1256,13 @@ const ToolRail = ({
         title="Redo"
         disabled={!canRedo}
         onClick={onRedo}
-        className="flex h-10 items-center justify-center rounded-lg text-[#5f6368] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-35"
+        className="flex h-8 items-center justify-center rounded-lg text-[#5f6368] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-35 xl:h-10"
       >
         <RedoGlyph />
       </button>
     </div>
 
-    <label className="mt-6 block">
+    <label className="mt-4 block xl:mt-6">
       <span className="block text-right font-heading text-xs uppercase text-secondary">
         Color
       </span>
@@ -1199,15 +1270,15 @@ const ToolRail = ({
         type="color"
         value={selectedColor === EMPTY_PIXEL ? "#000000" : selectedColor}
         onChange={(event) => onColorChange(event.target.value)}
-        className="mt-2 h-20 w-full cursor-pointer border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6]"
+        className="mt-2 h-12 w-full cursor-pointer border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6] xl:h-20"
       />
     </label>
 
-    <div className="mt-5 border-t border-skin-stroke pt-4">
+    <div className="mt-4 border-t border-skin-stroke pt-3 xl:mt-5 xl:pt-4">
       <div className="font-heading text-xs uppercase text-secondary">
         Used
       </div>
-      <div className="mt-2 grid grid-cols-4 gap-1">
+      <div className="mt-2 grid grid-cols-8 gap-1 xl:grid-cols-4">
         {(usedColors.length ? usedColors : starterPalette.slice(0, 8)).map(
           (color) => (
             <button

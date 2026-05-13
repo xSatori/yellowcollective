@@ -92,26 +92,29 @@ export default function ProposalComponent() {
 
   return (
     <Layout>
-      <div className="flex flex-col sm:flex-row items-baseline justify-between">
-        <div className="flex items-baseline">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start">
           <Link
             href="/proposals"
-            className="mr-4 flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+            className="mr-3 flex h-11 min-h-[2.75rem] w-11 min-w-[2.75rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none sm:mr-4"
           >
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </Link>
 
-          <div className="">
-            <div className="flex items-center">
-              <div className="font-heading text-2xl text-skin-base mr-4 break-words">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="mr-0 font-heading text-lg text-skin-base sm:mr-2 sm:text-2xl">
                 Proposal {proposalNumber}
               </div>
-              <ProposalStatus proposal={proposal} />
+              <ProposalStatus
+                proposal={proposal}
+                className="w-auto shrink-0 px-2 py-1 text-xs sm:w-24 sm:text-base"
+              />
             </div>
-            <div className="mt-2 text-5xl font-heading text-skin-base font-semibold">
+            <div className="mt-2 break-words font-heading text-[34px] font-semibold leading-[0.95] text-skin-base sm:text-5xl">
               {getProposalName(proposal.description)}
             </div>
-            <div className="mt-4 text-2xl font-heading text-skin-muted">
+            <div className="mt-3 text-lg font-heading text-skin-muted sm:mt-4 sm:text-2xl">
               Proposed by{" "}
               <AddressLink
                 address={proposal.proposal.proposer}
@@ -121,8 +124,18 @@ export default function ProposalComponent() {
           </div>
         </div>
 
-        <VoteButton proposal={proposal} proposalNumber={proposalNumber} />
+        <VoteButton
+          proposal={proposal}
+          proposalNumber={proposalNumber}
+          className="hidden sm:block"
+        />
       </div>
+
+      <VoteButton
+        proposal={proposal}
+        proposalNumber={proposalNumber}
+        className="mt-5 sm:hidden"
+      />
 
       <ProposalVoteSummary
         votes={[
@@ -148,7 +161,6 @@ export default function ProposalComponent() {
         metrics={[
           {
             label: "Threshold",
-            eyebrow: "Current Threshold",
             value: `${proposal.proposal.quorumVotes || 1} Quorum`,
           },
           {
@@ -172,7 +184,7 @@ export default function ProposalComponent() {
               label: "Description",
               content: (
                 <>
-                  <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+                  <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                     <div className="text-2xl font-heading text-skin-base font-bold">
                       Description
                     </div>
@@ -201,7 +213,7 @@ export default function ProposalComponent() {
               id: "votes",
               label: "Votes",
               content: (
-                <section className="rounded-b-2xl rounded-tr-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+                <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                   <div className="text-2xl font-heading text-skin-base font-bold">
                     Votes
                   </div>
@@ -229,9 +241,11 @@ export default function ProposalComponent() {
 const VoteButton = ({
   proposal,
   proposalNumber,
+  className = "",
 }: {
   proposal: Proposal;
   proposalNumber: number;
+  className?: string;
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const isPreviewProposal = proposal.proposalId === PREVIEW_PROPOSAL_ID;
@@ -259,7 +273,7 @@ const VoteButton = ({
         />
       </ModalWrapper>
       <button
-        className="mt-8 w-full rounded-[18px] bg-skin-button-accent px-4 py-3 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:bg-skin-button-accent-hover hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none sm:mt-0 sm:w-auto"
+        className={`w-full rounded-[18px] bg-skin-button-accent px-4 py-3 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:bg-skin-button-accent-hover hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none sm:w-auto ${className}`}
         onClick={() => setModalOpen(true)}
       >
         Submit vote

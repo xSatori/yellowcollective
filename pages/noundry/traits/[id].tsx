@@ -12,11 +12,14 @@ import {
 } from "@/components/noundry/NoundryPreview";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type { PlaygroundArtwork } from "data/nouns-builder/artwork";
+import type { Round } from "data/rounds";
+import { createRoundActionMessage } from "@/utils/rounds/auth";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
+import { useAccount, useSignMessage } from "wagmi";
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -31,6 +34,9 @@ const fetcher = async (url: string) => {
 
 export default function NoundryTraitPage() {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync, isLoading: isSigning } = useSignMessage();
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const id = typeof router.query.id === "string" ? router.query.id : "";
   const { data: artwork, error: artworkError } = useSWR<PlaygroundArtwork>(
     "/api/playground/artwork",
@@ -91,6 +97,17 @@ export default function NoundryTraitPage() {
         : [],
     [artwork, submittedTraitBase, submission]
   );
+  const isCreator =
+    Boolean(address && submission) &&
+    address?.toLowerCase() === submission?.artist.toLowerCase();
+  const eligibleRoundsKey =
+    isConnected && isCreator && submission && address
+      ? `/api/rounds/eligible-trait-rounds?wallet=${address}&traitId=${submission.id}`
+      : null;
+  const { data: eligibleRoundsData, mutate: mutateEligibleRounds } = useSWR<{
+    rounds: Round[];
+  }>(eligibleRoundsKey, fetcher);
+  const eligibleRounds = eligibleRoundsData?.rounds || [];
 
   const loadError = artworkError?.message || submissionsError?.message;
 
@@ -191,6 +208,15 @@ export default function NoundryTraitPage() {
                 </Link>
               </div>
               <div className="border-t border-skin-stroke p-4">
+                {eligibleRounds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSubmitModalOpen(true)}
+                    className="mb-3 flex w-full items-center justify-center rounded-xl border border-[#0f5f99] bg-[#1d9bf0] px-3 py-2 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
+                  >
+                    Submit to Rounds
+                  </button>
+                )}
                 <Link
                   href={`/noundry?tab=gallery`}
                   className="flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-accent px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#a98700] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
@@ -219,9 +245,208 @@ export default function NoundryTraitPage() {
           </section>
         )}
       </div>
+      {submission && isSubmitModalOpen && (
+        <SubmitTraitToRoundModal
+          address={address}
+          artwork={artwork}
+          isSigning={isSigning}
+          rounds={eligibleRounds}
+          signMessageAsync={signMessageAsync}
+          submission={submission}
+          traits={selectedTraits}
+          onClose={() => setIsSubmitModalOpen(false)}
+          onSubmitted={() => mutateEligibleRounds()}
+        />
+      )}
     </Layout>
   );
 }
+
+const SubmitTraitToRoundModal = ({
+  address,
+  artwork,
+  isSigning,
+  rounds,
+  signMessageAsync,
+  submission,
+  traits,
+  onClose,
+  onSubmitted,
+}: {
+  address?: string;
+  artwork?: PlaygroundArtwork;
+  isSigning: boolean;
+  rounds: Round[];
+  signMessageAsync: (args: { message: string }) => Promise<string>;
+  submission: NoundrySubmission;
+  traits: Record<string, string>;
+  onClose: () => void;
+  onSubmitted: () => void;
+}) => {
+  const [selectedSlug, setSelectedSlug] = useState(rounds[0]?.slug || "");
+  const [description, setDescription] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedRound = rounds.find((round) => round.slug === selectedSlug);
+
+  const submit = async () => {
+    if (!address) {
+      setMessage("Wallet not connected.");
+      return;
+    }
+    if (!selectedRound) {
+      setMessage("Choose a round first.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setMessage("");
+      const walletMessage = createRoundActionMessage({
+        action: "submit-trait",
+        roundSlug: selectedRound.slug,
+        walletAddress: address,
+      });
+      const walletSignature = await signMessageAsync({ message: walletMessage });
+      const response = await fetch(
+        `/api/rounds/${selectedRound.slug}/submit-trait`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletAddress: address,
+            walletMessage,
+            walletSignature,
+            traitId: submission.id,
+            description,
+          }),
+        }
+      );
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Submission failed.");
+      }
+
+      setMessage("Trait submitted successfully. It is pending admin review.");
+      onSubmitted();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to submit trait."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="submit-trait-round-title"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-[620px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_#BBB]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2
+          id="submit-trait-round-title"
+          className="font-heading text-4xl leading-none text-skin-base"
+        >
+          Submit trait to a round
+        </h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-[160px_1fr]">
+          <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-[#d7d9e4] p-4">
+            <NounPreviewTile
+              artwork={artwork}
+              submission={submission}
+              traits={traits}
+              showEditedTrait
+            />
+          </div>
+          <div>
+            <div className="font-heading text-2xl leading-none text-skin-base">
+              {submission.title}
+            </div>
+            <div className="mt-2 text-sm text-secondary">
+              {getLayerLabel(submission.traitType)}
+            </div>
+            <p className="mt-4 rounded-xl border border-skin-stroke bg-[#fff7bf] p-3 text-sm leading-snug text-secondary">
+              This creates a pending round submission using the canonical
+              Noundry trait record.
+            </p>
+          </div>
+        </div>
+
+        {rounds.length > 0 ? (
+          <div className="mt-5 flex flex-col gap-4">
+            <label className="block font-heading text-base text-skin-base">
+              Eligible round
+              <select
+                value={selectedSlug}
+                onChange={(event) => setSelectedSlug(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-skin-stroke bg-white px-4 py-3 font-sans text-base text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+              >
+                {rounds.map((round) => (
+                  <option key={round.id} value={round.slug}>
+                    {round.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block font-heading text-base text-skin-base">
+              Submission description
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={4}
+                placeholder="Describe why this trait fits the round."
+                className="mt-2 w-full rounded-xl border border-skin-stroke bg-white px-4 py-3 font-sans text-base text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+              />
+              {selectedRound && (
+                <span className="mt-1 block font-sans text-xs text-secondary">
+                  {selectedRound.minDescriptionLength}-
+                  {selectedRound.maxDescriptionLength} characters. If left
+                  blank, Yellow will use a Noundry-generated description.
+                </span>
+              )}
+            </label>
+          </div>
+        ) : (
+          <p className="mt-5 rounded-xl border border-dashed border-skin-stroke bg-[#fff7bf] p-4 text-secondary">
+            There are no active trait contests accepting submissions right now.
+          </p>
+        )}
+
+        {message && (
+          <p className="mt-4 rounded-xl border border-skin-stroke bg-[#fff7bf] p-3 text-sm text-secondary">
+            {message}
+          </p>
+        )}
+
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!selectedRound || isSubmitting || isSigning}
+            className="rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting || isSigning ? "Submitting..." : "Submit to round"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const NounGridSection = ({
   artwork,

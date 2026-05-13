@@ -217,6 +217,26 @@ export const listApprovedNoundrySubmissions = async () => {
 
 export const listNoundrySubmissions = listApprovedNoundrySubmissions;
 
+export const getNoundrySubmissionById = async (
+  id: string,
+  { approvedOnly = false }: { approvedOnly?: boolean } = {}
+) => {
+  await ensureTable();
+
+  const result = await getPool().query(
+    `
+      SELECT ${selectFields}
+      FROM noundry_submissions
+      WHERE id = $1
+        ${approvedOnly ? "AND status = 'approved'" : ""}
+      LIMIT 1
+    `,
+    [id]
+  );
+
+  return result.rows[0] ? mapSubmission(result.rows[0]) : null;
+};
+
 export const listAdminNoundrySubmissions = async () => {
   await ensureTable();
 

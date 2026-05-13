@@ -129,21 +129,21 @@ export default function NounsProposalsPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-8 pb-12">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-5">
+        <div className="flex flex-col items-center gap-5 text-center lg:flex-row lg:items-center lg:justify-between lg:text-left">
+          <div className="flex w-full flex-col items-center gap-3 lg:w-auto lg:flex-row lg:items-center lg:gap-5">
             <h1 className="text-[36px] leading-none md:text-[44px]">
               Proposals
             </h1>
-            <div className="flex gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6]">
+            <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_#b6b6b6] lg:w-fit lg:max-w-none lg:gap-1.5 lg:shadow-[0px_4px_0px_0px_#b6b6b6]">
               <Link
                 href="/proposals"
-                className="rounded-lg px-5 py-3 font-heading text-base text-secondary transition hover:bg-[#fff7bf] hover:text-skin-base"
+                className="flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-heading text-sm leading-tight text-secondary transition hover:bg-[#fff7bf] hover:text-skin-base lg:flex-none lg:px-5 lg:py-3 lg:text-base"
               >
                 Yellow Collective
               </Link>
               <Link
                 href="/proposals/nouns"
-                className="translate-y-[-1px] rounded-lg bg-accent px-5 py-3 font-heading text-base text-skin-base shadow-[0px_3px_0px_0px_#b89400] transition"
+                className="flex min-h-11 flex-1 translate-y-[-1px] items-center justify-center rounded-lg bg-accent px-3 py-2 text-center font-heading text-sm leading-tight text-skin-base shadow-[0px_2px_0px_0px_#b89400] transition lg:flex-none lg:px-5 lg:py-3 lg:text-base lg:shadow-[0px_3px_0px_0px_#b89400]"
               >
                 Nouns DAO
               </Link>

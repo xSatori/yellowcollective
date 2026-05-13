@@ -13,6 +13,7 @@ import { ETHERSCAN_BASEURL } from "constants/urls";
 import { useAccount, useBalance } from "wagmi";
 import { useDAOAddresses, useTreasuryBalance } from "hooks";
 import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 
 type NavItem = {
   label: string;
@@ -31,17 +32,33 @@ const daoItems = [
   { label: "Contracts", href: "/contracts" },
 ];
 
-const artItems = [
+const baseArtItems = [
   { label: "Community", href: "/community" },
   { label: "Playground", href: "/playground" },
   { label: "Probe", href: "/probe" },
   { label: "Noundry", href: "/noundry" },
 ];
 
+const roundsNavItem = { label: "Rounds", href: "/rounds" };
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to load data.");
+  }
+
+  return data;
+};
+
 export default function Header() {
   const { address } = useAccount();
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: roundsSettings } = useSWR<{
+    roundsPublicEnabled: boolean;
+  }>("/api/rounds/settings", fetcher);
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
@@ -94,6 +111,13 @@ export default function Header() {
   }, []);
 
   const isAdmin = isMounted && isAdminAddress(address);
+  const artItems = useMemo(() => {
+    if (isAdmin || roundsSettings?.roundsPublicEnabled) {
+      return [baseArtItems[0], roundsNavItem, ...baseArtItems.slice(1)];
+    }
+
+    return baseArtItems;
+  }, [isAdmin, roundsSettings?.roundsPublicEnabled]);
 
   const treasuryHref = `${ETHERSCAN_BASEURL}/tokenholdings?a=${addresses?.treasury}`;
 

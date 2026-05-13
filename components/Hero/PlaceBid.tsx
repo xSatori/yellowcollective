@@ -90,14 +90,18 @@ export const PlaceBid = ({
           <span className="font-bold">Bridge to Base</span>
         </div>
       </ExternalLink>
-      <div className={clsx("flex flex-row flex-wrap gap-4 items-start ")}>
-        <div className="shrink flex flex-col gap-1">
+      <div
+        className={clsx(
+          "flex w-full flex-col items-start gap-4 min-[390px]:flex-row min-[390px]:flex-wrap"
+        )}
+      >
+        <div className="flex w-full flex-col gap-1 min-[390px]:w-auto min-[390px]:shrink">
           <input
             value={bid}
             type="number"
             onChange={(e) => setBid(e.target.value)}
             className={clsx(
-              "bg-primary h-[59px] rounded-[18px] px-6 py-4 focus:border-accent border-2 outline-none",
+              "h-[59px] w-full min-w-0 rounded-[18px] border-2 bg-primary px-6 py-4 outline-none focus:border-accent min-[390px]:w-[265px]",
               getError() != undefined && getError() != "" && "border-negative"
             )}
             placeholder={
@@ -108,7 +112,7 @@ export const PlaceBid = ({
           />
           {error && <p className="caption text-negative">{getError()}</p>}
         </div>
-        <div className="flex flex-col gap-1 justify-center items-center">
+        <div className="flex flex-col items-center justify-center gap-1">
           <Button
             disabled={(!write || isLoading) && isConnected}
             onClick={(e) => {

@@ -7,6 +7,12 @@ import {
 import type { CommunityProject } from "data/community";
 import type { CommunityProjectRecord } from "data/community-project-submissions";
 import type { NoundrySubmission } from "data/noundry/submissions";
+import type {
+  Round,
+  RoundSubmission,
+  RoundInput,
+  RoundRequest,
+} from "data/rounds";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
@@ -14,9 +20,11 @@ import { useEffect, useMemo, useState } from "react";
 import useSWR, { type Fetcher, type KeyedMutator } from "swr";
 import { useAccount, useSignMessage } from "wagmi";
 
-type AdminSection = "community" | "noundry";
+type AdminSection = "community" | "noundry" | "rounds";
 type CommunityListMode = "queue" | "existing";
 type ProjectEditorMode = "edit" | "preview";
+type RoundListMode = "draft" | "published" | "archived";
+type RoundSubmissionMode = "pending" | "approved" | "closed";
 
 type AdminAuth = Required<
   Pick<AdminAuthPayload, "adminAddress" | "adminMessage" | "adminSignature">
@@ -33,6 +41,10 @@ const adminSections: { id: AdminSection; label: string }[] = [
   {
     id: "noundry",
     label: "Noundry Gallery",
+  },
+  {
+    id: "rounds",
+    label: "Rounds",
   },
 ];
 
@@ -61,11 +73,13 @@ const fieldClass =
   "w-full rounded-[18px] border border-skin-stroke bg-white px-4 py-3 text-base text-skin-base outline-none transition focus:border-[#d7aa00] focus:ring-2 focus:ring-[#ffcc00]/30";
 const labelClass = "block text-sm font-semibold text-secondary";
 const primaryButtonClass =
-  "rounded-[18px] bg-accent px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+  "whitespace-nowrap rounded-[18px] bg-accent px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const secondaryButtonClass =
-  "rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+  "whitespace-nowrap rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const dangerButtonClass =
-  "rounded-[18px] bg-[#c93d2f] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#7f2219] transition hover:-translate-y-0.5 hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+  "whitespace-nowrap rounded-[18px] bg-[#c93d2f] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#7f2219] transition hover:-translate-y-0.5 hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+const blueButtonClass =
+  "whitespace-nowrap rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 
 const createAuthQuery = (auth: AdminAuth) =>
   new URLSearchParams({
@@ -96,10 +110,26 @@ const noundrySubmissionsFetcher = createAdminFetcher<{
   submissions: NoundrySubmission[];
 }>();
 
+const roundsFetcher = createAdminFetcher<{
+  rounds: Round[];
+}>();
+
+const roundsSettingsFetcher = createAdminFetcher<{
+  roundsPublicEnabled: boolean;
+}>();
+
+const roundSubmissionsFetcher = createAdminFetcher<{
+  submissions: RoundSubmission[];
+}>();
+
+const roundRequestsFetcher = createAdminFetcher<{
+  requests: RoundRequest[];
+}>();
+
 const sendAdminRequest = async (
   path: string,
   auth: AdminAuth,
-  method: "PATCH" | "DELETE",
+  method: "PATCH" | "DELETE" | "POST",
   body: AdminRequestBody = {}
 ) => {
   const response = await fetch(path, {
@@ -162,6 +192,38 @@ const parseTraits = (value: string) =>
       .filter(([key, value]) => key && value)
   );
 
+const formatAwards = (awards: Round["awards"] = []) =>
+  awards
+    .map(
+      (award) =>
+        `${award.position} | ${award.title} | ${award.value} | ${award.description}`
+    )
+    .join("\n");
+
+const parseAwards = (value: string) =>
+  fromLines(value)
+    .map((line, index) => {
+      const [position, title, awardValue, ...descriptionParts] = line.split("|");
+
+      return {
+        position: Number(position?.trim()) || index + 1,
+        title: title?.trim() || "",
+        value: awardValue?.trim() || "",
+        description: descriptionParts.join("|").trim(),
+      };
+    })
+    .filter((award) => award.title || award.value || award.description);
+
+const formatVotingStrategy = (
+  strategy: Round["votingStrategy"],
+  votesPerWallet = 1
+) =>
+  strategy === "one_per_wallet"
+    ? "1 vote per wallet"
+    : strategy === "fixed_per_wallet"
+      ? `${votesPerWallet} votes per wallet`
+      : "1 vote per Collective Noun";
+
 const getQueryValue = (value: string | string[] | undefined) =>
   typeof value === "string" ? value : value?.[0];
 
@@ -173,13 +235,26 @@ export default function AdminDashboardPage() {
   const [authError, setAuthError] = useState<string | null>(null);
   const isAdmin = isAdminAddress(address);
   const activeSection: AdminSection =
-    router.query.section === "noundry" ? "noundry" : "community";
+    router.query.section === "noundry"
+      ? "noundry"
+      : router.query.section === "rounds"
+        ? "rounds"
+        : "community";
 
   const communityKey = adminAuth
     ? (["/api/admin/community-projects", adminAuth] as const)
     : null;
   const noundryKey = adminAuth
     ? (["/api/admin/noundry-submissions", adminAuth] as const)
+    : null;
+  const roundsKey = adminAuth
+    ? (["/api/admin/rounds", adminAuth] as const)
+    : null;
+  const roundsSettingsKey = adminAuth
+    ? (["/api/admin/rounds/settings", adminAuth] as const)
+    : null;
+  const roundRequestsKey = adminAuth
+    ? (["/api/admin/rounds/requests", adminAuth] as const)
     : null;
 
   const {
@@ -197,6 +272,32 @@ export default function AdminDashboardPage() {
   } = useSWR<{ submissions: NoundrySubmission[] }, Error, AdminSWRKey | null>(
     noundryKey,
     noundrySubmissionsFetcher
+  );
+
+  const {
+    data: roundsData,
+    error: roundsError,
+    mutate: mutateRounds,
+  } = useSWR<{ rounds: Round[] }, Error, AdminSWRKey | null>(
+    roundsKey,
+    roundsFetcher
+  );
+  const {
+    data: roundsSettingsData,
+    error: roundsSettingsError,
+    mutate: mutateRoundsSettings,
+  } = useSWR<
+    { roundsPublicEnabled: boolean },
+    Error,
+    AdminSWRKey | null
+  >(roundsSettingsKey, roundsSettingsFetcher);
+  const {
+    data: roundRequestsData,
+    error: roundRequestsError,
+    mutate: mutateRoundRequests,
+  } = useSWR<{ requests: RoundRequest[] }, Error, AdminSWRKey | null>(
+    roundRequestsKey,
+    roundRequestsFetcher
   );
 
   useEffect(() => {
@@ -245,7 +346,7 @@ export default function AdminDashboardPage() {
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-snug text-secondary">
                 Review database submissions, approve community projects, and
-                manage Noundry gallery entries.
+                manage Noundry gallery entries and rounds.
               </p>
             </div>
             {isAdmin && (
@@ -253,7 +354,7 @@ export default function AdminDashboardPage() {
                 type="button"
                 onClick={authorize}
                 disabled={isSigning}
-                className={primaryButtonClass}
+                className={dangerButtonClass}
               >
                 {adminAuth
                   ? "Refresh admin signature"
@@ -284,7 +385,7 @@ export default function AdminDashboardPage() {
           </AdminNotice>
         )}
 
-        {isAdmin && adminAuth && (
+        {isAdmin && (
           <section className="flex flex-col gap-6">
             <div className="flex flex-wrap justify-center gap-3 border-b border-skin-stroke">
               {adminSections.map((section) => {
@@ -306,22 +407,48 @@ export default function AdminDashboardPage() {
                 );
               })}
             </div>
-            {activeSection === "community" ? (
-              <CommunityAdminPanel
-                adminAuth={adminAuth}
-                projects={communityData?.projects || []}
-                error={communityError?.message}
-                isLoading={!communityData && !communityError}
-                mutate={mutateCommunity}
-              />
-            ) : (
-              <NoundryAdminPanel
-                adminAuth={adminAuth}
-                submissions={noundryData?.submissions || []}
-                error={noundryError?.message}
-                isLoading={!noundryData && !noundryError}
-                mutate={mutateNoundry}
-              />
+            {adminAuth && (
+              <>
+                {activeSection === "community" ? (
+                  <CommunityAdminPanel
+                    adminAuth={adminAuth}
+                    projects={communityData?.projects || []}
+                    error={communityError?.message}
+                    isLoading={!communityData && !communityError}
+                    mutate={mutateCommunity}
+                  />
+                ) : activeSection === "noundry" ? (
+                  <NoundryAdminPanel
+                    adminAuth={adminAuth}
+                    submissions={noundryData?.submissions || []}
+                    error={noundryError?.message}
+                    isLoading={!noundryData && !noundryError}
+                    mutate={mutateNoundry}
+                  />
+                ) : (
+                  <RoundsAdminPanel
+                    adminAuth={adminAuth}
+                    rounds={roundsData?.rounds || []}
+                    requests={roundRequestsData?.requests || []}
+                    roundsPublicEnabled={
+                      roundsSettingsData?.roundsPublicEnabled || false
+                    }
+                    error={
+                      roundsError?.message ||
+                      roundsSettingsError?.message ||
+                      roundRequestsError?.message
+                    }
+                    isLoading={
+                      (!roundsData && !roundsError) ||
+                      (!roundsSettingsData && !roundsSettingsError) ||
+                      (!roundRequestsData && !roundRequestsError)
+                    }
+                    mutate={mutateRounds}
+                    mutateSettings={mutateRoundsSettings}
+                    mutateRequests={mutateRoundRequests}
+                  />
+                )}
+              </>
             )}
           </section>
         )}
@@ -347,14 +474,16 @@ const AdminNotice = ({
 
 const StatusPill = ({ status }: { status: string }) => {
   const color =
-    status === "approved"
+    status === "approved" || status === "published"
       ? "bg-[#e7f7df] text-[#276514]"
-      : status === "removed"
+      : status === "removed" || status === "archived" || status === "rejected" || status === "hidden"
         ? "bg-[#f8d7d7] text-[#8c1d1d]"
         : "bg-[#fff7bf] text-[#6d5600]";
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${color}`}>
+    <span
+      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${color}`}
+    >
       {status}
     </span>
   );
@@ -586,23 +715,1293 @@ const NoundryAdminPanel = ({
   );
 };
 
+const RoundsAdminPanel = ({
+  adminAuth,
+  rounds,
+  requests,
+  roundsPublicEnabled,
+  error,
+  isLoading,
+  mutate,
+  mutateSettings,
+  mutateRequests,
+}: {
+  adminAuth: AdminAuth;
+  rounds: Round[];
+  requests: RoundRequest[];
+  roundsPublicEnabled: boolean;
+  error?: string;
+  isLoading: boolean;
+  mutate: KeyedMutator<{ rounds: Round[] }>;
+  mutateSettings: KeyedMutator<{ roundsPublicEnabled: boolean }>;
+  mutateRequests: KeyedMutator<{ requests: RoundRequest[] }>;
+}) => {
+  const router = useRouter();
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+  const requestedRoundId = getQueryValue(router.query.round);
+  const requestedSubmissionId = getQueryValue(router.query.submission);
+  const requestedRequestId = getQueryValue(router.query.request);
+  const activeRoundMode = (getQueryValue(router.query.roundMode) ||
+    "draft") as RoundListMode;
+  const activeSubmissionMode = (getQueryValue(router.query.submissionMode) ||
+    "pending") as RoundSubmissionMode;
+  const visibleRounds = useMemo(
+    () => rounds.filter((round) => round.status === activeRoundMode),
+    [activeRoundMode, rounds]
+  );
+  const selectedRound = useMemo(
+    () =>
+      visibleRounds.find((round) => round.id === requestedRoundId) ||
+      visibleRounds[0],
+    [requestedRoundId, visibleRounds]
+  );
+  const submissionsKey =
+    adminAuth && selectedRound
+      ? ([
+          `/api/admin/rounds/${selectedRound.id}/submissions`,
+          adminAuth,
+        ] as const)
+      : null;
+  const {
+    data: submissionData,
+    error: submissionsError,
+    mutate: mutateSubmissions,
+  } = useSWR<{ submissions: RoundSubmission[] }, Error, AdminSWRKey | null>(
+    submissionsKey,
+    roundSubmissionsFetcher
+  );
+  const submissions = useMemo(
+    () => submissionData?.submissions || [],
+    [submissionData?.submissions]
+  );
+  const visibleSubmissions = useMemo(
+    () =>
+      submissions.filter((submission) => {
+        if (activeSubmissionMode === "closed") {
+          return submission.status === "rejected" || submission.status === "hidden";
+        }
+        return submission.status === activeSubmissionMode;
+      }),
+    [activeSubmissionMode, submissions]
+  );
+  const selectedSubmission = useMemo(
+    () =>
+      visibleSubmissions.find(
+        (submission) => submission.id === requestedSubmissionId
+      ),
+    [requestedSubmissionId, visibleSubmissions]
+  );
+  const selectedRequest = useMemo(
+    () => requests.find((request) => request.id === requestedRequestId),
+    [requestedRequestId, requests]
+  );
+  const roundCounts = useMemo(
+    () => ({
+      draft: rounds.filter((round) => round.status === "draft").length,
+      published: rounds.filter((round) => round.status === "published").length,
+      archived: rounds.filter((round) => round.status === "archived").length,
+    }),
+    [rounds]
+  );
+  const submissionCounts = useMemo(
+    () => ({
+      pending: submissions.filter((submission) => submission.status === "pending")
+        .length,
+      approved: submissions.filter(
+        (submission) => submission.status === "approved"
+      ).length,
+      closed: submissions.filter(
+        (submission) =>
+          submission.status === "rejected" || submission.status === "hidden"
+      ).length,
+    }),
+    [submissions]
+  );
+  const requestCounts = useMemo(
+    () => ({
+      pending: requests.filter((request) => request.status === "pending").length,
+      reviewed: requests.filter((request) => request.status === "reviewed").length,
+      closed: requests.filter(
+        (request) =>
+          request.status === "approved" || request.status === "rejected"
+      ).length,
+    }),
+    [requests]
+  );
+
+  const selectRound = (round: Round) => {
+    void router.push(
+      {
+        pathname: "/admin/dashboard",
+        query: {
+          section: "rounds",
+          roundMode: activeRoundMode,
+          submissionMode: activeSubmissionMode,
+          round: round.id,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const selectSubmission = (submission: RoundSubmission) => {
+    if (!selectedRound) return;
+
+    void router.push(
+      {
+        pathname: "/admin/dashboard",
+        query: {
+          section: "rounds",
+          roundMode: activeRoundMode,
+          submissionMode: activeSubmissionMode,
+          round: selectedRound.id,
+          submission: submission.id,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const selectRequest = (request: RoundRequest) => {
+    void router.push(
+      {
+        pathname: "/admin/dashboard",
+        query: {
+          section: "rounds",
+          roundMode: activeRoundMode,
+          submissionMode: activeSubmissionMode,
+          request: request.id,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const setRoundMode = (mode: RoundListMode) => {
+    void router.push(
+      {
+        pathname: "/admin/dashboard",
+        query: {
+          section: "rounds",
+          roundMode: mode,
+          submissionMode: activeSubmissionMode,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const setSubmissionMode = (mode: RoundSubmissionMode) => {
+    void router.push(
+      {
+        pathname: "/admin/dashboard",
+        query: {
+          section: "rounds",
+          roundMode: activeRoundMode,
+          submissionMode: mode,
+          round: selectedRound?.id,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const createNewRound = async () => {
+    try {
+      const data = await sendAdminRequest(
+        "/api/admin/rounds",
+        adminAuth,
+        "POST",
+        { round: {} }
+      );
+      await mutate();
+      const round = data.round as Round | undefined;
+      if (round) {
+        void router.push(
+          {
+            pathname: "/admin/dashboard",
+            query: {
+              section: "rounds",
+              roundMode: "draft",
+              round: round.id,
+            },
+          },
+          undefined,
+          { shallow: true }
+        );
+      }
+    } catch (createError) {
+      window.alert(
+        createError instanceof Error
+          ? createError.message
+          : "Unable to create round."
+      );
+    }
+  };
+
+  const updateRoundsVisibility = async (enabled: boolean) => {
+    try {
+      setIsUpdatingVisibility(true);
+      await sendAdminRequest(
+        "/api/admin/rounds/settings",
+        adminAuth,
+        "PATCH",
+        { roundsPublicEnabled: enabled }
+      );
+      await mutateSettings();
+    } catch (visibilityError) {
+      window.alert(
+        visibilityError instanceof Error
+          ? visibilityError.message
+          : "Unable to update rounds visibility."
+      );
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
+  return (
+    <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <AdminList
+        title="Rounds"
+        titleAction={
+          <RoundsVisibilitySwitch
+            enabled={roundsPublicEnabled}
+            isUpdating={isUpdatingVisibility}
+            onChange={updateRoundsVisibility}
+          />
+        }
+        error={error || submissionsError?.message}
+        isLoading={isLoading || Boolean(selectedRound && !submissionData && !submissionsError)}
+        header={
+          <div className="mt-4 flex flex-col gap-4">
+            <button
+              type="button"
+              onClick={createNewRound}
+              className={blueButtonClass}
+            >
+              Create round
+            </button>
+            <AdminModeTabs
+              modes={[
+                ["draft", `Draft (${roundCounts.draft})`],
+                ["published", `Published (${roundCounts.published})`],
+                ["archived", `Archived (${roundCounts.archived})`],
+              ]}
+              activeMode={activeRoundMode}
+              onChange={(mode) => setRoundMode(mode as RoundListMode)}
+            />
+          </div>
+        }
+      >
+        {visibleRounds.map((round) => (
+          <button
+            key={round.id}
+            type="button"
+            onClick={() => selectRound(round)}
+            className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+              selectedRound?.id === round.id && !selectedSubmission
+                ? "border-[#d7aa00] bg-[#fff7bf]"
+                : "border-skin-stroke bg-white hover:bg-[#fffbe0]"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-heading text-lg leading-tight text-skin-base">
+                  {round.title}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-secondary">
+                  <span>/rounds/{round.slug}</span>
+                  {round.isTraitContest && (
+                    <span className="rounded-full bg-[#dff3ff] px-2 py-0.5 font-semibold text-[#0f5f99]">
+                      Trait contest
+                    </span>
+                  )}
+                </div>
+              </div>
+              <StatusPill status={round.status} />
+            </div>
+          </button>
+        ))}
+        {!isLoading && !error && visibleRounds.length === 0 && (
+          <p className="rounded-xl border border-dashed border-skin-stroke bg-white p-4 text-sm leading-snug text-secondary">
+            No {activeRoundMode} rounds yet.
+          </p>
+        )}
+
+        {selectedRound && (
+          <div className="mt-3 border-t border-skin-stroke pt-4">
+            <h3 className="font-heading text-xl leading-none text-skin-base">
+              Submission queue
+            </h3>
+            <div className="mt-3">
+              <AdminModeTabs
+                modes={[
+                  ["pending", `Pending (${submissionCounts.pending})`],
+                  ["approved", `Approved (${submissionCounts.approved})`],
+                  ["closed", `Rejected/hidden (${submissionCounts.closed})`],
+                ]}
+                activeMode={activeSubmissionMode}
+                onChange={(mode) =>
+                  setSubmissionMode(mode as RoundSubmissionMode)
+                }
+              />
+            </div>
+            <div className="mt-3 flex flex-col gap-3">
+              {visibleSubmissions.map((submission) => (
+                <button
+                  key={submission.id}
+                  type="button"
+                  onClick={() => selectSubmission(submission)}
+                  className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+                    selectedSubmission?.id === submission.id
+                      ? "border-[#d7aa00] bg-[#fff7bf]"
+                      : "border-skin-stroke bg-white hover:bg-[#fffbe0]"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-heading text-lg leading-tight text-skin-base">
+                        {submission.title}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-secondary">
+                        <span
+                          className={`rounded-full px-2 py-0.5 font-semibold ${
+                            submission.submissionType === "trait"
+                              ? "bg-[#dff3ff] text-[#0f5f99]"
+                              : "bg-[#fff7bf] text-skin-base"
+                          }`}
+                        >
+                          {submission.submissionType === "trait"
+                            ? "Trait"
+                            : "Project"}
+                        </span>
+                        {submission.voteCount} votes
+                      </div>
+                    </div>
+                    <StatusPill status={submission.status} />
+                  </div>
+                </button>
+              ))}
+              {!submissionsError && visibleSubmissions.length === 0 && (
+                <p className="rounded-xl border border-dashed border-skin-stroke bg-white p-4 text-sm leading-snug text-secondary">
+                  No {activeSubmissionMode} submissions for this round.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 border-t border-skin-stroke pt-4">
+          <h3 className="font-heading text-xl leading-none text-skin-base">
+            Round requests
+          </h3>
+          <div className="mt-2 text-sm text-secondary">
+            {requestCounts.pending} pending / {requestCounts.reviewed} reviewed /{" "}
+            {requestCounts.closed} closed
+          </div>
+          <div className="mt-3 flex flex-col gap-3">
+            {requests.slice(0, 20).map((request) => (
+              <button
+                key={request.id}
+                type="button"
+                onClick={() => selectRequest(request)}
+                className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+                  selectedRequest?.id === request.id
+                    ? "border-[#d7aa00] bg-[#fff7bf]"
+                    : "border-skin-stroke bg-white hover:bg-[#fffbe0]"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="break-words font-heading text-lg leading-tight text-skin-base">
+                      {request.title}
+                    </div>
+                    <div className="mt-1 text-sm text-secondary">
+                      {new Date(request.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <StatusPill status={request.status} />
+                </div>
+              </button>
+            ))}
+            {requests.length === 0 && (
+              <p className="rounded-xl border border-dashed border-skin-stroke bg-white p-4 text-sm leading-snug text-secondary">
+                No round requests yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </AdminList>
+
+      {selectedRequest ? (
+        <RoundRequestEditor
+          key={selectedRequest.id}
+          adminAuth={adminAuth}
+          request={selectedRequest}
+          mutateRounds={mutate}
+          mutateRequests={mutateRequests}
+        />
+      ) : selectedSubmission && selectedRound ? (
+        <RoundSubmissionEditor
+          key={selectedSubmission.id}
+          adminAuth={adminAuth}
+          round={selectedRound}
+          submission={selectedSubmission}
+          mutateSubmissions={mutateSubmissions}
+        />
+      ) : selectedRound ? (
+        <RoundEditor
+          key={selectedRound.id}
+          adminAuth={adminAuth}
+          round={selectedRound}
+          mutate={mutate}
+        />
+      ) : (
+        <EmptyEditor title="No rounds yet" />
+      )}
+    </section>
+  );
+};
+
+const AdminModeTabs = ({
+  modes,
+  activeMode,
+  onChange,
+}: {
+  modes: [string, string][];
+  activeMode: string;
+  onChange: (mode: string) => void;
+}) => (
+  <div className="flex gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6]">
+    {modes.map(([mode, label]) => {
+      const isActive = activeMode === mode;
+
+      return (
+        <button
+          key={mode}
+          type="button"
+          onClick={() => onChange(mode)}
+          className={`flex-1 rounded-lg px-3 py-2 font-heading text-sm transition ${
+            isActive
+              ? "translate-y-[-1px] bg-accent text-skin-base shadow-[0px_3px_0px_0px_#b89400]"
+              : "text-secondary hover:bg-[#fff7bf] hover:text-skin-base"
+          }`}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+const RoundsVisibilitySwitch = ({
+  enabled,
+  isUpdating,
+  onChange,
+}: {
+  enabled: boolean;
+  isUpdating: boolean;
+  onChange: (enabled: boolean) => void;
+}) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={enabled}
+    disabled={isUpdating}
+    onClick={() => onChange(!enabled)}
+    className="flex shrink-0 items-center gap-2 rounded-full border border-skin-stroke bg-skin-muted px-2 py-1 text-xs font-semibold text-skin-base transition hover:bg-[#fff7bf] disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    <span>{enabled ? "On" : "Off"}</span>
+    <span
+      className={`flex h-5 w-9 items-center rounded-full p-0.5 transition ${
+        enabled ? "bg-positive" : "bg-secondary"
+      }`}
+    >
+      <span
+        className={`h-4 w-4 rounded-full bg-white shadow transition ${
+          enabled ? "translate-x-4" : "translate-x-0"
+        }`}
+      />
+    </span>
+  </button>
+);
+
+const toDateInput = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 16);
+};
+
+const fromDateInput = (value: string) =>
+  value ? new Date(value).toISOString() : "";
+
+const getRoundPayloadFromForm = ({
+  title,
+  slug,
+  description,
+  content,
+  image,
+  startsAt,
+  submissionsOpenAt,
+  votingStartsAt,
+  votingEndsAt,
+  endsAt,
+  active,
+  featured,
+  isTraitContest,
+  traitSubmissionsEnabled,
+  status,
+  votingStrategy,
+  votesPerWallet,
+  winnerCount,
+  maxSubmissionsPerWallet,
+  minTitleLength,
+  maxTitleLength,
+  minDescriptionLength,
+  maxDescriptionLength,
+  awards,
+}: {
+  title: string;
+  slug: string;
+  description: string;
+  content: string;
+  image: string;
+  startsAt: string;
+  submissionsOpenAt: string;
+  votingStartsAt: string;
+  votingEndsAt: string;
+  endsAt: string;
+  active: boolean;
+  featured: boolean;
+  isTraitContest: boolean;
+  traitSubmissionsEnabled: boolean;
+  status: Round["status"];
+  votingStrategy: Round["votingStrategy"];
+  votesPerWallet: number;
+  winnerCount: number;
+  maxSubmissionsPerWallet: number;
+  minTitleLength: number;
+  maxTitleLength: number;
+  minDescriptionLength: number;
+  maxDescriptionLength: number;
+  awards: RoundInput["awards"];
+}): RoundInput => ({
+  title,
+  slug,
+  description,
+  content,
+  image,
+  startsAt: fromDateInput(startsAt),
+  submissionsOpenAt: fromDateInput(submissionsOpenAt),
+  votingStartsAt: fromDateInput(votingStartsAt),
+  votingEndsAt: fromDateInput(votingEndsAt),
+  endsAt: fromDateInput(endsAt),
+  active,
+  featured,
+  isTraitContest,
+  traitSubmissionsEnabled,
+  status,
+  votingStrategy,
+  votesPerWallet,
+  winnerCount,
+  maxSubmissionsPerWallet,
+  minTitleLength,
+  maxTitleLength,
+  minDescriptionLength,
+  maxDescriptionLength,
+  awards,
+});
+
+const validateRoundPublishForm = (round: RoundInput) => {
+  if (!round.title || !round.slug || !round.description || !round.content || !round.image) {
+    return "Title, slug, description, content, and image are required before publishing.";
+  }
+
+  const dates = [
+    round.startsAt,
+    round.submissionsOpenAt,
+    round.votingStartsAt,
+    round.votingEndsAt,
+    round.endsAt,
+  ].map((value) => new Date(String(value)).getTime());
+
+  if (
+    dates.some((date) => Number.isNaN(date)) ||
+    dates[0] > dates[1] ||
+    dates[1] > dates[2] ||
+    dates[2] >= dates[3] ||
+    dates[3] > dates[4]
+  ) {
+    return "Dates must be valid and ordered from start through voting end.";
+  }
+
+  return undefined;
+};
+
+const RoundEditor = ({
+  adminAuth,
+  round,
+  mutate,
+}: {
+  adminAuth: AdminAuth;
+  round: Round;
+  mutate: KeyedMutator<{ rounds: Round[] }>;
+}) => {
+  const [title, setTitle] = useState(round.title);
+  const [slug, setSlug] = useState(round.slug);
+  const [description, setDescription] = useState(round.description);
+  const [content, setContent] = useState(round.content);
+  const [image, setImage] = useState(round.image);
+  const [startsAt, setStartsAt] = useState(toDateInput(round.startsAt));
+  const [submissionsOpenAt, setSubmissionsOpenAt] = useState(
+    toDateInput(round.submissionsOpenAt)
+  );
+  const [votingStartsAt, setVotingStartsAt] = useState(
+    toDateInput(round.votingStartsAt)
+  );
+  const [votingEndsAt, setVotingEndsAt] = useState(
+    toDateInput(round.votingEndsAt)
+  );
+  const [endsAt, setEndsAt] = useState(toDateInput(round.endsAt));
+  const [active, setActive] = useState(round.active);
+  const [featured, setFeatured] = useState(round.featured);
+  const [isTraitContest, setIsTraitContest] = useState(round.isTraitContest);
+  const [traitSubmissionsEnabled, setTraitSubmissionsEnabled] = useState(
+    round.traitSubmissionsEnabled
+  );
+  const [status, setStatus] = useState<Round["status"]>(round.status);
+  const [votingStrategy, setVotingStrategy] = useState<Round["votingStrategy"]>(
+    round.votingStrategy
+  );
+  const [votesPerWallet, setVotesPerWallet] = useState(round.votesPerWallet);
+  const [winnerCount, setWinnerCount] = useState(round.winnerCount);
+  const [maxSubmissionsPerWallet, setMaxSubmissionsPerWallet] = useState(
+    round.maxSubmissionsPerWallet
+  );
+  const [awardsText, setAwardsText] = useState(formatAwards(round.awards));
+  const [minTitleLength, setMinTitleLength] = useState(round.minTitleLength);
+  const [maxTitleLength, setMaxTitleLength] = useState(round.maxTitleLength);
+  const [minDescriptionLength, setMinDescriptionLength] = useState(
+    round.minDescriptionLength
+  );
+  const [maxDescriptionLength, setMaxDescriptionLength] = useState(
+    round.maxDescriptionLength
+  );
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const updateTraitContest = (checked: boolean) => {
+    setIsTraitContest(checked);
+    setTraitSubmissionsEnabled((current) => (checked ? true : current));
+  };
+
+  const submit = async (action?: "publish" | "archive" | "remove") => {
+    if (action === "remove" && !window.confirm("Remove this round?")) return;
+    if (action === "archive" && !window.confirm("Archive this round?")) return;
+
+    const roundPayload = getRoundPayloadFromForm({
+      title,
+      slug,
+      description,
+      content,
+      image,
+      startsAt,
+      submissionsOpenAt,
+      votingStartsAt,
+      votingEndsAt,
+      endsAt,
+      active,
+      featured,
+      isTraitContest,
+      traitSubmissionsEnabled,
+      status,
+      votingStrategy,
+      votesPerWallet,
+      winnerCount,
+      maxSubmissionsPerWallet,
+      minTitleLength,
+      maxTitleLength,
+      minDescriptionLength,
+      maxDescriptionLength,
+      awards: parseAwards(awardsText),
+    });
+    const validationError =
+      action === "publish" || roundPayload.status === "published"
+        ? validateRoundPublishForm(roundPayload)
+        : undefined;
+
+    if (validationError) {
+      setMessage(validationError);
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setMessage(null);
+      await sendAdminRequest(
+        `/api/admin/rounds/${round.id}`,
+        adminAuth,
+        action === "remove" ? "DELETE" : "PATCH",
+        action ? { action, round: roundPayload } : { round: roundPayload }
+      );
+      await mutate();
+      setMessage(
+        action === "publish"
+          ? "Round published."
+          : action === "archive"
+            ? "Round archived."
+            : action === "remove"
+              ? "Round removed."
+              : "Round saved."
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to save round.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <EditorCard
+      title={round.title}
+      status={round.status}
+      message={message}
+      actions={
+        <>
+          <button
+            type="button"
+            onClick={() => submit()}
+            disabled={isSaving}
+            className={primaryButtonClass}
+          >
+            Save changes
+          </button>
+          {round.status !== "published" && (
+            <button
+              type="button"
+              onClick={() => submit("publish")}
+              disabled={isSaving}
+              className={secondaryButtonClass}
+            >
+              Publish
+            </button>
+          )}
+          {round.status !== "archived" && (
+            <button
+              type="button"
+              onClick={() => submit("archive")}
+              disabled={isSaving}
+              className={secondaryButtonClass}
+            >
+              Archive
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => submit("remove")}
+            disabled={isSaving}
+            className={dangerButtonClass}
+          >
+            Remove
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <FormField label="Title" value={title} onChange={setTitle} />
+        <FormField label="Slug" value={slug} onChange={setSlug} />
+      </div>
+      <FormField label="Description" value={description} onChange={setDescription} rows={3} />
+      <FormField label="Content" value={content} onChange={setContent} rows={6} />
+      <FormField label="Image URL" value={image} onChange={setImage} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <DateField label="Start date" value={startsAt} onChange={setStartsAt} />
+        <DateField
+          label="Submissions open"
+          value={submissionsOpenAt}
+          onChange={setSubmissionsOpenAt}
+        />
+        <DateField
+          label="Voting starts"
+          value={votingStartsAt}
+          onChange={setVotingStartsAt}
+        />
+        <DateField
+          label="Voting ends"
+          value={votingEndsAt}
+          onChange={setVotingEndsAt}
+        />
+        <DateField label="Round ends" value={endsAt} onChange={setEndsAt} />
+        <label className={labelClass}>
+          Status
+          <select
+            value={status}
+            onChange={(event) => setStatus(event.target.value as Round["status"])}
+            className={`${fieldClass} mt-2`}
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+        </label>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <label className={labelClass}>
+          Voting type
+          <select
+            value={votingStrategy}
+            onChange={(event) =>
+              setVotingStrategy(event.target.value as Round["votingStrategy"])
+            }
+            className={`${fieldClass} mt-2`}
+          >
+            <option value="one_per_nft">1 vote per Collective Noun</option>
+            <option value="one_per_wallet">1 vote per wallet</option>
+            <option value="fixed_per_wallet">Fixed votes per wallet</option>
+          </select>
+        </label>
+        <NumberField
+          label="Votes / wallet"
+          value={votesPerWallet}
+          onChange={setVotesPerWallet}
+        />
+        <NumberField
+          label="Winner count"
+          value={winnerCount}
+          onChange={setWinnerCount}
+        />
+        <NumberField
+          label="Max submissions / wallet"
+          value={maxSubmissionsPerWallet}
+          onChange={setMaxSubmissionsPerWallet}
+        />
+        <NumberField label="Min title" value={minTitleLength} onChange={setMinTitleLength} />
+        <NumberField label="Max title" value={maxTitleLength} onChange={setMaxTitleLength} />
+        <NumberField
+          label="Min description"
+          value={minDescriptionLength}
+          onChange={setMinDescriptionLength}
+        />
+        <NumberField
+          label="Max description"
+          value={maxDescriptionLength}
+          onChange={setMaxDescriptionLength}
+        />
+      </div>
+      <FormField
+        label="Prizes, one per line as Position | Title | Value | Description"
+        value={awardsText}
+        onChange={setAwardsText}
+        rows={5}
+      />
+      <div className="flex flex-wrap gap-4">
+        <CheckboxField label="Active" checked={active} onChange={setActive} />
+        <CheckboxField
+          label="Featured"
+          checked={featured}
+          onChange={setFeatured}
+        />
+        <CheckboxField
+          label="Trait contest"
+          checked={isTraitContest}
+          onChange={updateTraitContest}
+        />
+        <CheckboxField
+          label="Enable Noundry trait submissions"
+          checked={traitSubmissionsEnabled}
+          onChange={setTraitSubmissionsEnabled}
+        />
+      </div>
+    </EditorCard>
+  );
+};
+
+const RoundSubmissionEditor = ({
+  adminAuth,
+  round,
+  submission,
+  mutateSubmissions,
+}: {
+  adminAuth: AdminAuth;
+  round: Round;
+  submission: RoundSubmission;
+  mutateSubmissions: KeyedMutator<{ submissions: RoundSubmission[] }>;
+}) => {
+  const [title, setTitle] = useState(submission.title);
+  const [description, setDescription] = useState(submission.description);
+  const [image, setImage] = useState(submission.image);
+  const [url, setUrl] = useState(submission.url);
+  const [walletAddress, setWalletAddress] = useState(submission.walletAddress);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const submit = async (action?: "approve" | "reject" | "hide" | "remove") => {
+    if (
+      (action === "reject" || action === "hide" || action === "remove") &&
+      !window.confirm(`${action} this submission?`)
+    ) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setMessage(null);
+      await sendAdminRequest(
+        `/api/admin/rounds/${round.id}/submissions/${submission.id}`,
+        adminAuth,
+        action === "remove" ? "DELETE" : "PATCH",
+        action
+          ? { action, submission: { title, description, image, url, walletAddress } }
+          : { submission: { title, description, image, url, walletAddress } }
+      );
+      await mutateSubmissions();
+      setMessage(
+        action === "approve"
+          ? "Submission approved."
+          : action === "reject"
+            ? "Submission rejected."
+            : action === "hide"
+              ? "Submission hidden."
+              : action === "remove"
+                ? "Submission removed."
+                : "Submission saved."
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to save submission."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <EditorCard
+      title={submission.title}
+      status={submission.status}
+      message={message}
+      actions={
+        <>
+          <button
+            type="button"
+            onClick={() => submit()}
+            disabled={isSaving}
+            className={primaryButtonClass}
+          >
+            Save changes
+          </button>
+          {submission.status !== "approved" && (
+            <button
+              type="button"
+              onClick={() => submit("approve")}
+              disabled={isSaving}
+              className={secondaryButtonClass}
+            >
+              Approve
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => submit("reject")}
+            disabled={isSaving}
+            className={secondaryButtonClass}
+          >
+            Reject
+          </button>
+          <button
+            type="button"
+            onClick={() => submit("hide")}
+            disabled={isSaving}
+            className={secondaryButtonClass}
+          >
+            Hide
+          </button>
+          <button
+            type="button"
+            onClick={() => submit("remove")}
+            disabled={isSaving}
+            className={dangerButtonClass}
+          >
+            Remove
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
+        <div>
+          <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={submission.image}
+              alt={submission.title}
+              className="aspect-square w-full object-cover"
+            />
+          </div>
+          <div className="mt-3 rounded-xl bg-[#fff7bf] p-3 text-sm text-secondary">
+            <span className="font-heading text-lg text-skin-base">
+              {submission.voteCount}
+            </span>{" "}
+            stored votes
+          </div>
+          <div className="mt-3 rounded-xl border border-skin-stroke bg-white p-3 text-sm text-secondary">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full px-2 py-0.5 font-semibold ${
+                  submission.submissionType === "trait"
+                    ? "bg-[#dff3ff] text-[#0f5f99]"
+                    : "bg-[#fff7bf] text-skin-base"
+                }`}
+              >
+                {submission.submissionType === "trait" ? "Trait" : "Project"}
+              </span>
+              {submission.traitType && <span>{submission.traitType}</span>}
+            </div>
+            {submission.traitId && (
+              <div className="mt-2 break-all">
+                Source trait: {submission.traitId}
+              </div>
+            )}
+            {submission.source === "noundry" && submission.url && (
+              <a
+                href={submission.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex font-heading text-sm underline"
+              >
+                Open Noundry trait
+              </a>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col gap-4">
+          <FormField label="Title" value={title} onChange={setTitle} />
+          <FormField
+            label="Submitting wallet"
+            value={walletAddress}
+            onChange={setWalletAddress}
+          />
+          <FormField label="Image URL" value={image} onChange={setImage} />
+          <FormField label="Project URL" value={url} onChange={setUrl} />
+          <FormField
+            label="Description"
+            value={description}
+            onChange={setDescription}
+            rows={6}
+          />
+        </div>
+      </div>
+    </EditorCard>
+  );
+};
+
+const RoundRequestEditor = ({
+  adminAuth,
+  request,
+  mutateRounds,
+  mutateRequests,
+}: {
+  adminAuth: AdminAuth;
+  request: RoundRequest;
+  mutateRounds: KeyedMutator<{ rounds: Round[] }>;
+  mutateRequests: KeyedMutator<{ requests: RoundRequest[] }>;
+}) => {
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const submit = async (
+    action: "reviewed" | "approved" | "rejected" | "remove"
+  ) => {
+    if (
+      (action === "rejected" || action === "remove") &&
+      !window.confirm(`${action} this round request?`)
+    ) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setMessage(null);
+      await sendAdminRequest(
+        `/api/admin/rounds/requests/${request.id}`,
+        adminAuth,
+        action === "remove" ? "DELETE" : "PATCH",
+        { action }
+      );
+      if (action === "approved") {
+        await mutateRounds();
+      }
+      await mutateRequests();
+      setMessage(
+        action === "remove"
+          ? "Request removed."
+          : action === "approved"
+            ? "Round published from request."
+            : `Request marked ${action}.`
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to update request."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <EditorCard
+      title={request.title}
+      status={request.status}
+      message={message}
+      actions={
+        <>
+          <button
+            type="button"
+            onClick={() => submit("reviewed")}
+            disabled={isSaving}
+            className={primaryButtonClass}
+          >
+            Mark reviewed
+          </button>
+          <button
+            type="button"
+            onClick={() => submit("approved")}
+            disabled={isSaving}
+            className={secondaryButtonClass}
+          >
+            Approve request
+          </button>
+          <button
+            type="button"
+            onClick={() => submit("rejected")}
+            disabled={isSaving}
+            className={secondaryButtonClass}
+          >
+            Reject
+          </button>
+          <button
+            type="button"
+            onClick={() => submit("remove")}
+            disabled={isSaving}
+            className={dangerButtonClass}
+          >
+            Remove
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
+        <div className="flex flex-col gap-3">
+          <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
+            {request.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={request.image}
+                alt={request.title}
+                className="aspect-square w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-square items-center justify-center p-6 text-center font-heading text-2xl text-skin-base">
+                {request.title}
+              </div>
+            )}
+          </div>
+          {request.url && (
+            <a
+              href={request.url}
+              target="_blank"
+              rel="noreferrer"
+              className="break-all rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base underline"
+            >
+              Reference link
+            </a>
+          )}
+        </div>
+        <div className="flex flex-col gap-4">
+          <ReadonlyField label="Requested by" value={request.requesterName || "Not provided"} />
+          <ReadonlyField label="Email" value={request.requesterEmail || "Not provided"} />
+          <ReadonlyField label="Wallet" value={request.walletAddress || "Not connected"} />
+          <ReadonlyField label="Slug" value={`/rounds/${request.requestedSlug}`} />
+          <ReadonlyField label="Description" value={request.description} multiline />
+          <ReadonlyField label="Round details" value={request.content} multiline />
+          <ReadonlyField
+            label="Voting type"
+            value={formatVotingStrategy(
+              request.votingStrategy,
+              request.votesPerWallet
+            )}
+          />
+          <ReadonlyField
+            label="Winners"
+            value={`${request.winnerCount} winner${
+              request.winnerCount === 1 ? "" : "s"
+            }`}
+          />
+          <ReadonlyField
+            label="Max submissions / wallet"
+            value={String(request.maxSubmissionsPerWallet)}
+          />
+          <ReadonlyField
+            label="Round dates"
+            value={[
+              `Start: ${new Date(request.startsAt).toLocaleString()}`,
+              `Submissions: ${new Date(
+                request.submissionsOpenAt
+              ).toLocaleString()}`,
+              `Voting starts: ${new Date(
+                request.votingStartsAt
+              ).toLocaleString()}`,
+              `Voting ends: ${new Date(request.votingEndsAt).toLocaleString()}`,
+              `Ends: ${new Date(request.endsAt).toLocaleString()}`,
+            ].join("\n")}
+            multiline
+          />
+          {request.awards.length > 0 && (
+            <ReadonlyField
+              label="Prizes"
+              value={formatAwards(request.awards as Round["awards"])}
+              multiline
+            />
+          )}
+          {request.goals && (
+            <ReadonlyField label="Goals" value={request.goals} multiline />
+          )}
+          {request.timeline && (
+            <ReadonlyField label="Timing" value={request.timeline} multiline />
+          )}
+        </div>
+      </div>
+    </EditorCard>
+  );
+};
+
 const AdminList = ({
   title,
+  titleAction,
   error,
   isLoading,
   header,
   children,
 }: {
   title: string;
+  titleAction?: ReactNode;
   error?: string;
   isLoading: boolean;
   header?: ReactNode;
   children: ReactNode;
 }) => (
   <div className="h-fit rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm">
-    <h2 className="font-heading text-2xl leading-none text-skin-base">
-      {title}
-    </h2>
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="font-heading text-2xl leading-none text-skin-base">
+        {title}
+      </h2>
+      {titleAction}
+    </div>
     {header}
     {isLoading && <p className="mt-4 text-secondary">Loading...</p>}
     {error && <p className="mt-4 text-skin-proposal-danger">{error}</p>}
@@ -1056,9 +2455,9 @@ const EditorCard = ({
 }) => (
   <div className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
     <div className="flex flex-col gap-4 border-b border-skin-stroke pb-5 md:flex-row md:items-center md:justify-between">
-      <div>
+      <div className="min-w-0">
         <div className="flex items-center gap-3">
-          <h2 className="font-heading text-3xl leading-none text-skin-base">
+          <h2 className="break-words font-heading text-3xl leading-none text-skin-base">
             {title}
           </h2>
           {showStatusInTitle && <StatusPill status={status} />}
@@ -1066,7 +2465,7 @@ const EditorCard = ({
         {headingAddon}
         {message && <p className="mt-2 text-sm text-secondary">{message}</p>}
       </div>
-      <div className="flex shrink-0 flex-nowrap gap-3">{actions}</div>
+      <div className="flex shrink-0 flex-wrap gap-3">{actions}</div>
     </div>
     <div className="mt-5 flex flex-col gap-4">{children}</div>
   </div>
@@ -1105,8 +2504,90 @@ const FormField = ({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`${fieldClass} mt-2`}
-      />
-    )}
+    />
+  )}
+  </label>
+);
+
+const ReadonlyField = ({
+  label,
+  value,
+  multiline = false,
+}: {
+  label: string;
+  value: string;
+  multiline?: boolean;
+}) => (
+  <div>
+    <div className={labelClass}>{label}</div>
+    <div
+      className={`mt-2 break-words rounded-[18px] border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base ${
+        multiline ? "whitespace-pre-wrap" : ""
+      }`}
+    >
+      {value}
+    </div>
+  </div>
+);
+
+const DateField = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) => (
+  <label className={labelClass}>
+    {label}
+    <input
+      type="datetime-local"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={`${fieldClass} mt-2`}
+    />
+  </label>
+);
+
+const NumberField = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) => (
+  <label className={labelClass}>
+    {label}
+    <input
+      type="number"
+      min={1}
+      value={value}
+      onChange={(event) => onChange(Number(event.target.value))}
+      className={`${fieldClass} mt-2`}
+    />
+  </label>
+);
+
+const CheckboxField = ({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) => (
+  <label className="flex items-center gap-3 rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 font-heading text-base text-skin-base">
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(event) => onChange(event.target.checked)}
+      className="h-5 w-5 accent-[#ffcc00]"
+    />
+    {label}
   </label>
 );
 

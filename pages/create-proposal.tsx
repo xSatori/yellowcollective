@@ -775,7 +775,7 @@ const SubmitButton = () => {
     disabled
       ? "bg-skin-button-muted"
       : "bg-skin-button-accent hover:bg-skin-button-accent-hover"
-  } flex h-12 w-full items-center justify-center rounded-[18px] px-4 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#0464BC] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#0464BC] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none`;
+  } flex min-h-12 w-full items-center justify-center rounded-[18px] px-4 py-3 text-center font-heading text-base leading-tight text-skin-inverted shadow-[0px_4.02px_0px_0px_#0464BC] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#0464BC] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none`;
 
   const getButtonLabel = () => {
     if (!hasBalance) return "You don't have enough votes to submit a proposal";

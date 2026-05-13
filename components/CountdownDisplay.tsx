@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, Fragment } from "react";
 export type CountdownDisplayProps = {
   from?: number | string;
   to: number | string;
+  className?: string;
 };
 
 function getNumber(time: number | string) {
@@ -122,5 +123,5 @@ export const CountdownDisplay: React.FC<CountdownDisplayProps> = (
       }
       return `${lastString} ${number}${postfix}`;
     }, "");
-  return <h3>{timeString || "0s"}</h3>;
+  return <h3 className={props.className}>{timeString || "0s"}</h3>;
 };

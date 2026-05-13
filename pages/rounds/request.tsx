@@ -1,0 +1,536 @@
+import CustomConnectButton from "@/components/CustomConnectButton";
+import Layout from "@/components/Layout";
+import { ArrowLeftIcon } from "@heroicons/react/20/solid";
+import Head from "next/head";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { useAccount } from "wagmi";
+
+const initialValues = {
+  requesterName: "",
+  requesterEmail: "",
+  requestedSlug: "",
+  title: "",
+  description: "",
+  content: "",
+  goals: "",
+  image: "",
+  url: "",
+  timeline: "",
+  startsAt: "",
+  submissionsOpenAt: "",
+  votingStartsAt: "",
+  votingEndsAt: "",
+  endsAt: "",
+  votingStrategy: "one_per_nft",
+  votesPerWallet: "1",
+  winnerCount: "1",
+  maxSubmissionsPerWallet: "1",
+  awards: "",
+};
+
+type FormValues = typeof initialValues;
+
+type MessageState = {
+  type: "success" | "error";
+  text: string;
+} | null;
+
+const votingStrategyOptions = [
+  {
+    value: "one_per_nft",
+    label: "1 vote per Collective Noun held",
+  },
+  {
+    value: "one_per_wallet",
+    label: "1 vote per wallet",
+  },
+  {
+    value: "fixed_per_wallet",
+    label: "Fixed votes per wallet",
+  },
+];
+
+export default function RequestRoundPage() {
+  const { address, isConnected } = useAccount();
+  const [values, setValues] = useState<FormValues>(initialValues);
+  const [message, setMessage] = useState<MessageState>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const canSubmit = useMemo(
+    () =>
+      Boolean(
+        values.requesterName.trim() &&
+          values.requesterEmail.trim() &&
+          values.requestedSlug.trim() &&
+          values.title.trim().length >= 3 &&
+          values.description.trim().length >= 20 &&
+          values.content.trim().length >= 20 &&
+          values.image.trim() &&
+          values.startsAt &&
+          values.submissionsOpenAt &&
+          values.votingStartsAt &&
+          values.votingEndsAt &&
+          values.endsAt &&
+          Number(values.winnerCount) > 0 &&
+          Number(values.maxSubmissionsPerWallet) > 0 &&
+          Number(values.votesPerWallet) > 0 &&
+          values.awards.trim()
+      ),
+    [values]
+  );
+
+  const updateValue = (field: keyof FormValues, value: string) => {
+    setMessage(null);
+    setValues((currentValues) => {
+      if (field === "title" && !currentValues.requestedSlug.trim()) {
+        return {
+          ...currentValues,
+          title: value,
+          requestedSlug: slugify(value),
+        };
+      }
+
+      return { ...currentValues, [field]: value };
+    });
+  };
+
+  const submit = async () => {
+    if (!canSubmit) return;
+
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/rounds/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request: {
+            ...values,
+            walletAddress: address || undefined,
+            startsAt: dateInputToIso(values.startsAt),
+            submissionsOpenAt: dateInputToIso(values.submissionsOpenAt),
+            votingStartsAt: dateInputToIso(values.votingStartsAt),
+            votingEndsAt: dateInputToIso(values.votingEndsAt),
+            endsAt: dateInputToIso(values.endsAt),
+            votesPerWallet: Number(values.votesPerWallet),
+            winnerCount: Number(values.winnerCount),
+            maxSubmissionsPerWallet: Number(values.maxSubmissionsPerWallet),
+            awards: parseAwards(values.awards),
+          },
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Round request failed.");
+      }
+
+      setValues(initialValues);
+      setMessage({
+        type: "success",
+        text: "Round request submitted. An admin will review it and get back to you.",
+      });
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Round request failed.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Layout>
+      <Head>
+        <title>Request a Round | Yellow Collective</title>
+      </Head>
+
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-7 pb-12">
+        <Link
+          href="/rounds"
+          className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+            <ArrowLeftIcon className="h-4 text-skin-base" />
+          </span>
+          Rounds
+        </Link>
+
+        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+          <h1 className="font-heading text-[34px] leading-none md:text-[42px]">
+            Request a round
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-snug text-secondary md:text-lg">
+            Submit the full round setup for admin review. If approved, the
+            round can be published directly from this request.
+          </p>
+        </section>
+
+        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+          {!isConnected && (
+            <div className="mb-5 rounded-xl border border-skin-stroke bg-[#fff7bf] p-4">
+              <p className="mb-3 text-base text-secondary">
+                You can submit without connecting, or connect a wallet so admins
+                can see who requested the round.
+              </p>
+              <CustomConnectButton className="h-11 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base" />
+            </div>
+          )}
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <FormField
+              label="Your name"
+              value={values.requesterName}
+              onChange={(value) => updateValue("requesterName", value)}
+              placeholder="Your name"
+              required
+            />
+            <FormField
+              label="Email"
+              value={values.requesterEmail}
+              onChange={(value) => updateValue("requesterEmail", value)}
+              placeholder="you@example.com"
+              type="email"
+              required
+            />
+            <FormField
+              label="Round title"
+              value={values.title}
+              onChange={(value) => updateValue("title", value)}
+              placeholder="Yellow poster round"
+              required
+            />
+            <FormField
+              label="Round slug"
+              value={values.requestedSlug}
+              onChange={(value) => updateValue("requestedSlug", slugify(value))}
+              placeholder="yellow-poster-round"
+              required
+            />
+            <FormField
+              label="Image URL"
+              value={values.image}
+              onChange={(value) => updateValue("image", value)}
+              placeholder="https://..."
+              required
+            />
+            <FormField
+              label="Reference URL"
+              value={values.url}
+              onChange={(value) => updateValue("url", value)}
+              placeholder="https://example.com"
+            />
+          </div>
+
+          <TextAreaField
+            label="Description"
+            value={values.description}
+            onChange={(value) => updateValue("description", value)}
+            placeholder="Short public summary for the round card."
+            required
+          />
+          <TextAreaField
+            label="Round details"
+            value={values.content}
+            onChange={(value) => updateValue("content", value)}
+            placeholder="Submission rules, judging context, eligibility, and anything participants need to know."
+            required
+          />
+          <TextAreaField
+            label="Goals"
+            value={values.goals}
+            onChange={(value) => updateValue("goals", value)}
+            placeholder="What would this round produce for Yellow Collective?"
+          />
+          <TextAreaField
+            label="Timing note"
+            value={values.timeline}
+            onChange={(value) => updateValue("timeline", value)}
+            placeholder="Any scheduling notes for admins."
+          />
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+            <DateField
+              label="Start date"
+              value={values.startsAt}
+              onChange={(value) => updateValue("startsAt", value)}
+              required
+            />
+            <DateField
+              label="Submissions open"
+              value={values.submissionsOpenAt}
+              onChange={(value) => updateValue("submissionsOpenAt", value)}
+              required
+            />
+            <DateField
+              label="Voting starts"
+              value={values.votingStartsAt}
+              onChange={(value) => updateValue("votingStartsAt", value)}
+              required
+            />
+            <DateField
+              label="Voting ends"
+              value={values.votingEndsAt}
+              onChange={(value) => updateValue("votingEndsAt", value)}
+              required
+            />
+            <DateField
+              label="Round ends"
+              value={values.endsAt}
+              onChange={(value) => updateValue("endsAt", value)}
+              required
+            />
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <label className="font-heading text-base text-skin-base">
+              Voting type *
+              <select
+                value={values.votingStrategy}
+                onChange={(event) =>
+                  updateValue("votingStrategy", event.target.value)
+                }
+                className="mt-2 w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+              >
+                {votingStrategyOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <NumberField
+              label="Votes per wallet"
+              value={values.votesPerWallet}
+              onChange={(value) => updateValue("votesPerWallet", value)}
+              disabled={values.votingStrategy !== "fixed_per_wallet"}
+              required
+            />
+            <NumberField
+              label="Number of winners"
+              value={values.winnerCount}
+              onChange={(value) => updateValue("winnerCount", value)}
+              required
+            />
+            <NumberField
+              label="Max submissions / wallet"
+              value={values.maxSubmissionsPerWallet}
+              onChange={(value) =>
+                updateValue("maxSubmissionsPerWallet", value)
+              }
+              required
+            />
+          </div>
+
+          <TextAreaField
+            label="Prizes"
+            value={values.awards}
+            onChange={(value) => updateValue("awards", value)}
+            placeholder="1 | First place | 1 ETH | Paid after the round ends"
+            required
+          />
+
+          <div className="mt-6 flex flex-col gap-4 md:flex-row">
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!canSubmit || isSubmitting}
+              className="flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? "Submitting..." : "Submit request"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setValues(initialValues)}
+              className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+            >
+              Reset
+            </button>
+          </div>
+          {message && (
+            <p
+              role={message.type === "error" ? "alert" : "status"}
+              className={`mt-4 rounded-xl border p-3 text-sm ${
+                message.type === "error"
+                  ? "border-skin-proposal-danger bg-skin-proposal-danger bg-opacity-10 text-skin-proposal-danger"
+                  : "border-skin-proposal-success bg-skin-proposal-success bg-opacity-10 text-skin-proposal-success"
+              }`}
+            >
+              {message.text}
+            </p>
+          )}
+        </section>
+      </div>
+    </Layout>
+  );
+}
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const dateInputToIso = (value: string) =>
+  value ? new Date(value).toISOString() : "";
+
+const parseAwards = (value: string) =>
+  value
+    .split("\n")
+    .map((line, index) => {
+      const [position, title, awardValue, ...descriptionParts] =
+        line.split("|");
+
+      return {
+        position: Number(position?.trim()) || index + 1,
+        title: title?.trim() || "",
+        value: awardValue?.trim() || "",
+        description: descriptionParts.join("|").trim(),
+      };
+    })
+    .filter((award) => award.title || award.value || award.description);
+
+const fieldId = (label: string) =>
+  `round-request-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
+const FormField = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  className = "",
+  required = false,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  className?: string;
+  required?: boolean;
+  type?: string;
+}) => {
+  const id = fieldId(label);
+
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="font-heading text-base text-skin-base">
+        {label}
+        {required ? " *" : ""}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        required={required}
+        className="mt-2 w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+      />
+    </div>
+  );
+};
+
+const NumberField = ({
+  label,
+  value,
+  onChange,
+  required = false,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  disabled?: boolean;
+}) => {
+  const id = fieldId(label);
+
+  return (
+    <div>
+      <label htmlFor={id} className="font-heading text-base text-skin-base">
+        {label}
+        {required ? " *" : ""}
+      </label>
+      <input
+        id={id}
+        type="number"
+        min="1"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required={required}
+        disabled={disabled}
+        className="mt-2 w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted disabled:cursor-not-allowed disabled:opacity-60"
+      />
+    </div>
+  );
+};
+
+const DateField = ({
+  label,
+  value,
+  onChange,
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) => {
+  const id = fieldId(label);
+
+  return (
+    <div>
+      <label htmlFor={id} className="font-heading text-base text-skin-base">
+        {label}
+        {required ? " *" : ""}
+      </label>
+      <input
+        id={id}
+        type="datetime-local"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required={required}
+        className="mt-2 w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+      />
+    </div>
+  );
+};
+
+const TextAreaField = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  required?: boolean;
+}) => {
+  const id = fieldId(label);
+
+  return (
+    <div className="mt-5">
+      <label htmlFor={id} className="font-heading text-base text-skin-base">
+        {label}
+        {required ? " *" : ""}
+      </label>
+      <textarea
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={5}
+        placeholder={placeholder}
+        required={required}
+        className="mt-2 w-full resize-y rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+      />
+    </div>
+  );
+};
