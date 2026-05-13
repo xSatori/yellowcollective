@@ -1,5 +1,6 @@
 import CustomConnectButton from "@/components/CustomConnectButton";
 import Layout from "@/components/Layout";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import { RoundStatusPill } from "@/components/rounds/RoundCard";
 import { RoundTimeline } from "@/components/rounds/RoundTimeline";
 import { useIsMounted } from "@/hooks/useIsMounted";
@@ -562,15 +563,13 @@ const SubmissionCard = ({
         {submission.description}
       </p>
       <div className="mt-auto flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onOpen}
+        <WalletIdentityLink
+          address={submission.walletAddress}
+          ensName={demoAuthorNames[submission.walletAddress.toLowerCase()]}
           className={`font-heading text-base underline ${
             isWinner ? "text-white" : "text-skin-base"
           }`}
-        >
-          {formatSubmissionAuthor(submission.walletAddress)}
-        </button>
+        />
         {canVote && (
           <div className="flex items-center gap-2 rounded-xl border border-skin-stroke bg-[#f1f1f1] p-1">
             <button
@@ -772,9 +771,11 @@ const SubmissionModal = ({
                 Close
               </button>
             </div>
-            <div className="break-all text-right text-sm font-semibold text-black">
-              {submission.walletAddress}
-            </div>
+            <WalletIdentityLink
+              address={submission.walletAddress}
+              ensName={demoAuthorNames[submission.walletAddress.toLowerCase()]}
+              className="break-all text-right text-sm font-semibold text-black"
+            />
           </div>
         </div>
       </div>
@@ -823,9 +824,11 @@ const SubmissionModal = ({
                       key={vote.id}
                       className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3"
                     >
-                      <span className="min-w-0 break-all font-heading text-lg leading-none text-skin-base">
-                        {formatSubmissionAuthor(vote.walletAddress)}
-                      </span>
+                      <WalletIdentityLink
+                        address={vote.walletAddress}
+                        ensName={demoAuthorNames[vote.walletAddress.toLowerCase()]}
+                        className="min-w-0 break-all font-heading text-lg leading-none text-skin-base"
+                      />
                       <span className="shrink-0 rounded-full bg-[#1d9bf0] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99]">
                         {vote.voteCount} votes
                       </span>
@@ -1059,9 +1062,11 @@ const RoundActivityPanel = ({ round }: { round: RoundWithSubmissions }) => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="break-words font-heading text-xl leading-none text-skin-base">
-                    {shortenAddress(activity.walletAddress)}
-                  </span>
+                  <WalletIdentityLink
+                    address={activity.walletAddress}
+                    ensName={demoAuthorNames[activity.walletAddress.toLowerCase()]}
+                    className="break-words font-heading text-xl leading-none text-skin-base"
+                  />
                   <span className="font-heading text-xl leading-none text-[#6e95ff]">
                     +{activity.voteCount}
                   </span>

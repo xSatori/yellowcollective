@@ -1,9 +1,6 @@
-import { shortenAddress } from "@/utils/shortenAddress";
-import useEnsNames from "@/hooks/fetch/useEnsNames";
-import { ETHERSCAN_BASEURL } from "constants/urls";
-import Link from "next/link";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import { useMemo } from "react";
-import { getAddress, isAddress } from "viem";
+import { isAddress } from "viem";
 
 export type ProposalVote = {
   voter: string;
@@ -72,21 +69,6 @@ export default function ProposalVoteList({
         .map(({ vote }) => vote),
     [votes]
   );
-  const voteAddresses = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          sortedVotes
-            .map((vote) => vote.voter)
-            .filter((voter) => isAddress(voter))
-            .map((voter) => getAddress(voter))
-        )
-      ),
-    [sortedVotes]
-  );
-  const { data: ensNamesResp } = useEnsNames(voteAddresses);
-  const ensNames = ensNamesResp?.names || {};
-
   if (isLoading) {
     return <p className="text-base text-secondary">Loading votes...</p>;
   }
@@ -105,45 +87,29 @@ export default function ProposalVoteList({
         <ProposalVoteRow
           key={`${vote.voter}-${vote.support}-${vote.weight}-${vote.reason}-${vote.timestamp || ""}-${vote.blockNumber || ""}`}
           vote={vote}
-          ensNames={ensNames}
         />
       ))}
     </div>
   );
 }
 
-const ProposalVoteRow = ({
-  vote,
-  ensNames,
-}: {
-  vote: ProposalVote;
-  ensNames: Record<string, string>;
-}) => {
+const ProposalVoteRow = ({ vote }: { vote: ProposalVote }) => {
   const support = supportLabel(vote.support);
-  const normalizedAddress = isAddress(vote.voter)
-    ? getAddress(vote.voter)
-    : undefined;
-  const voterLabel =
-    (normalizedAddress && ensNames[normalizedAddress.toLowerCase()]) ||
-    shortenAddress(normalizedAddress || vote.voter, 4);
+  const isWallet = isAddress(vote.voter);
 
   return (
     <div
       className={`rounded-xl border-2 ${support.borderClassName} bg-white p-4`}
     >
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-        {normalizedAddress ? (
-          <Link
-            href={`${ETHERSCAN_BASEURL}/address/${normalizedAddress}`}
-            rel="noopener noreferrer"
-            target="_blank"
+        {isWallet ? (
+          <WalletIdentityLink
+            address={vote.voter}
             className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
-          >
-            {voterLabel}
-          </Link>
+          />
         ) : (
           <span className="font-heading text-base font-bold text-skin-base">
-            {voterLabel}
+            {vote.voter}
           </span>
         )}
         <div className="flex items-center gap-3 text-sm text-skin-base">

@@ -98,6 +98,17 @@ export type RoundVoteActivity = {
   updatedAt: string;
 };
 
+export type ProfileRoundSubmission = RoundSubmission & {
+  roundSlug: string;
+  roundTitle: string;
+};
+
+export type ProfileRoundVote = RoundVoteActivity & {
+  roundId: string;
+  roundSlug: string;
+  roundTitle: string;
+};
+
 export type RoundAward = {
   id: string;
   roundId: string;
@@ -1863,6 +1874,87 @@ export const listRoundSubmissionVotes = async ({
     createdAt: formatDate(row.created_at) || "",
     updatedAt: formatDate(row.updated_at) || "",
   })) as RoundVoteActivity[];
+};
+
+export const listProfileRoundSubmissions = async (
+  walletAddress: string
+): Promise<ProfileRoundSubmission[]> => {
+  await ensureTables();
+
+  const result = await getPool().query(
+    `
+      SELECT
+        ${submissionSelectFields},
+        r.slug AS round_slug,
+        r.title AS round_title
+      FROM round_submissions s
+      INNER JOIN rounds r ON r.id = s.round_id
+      ${voteTotalsJoin}
+      ${winnersJoin}
+      WHERE lower(s.wallet_address) = lower($1)
+        AND s.deleted_at IS NULL
+        AND r.deleted_at IS NULL
+        AND r.status = 'published'
+        AND r.active = true
+        AND (s.status = 'approved' OR w.winner_position IS NOT NULL)
+      ORDER BY s.created_at DESC
+      LIMIT 100
+    `,
+    [walletAddress]
+  );
+
+  return result.rows.map((row) => ({
+    ...mapSubmission(row),
+    roundSlug: row.round_slug,
+    roundTitle: row.round_title,
+  }));
+};
+
+export const listProfileRoundVotes = async (
+  walletAddress: string
+): Promise<ProfileRoundVote[]> => {
+  await ensureTables();
+
+  const result = await getPool().query(
+    `
+      SELECT
+        v.id,
+        v.round_id,
+        v.wallet_address,
+        v.submission_id,
+        s.title AS submission_title,
+        v.vote_count,
+        v.created_at,
+        v.updated_at,
+        r.slug AS round_slug,
+        r.title AS round_title
+      FROM round_votes v
+      INNER JOIN round_submissions s ON s.id = v.submission_id
+      INNER JOIN rounds r ON r.id = v.round_id
+      WHERE lower(v.wallet_address) = lower($1)
+        AND s.deleted_at IS NULL
+        AND s.status = 'approved'
+        AND r.deleted_at IS NULL
+        AND r.status = 'published'
+        AND r.active = true
+      ORDER BY v.updated_at DESC, v.created_at DESC
+      LIMIT 100
+    `,
+    [walletAddress]
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    roundId: row.round_id,
+    walletAddress: row.wallet_address,
+    submissionId: row.submission_id,
+    submissionTitle: row.submission_title,
+    voteCount: Number(row.vote_count || 0),
+    createdAt: formatDate(row.created_at) || "",
+    updatedAt: formatDate(row.updated_at) || "",
+    roundSlug: row.round_slug,
+    roundTitle: row.round_title,
+  }));
 };
 
 export const createRound = async (input: RoundInput = {}) => {

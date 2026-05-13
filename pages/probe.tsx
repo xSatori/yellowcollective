@@ -1,11 +1,11 @@
-import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
+import { getProfilePath } from "@/utils/profile/identity";
 import type {
   ProbeToken,
   ProbeTokenResponse,
   ProbeTraitOption,
 } from "data/nouns-builder/probe";
-import { ETHERSCAN_BASEURL } from "constants/urls";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -428,19 +428,19 @@ const TokenModal = ({
 
         {token.owner && (
           <Link
-            href={`${ETHERSCAN_BASEURL}/address/${token.owner}`}
-            target="_blank"
-            rel="noreferrer"
+            href={getProfilePath({
+              address: token.owner,
+              ensName: ensNames[token.owner.toLowerCase()],
+            })}
             className="mt-5 block rounded-xl border border-skin-stroke bg-skin-muted p-3 text-sm text-secondary transition hover:bg-[#fff7bf]"
           >
             Owner{" "}
-            <AddressLink
+            <WalletIdentityLink
               address={token.owner}
+              ensName={ensNames[token.owner.toLowerCase()]}
               fallback="full"
               link={false}
-            >
-              {ensNames[token.owner.toLowerCase()]}
-            </AddressLink>
+            />
           </Link>
         )}
 

@@ -1,4 +1,4 @@
-import AddressLink from "@/components/AddressLink";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import { TOKEN_CONTRACT, TOKEN_NETWORK } from "constants/addresses";
 import { ETHERSCAN_BASEURL } from "constants/urls";
 import { BigNumber, ethers } from "ethers";
@@ -386,7 +386,7 @@ const PropdateCreator = ({ address }: { address: string }) => {
     : undefined;
 
   return normalizedAddress ? (
-    <AddressLink
+    <WalletIdentityLink
       address={normalizedAddress}
       className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
     />

@@ -1,5 +1,5 @@
-import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import { type CommunityProject } from "data/community";
 import {
   getCommunityProject,
@@ -65,13 +65,13 @@ export default function CommunityDetailPage({
 
       <div className="mx-auto flex w-full max-w-[980px] flex-col gap-7 pb-12">
         <Link
-          href="/community"
+          href="/projects"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
-          Community
+          Projects
         </Link>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -127,10 +127,9 @@ export default function CommunityDetailPage({
               <div>
                 <dt className="font-heading text-xl">Artist</dt>
                 <dd className="mt-1 text-secondary">
-                  <AddressLink
+                  <WalletIdentityLink
                     address={project.artist}
                     fallback="full"
-                    link={false}
                   />
                 </dd>
               </div>

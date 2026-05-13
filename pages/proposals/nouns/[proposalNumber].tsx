@@ -1,4 +1,4 @@
-import AddressLink from "@/components/AddressLink";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import Layout from "@/components/Layout";
 import ProposalPropdates from "@/components/ProposalPropdates";
 import ProposalTabs from "@/components/ProposalTabs";
@@ -136,24 +136,24 @@ export default function NounsProposalDetailPage({
         </title>
       </Head>
 
-      <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 pb-12">
+      <div className="flex w-full flex-col gap-6 pb-12">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-baseline">
+          <div className="flex min-w-0 items-start">
             <Link
               href="/proposals/nouns"
-              className="mr-4 flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+              className="mr-3 flex h-11 min-h-[2.75rem] w-11 min-w-[2.75rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none sm:mr-4"
               aria-label="Back to Nouns DAO proposals"
             >
               <ArrowLeftIcon className="h-4 text-skin-base" />
             </Link>
 
-            <div>
-              <div className="flex items-center">
-                <div className="font-heading text-2xl text-skin-base mr-4 break-words">
-                  Nouns DAO Proposals
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="mr-0 font-heading text-lg text-skin-base sm:mr-2 sm:text-2xl">
+                  Nouns Proposal {proposal.proposalNumber}
                 </div>
                 <div
-                  className={`${status.className} w-24 rounded-md p-1 px-2 text-center ${status.className.includes("text-") ? "" : "text-white"}`}
+                  className={`${status.className} w-auto shrink-0 rounded-md px-2 py-1 text-center text-xs sm:w-24 sm:text-base ${status.className.includes("text-") ? "" : "text-white"}`}
                 >
                   {status.label}
                 </div>
@@ -161,17 +161,14 @@ export default function NounsProposalDetailPage({
               <h1 className="mt-2 break-words font-heading text-[34px] font-semibold leading-[0.95] text-skin-base sm:text-5xl">
                 {proposal.title}
               </h1>
-              <div className="mt-4 text-2xl font-heading text-skin-muted">
+              <div className="mt-3 text-lg font-heading text-skin-muted sm:mt-4 sm:text-2xl">
                 Proposed by{" "}
-                <AddressLink
+                <WalletIdentityLink
                   address={proposal.proposer}
                   className="text-skin-highlighted underline"
                 />
               </div>
             </div>
-          </div>
-          <div className="rounded-xl border border-skin-stroke bg-white px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB]">
-            This page is a work in progress.
           </div>
         </div>
 
@@ -228,7 +225,7 @@ export default function NounsProposalDetailPage({
 
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
-                      className="prose prose-skin mt-4 max-w-none break-words prose-headings:font-heading prose-p:text-base prose-p:leading-snug prose-a:text-accent-blue prose-a:underline md:prose-p:text-lg"
+                      className="prose prose-skin mt-4 max-w-[90vw] break-words prose-headings:font-heading prose-p:text-base prose-p:leading-snug prose-a:text-accent-blue prose-a:underline sm:max-w-[1000px] md:prose-p:text-lg"
                       components={{
                         a: ({ href, children }) => (
                           <a href={href} target="_blank" rel="noreferrer">

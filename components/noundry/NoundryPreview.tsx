@@ -2,7 +2,8 @@ import type {
   PlaygroundArtwork,
   PlaygroundImage,
 } from "data/nouns-builder/artwork";
-import AddressLink from "@/components/AddressLink";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
+import { getProfilePath } from "@/utils/profile/identity";
 import Link from "next/link";
 import type React from "react";
 
@@ -219,12 +220,18 @@ export const SubmissionGalleryCard = ({
   artwork,
   submission,
   footer,
+  compact = false,
 }: {
   artwork?: PlaygroundArtwork;
   submission: NoundrySubmission;
   footer?: React.ReactNode;
+  compact?: boolean;
 }) => (
-  <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm">
+  <div
+    className={`overflow-hidden border border-skin-stroke bg-white shadow-sm ${
+      compact ? "rounded-xl" : "rounded-2xl"
+    }`}
+  >
     <Link
       href={getTraitPath(submission.id)}
       className="block aspect-square bg-[#ffcc00] transition hover:brightness-[1.02]"
@@ -238,21 +245,29 @@ export const SubmissionGalleryCard = ({
         fullBleed
       />
     </Link>
-    <div className="border-t border-skin-stroke p-4">
+    <div className={`border-t border-skin-stroke ${compact ? "p-2 sm:p-3" : "p-4"}`}>
       <Link
         href={getTraitPath(submission.id)}
-        className="font-heading text-xl leading-tight text-skin-base transition hover:text-[#b89400]"
+        className={`font-heading leading-tight text-skin-base transition hover:text-[#b89400] ${
+          compact ? "text-sm" : "text-xl"
+        }`}
       >
         {submission.title}
       </Link>
-      <div className="mt-1 text-sm leading-snug text-secondary">
+      <div
+        className={`mt-1 leading-snug text-secondary ${
+          compact ? "text-xs" : "text-sm"
+        }`}
+      >
         {getLayerLabel(submission.traitType)}
       </div>
       <Link
-        href={getArtistPath(submission.artist)}
-        className="mt-2 block truncate font-heading text-sm text-skin-base transition hover:text-[#b89400]"
+        href={getProfilePath({ address: submission.artist })}
+        className={`mt-2 block truncate font-heading text-skin-base transition hover:text-[#b89400] ${
+          compact ? "text-xs" : "text-sm"
+        }`}
       >
-        <AddressLink address={submission.artist} link={false} />
+        <WalletIdentityLink address={submission.artist} link={false} />
       </Link>
       {footer}
     </div>

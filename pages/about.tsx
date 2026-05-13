@@ -21,8 +21,10 @@ import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getProfilePath } from "@/utils/profile/identity";
 import { useMemo } from "react";
 import { isAddress } from "viem";
 
@@ -425,11 +427,12 @@ export default function AboutPage({
           {founders.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               {founders.map((founder, index) => (
-                <a
+                <Link
                   key={founder.wallet}
-                  href={`${ETHERSCAN_BASEURL}/address/${founder.wallet}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={getProfilePath({
+                    address: founder.wallet,
+                    ensName: founder.displayName,
+                  })}
                   className="flex items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
                 >
                   <div className="flex min-w-0 items-center gap-4">
@@ -447,7 +450,7 @@ export default function AboutPage({
                   <span className="font-heading text-xl">
                     {founder.ownershipPct}%
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
           ) : (
@@ -481,11 +484,12 @@ export default function AboutPage({
 
               {delegates.length > 0 ? (
                 delegates.map((delegate, index) => (
-                  <a
+                  <Link
                     key={delegate.address}
-                    href={`${ETHERSCAN_BASEURL}/address/${delegate.address}`}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={getProfilePath({
+                      address: delegate.address,
+                      ensName: delegate.displayName,
+                    })}
                     className="grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-6 p-5 text-base transition hover:bg-[#fff7bf] md:text-lg"
                   >
                     <div className="flex min-w-0 items-center gap-4">
@@ -506,7 +510,7 @@ export default function AboutPage({
                     <div>{delegate.votes} Tokens</div>
                     <div>{delegate.votePercent.toFixed(2)}%</div>
                     <div>{delegate.joined || "--"}</div>
-                  </a>
+                  </Link>
                 ))
               ) : (
                 <div className="p-6 text-base text-secondary md:text-lg">

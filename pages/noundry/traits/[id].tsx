@@ -1,11 +1,11 @@
-import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
+import { getProfilePath } from "@/utils/profile/identity";
 import {
   NoundrySubmission,
   NounPreviewTile,
   buildRandomTraits,
   formatRelativeTime,
-  getArtistPath,
   getLayerLabel,
   getSubmissionPreviewTraits,
   getTraitPath,
@@ -134,7 +134,7 @@ export default function NoundryTraitPage() {
           </Link>
           {submission && (
             <Link
-              href={getArtistPath(submission.artist)}
+              href={getProfilePath({ address: submission.artist })}
               className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
             >
               Artist profile
@@ -190,7 +190,7 @@ export default function NoundryTraitPage() {
                   {formatRelativeTime(submission.createdAt)}
                 </div>
                 <Link
-                  href={getArtistPath(submission.artist)}
+                  href={getProfilePath({ address: submission.artist })}
                   className="mt-4 flex min-w-0 items-center gap-3 rounded-xl border border-skin-stroke bg-[#f7f7f7] p-3 transition hover:bg-[#fff7bf]"
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent font-heading text-sm text-skin-base">
@@ -198,7 +198,7 @@ export default function NoundryTraitPage() {
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate font-heading text-base text-skin-base">
-                    <AddressLink address={submission.artist} link={false} />
+                    <WalletIdentityLink address={submission.artist} link={false} />
                     </span>
                     <span className="block text-xs text-secondary">
                       {artistSubmissions.length} submission

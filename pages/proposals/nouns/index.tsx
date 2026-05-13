@@ -151,8 +151,7 @@ export default function NounsProposalsPage({
           </div>
 
           <p className="max-w-[520px] text-base leading-snug text-secondary">
-            Nouns DAO proposals for Yellow Collective meta-governance. This page
-            is a work in progress.
+            Nouns DAO proposals for Yellow Collective meta-governance.
           </p>
         </div>
 

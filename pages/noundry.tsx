@@ -3,7 +3,8 @@ import {
   SubmissionGalleryCard,
   getArtistPath,
 } from "@/components/noundry/NoundryPreview";
-import AddressLink from "@/components/AddressLink";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
+import { getProfilePath } from "@/utils/profile/identity";
 import { isAdminAddress } from "@/utils/admin";
 import type {
   PlaygroundArtwork,
@@ -2071,7 +2072,7 @@ const GalleryView = ({
             return (
               <Link
                 key={artist.address}
-                href={getArtistPath(artist.address)}
+                href={getProfilePath({ address: artist.address })}
                 className="grid gap-4 rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:grid-cols-[108px_1fr]"
               >
                 <div className="aspect-square rounded-xl bg-[#ffcc00] p-3">
@@ -2081,7 +2082,7 @@ const GalleryView = ({
                 </div>
                 <div className="min-w-0 self-center">
                   <div className="truncate font-heading text-2xl leading-none text-skin-base">
-                    <AddressLink address={artist.address} link={false} />
+                    <WalletIdentityLink address={artist.address} link={false} />
                   </div>
                   <div className="mt-2 text-sm leading-snug text-secondary">
                     {artist.submissions.length} trait

@@ -29,14 +29,14 @@ export default function CommunityPage({
   return (
     <Layout>
       <Head>
-        <title>Community | Yellow Collective</title>
+        <title>Projects | Yellow Collective</title>
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-7 pb-12">
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
           <div className="flex flex-col gap-3">
             <h1 className="font-heading text-[36px] leading-none md:text-[44px]">
-              Community
+              Projects
             </h1>
             <p className="max-w-[720px] text-base leading-snug text-secondary md:text-lg">
               A gallery of projects, events, art, and community work from the
@@ -44,7 +44,7 @@ export default function CommunityPage({
             </p>
           </div>
           <Link
-            href="/community/submit"
+            href="/projects/submit"
             className="flex w-fit shrink-0 items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none"
           >
             Submit project
@@ -59,7 +59,7 @@ export default function CommunityPage({
                 className="group overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
               >
                 <Link
-                  href={`/community/${project.slug}`}
+                  href={`/projects/${project.slug}`}
                   aria-label={project.title}
                   className="block"
                 >
@@ -90,7 +90,7 @@ export default function CommunityPage({
           </div>
         ) : (
           <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-6 text-base text-secondary md:text-lg">
-            No community projects have been submitted yet.
+            No projects have been submitted yet.
           </div>
         )}
       </div>

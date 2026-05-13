@@ -200,13 +200,13 @@ export default function SubmitCommunityProjectPage() {
 
       <div className="mx-auto flex w-full max-w-[980px] flex-col gap-7 pb-12">
         <Link
-          href="/community"
+          href="/projects"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
-          Community
+          Projects
         </Link>
 
         <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
@@ -215,7 +215,7 @@ export default function SubmitCommunityProjectPage() {
           </h1>
           <p className="mt-4 text-base leading-snug text-secondary md:text-lg">
             Submissions are stored for admin review. Approved projects appear
-            in the community gallery.
+            in the projects gallery.
           </p>
         </section>
 

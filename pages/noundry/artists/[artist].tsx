@@ -1,5 +1,5 @@
-import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import useEnsName from "@/hooks/fetch/useEnsName";
 import {
   NoundrySubmission,
@@ -89,7 +89,7 @@ export default function NoundryArtistPage() {
                 {artistDisplayName}
               </h1>
               <p className="mt-3 max-w-3xl break-all text-sm leading-snug text-secondary md:text-base">
-                <AddressLink address={artist} fallback="full" link={false} />
+                <WalletIdentityLink address={artist} fallback="full" />
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

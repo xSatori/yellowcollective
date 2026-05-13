@@ -14,6 +14,7 @@ const RESERVED_PAGE_SLUGS = new Set([
   "community",
   "contracts",
   "create-proposal",
+  "projects",
   "proposals",
   "treasury",
 ]);

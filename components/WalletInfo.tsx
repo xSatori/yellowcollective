@@ -4,15 +4,18 @@ import { Address } from "wagmi";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { getAddress, zeroAddress } from "viem";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import useEnsName from "@/hooks/fetch/useEnsName";
 import useEnsAvatar from "@/hooks/fetch/useEnsAvatar";
+import { getProfilePath } from "@/utils/profile/identity";
 
 interface WalletInfoProps {
   address?: Address;
   hideAvatar?: boolean;
   hideAddress?: boolean;
   disableEns?: boolean;
+  link?: boolean;
   size: "sm" | "lg";
 }
 
@@ -21,6 +24,7 @@ export default function WalletInfo({
   hideAvatar,
   hideAddress,
   disableEns,
+  link = true,
   size,
 }: WalletInfoProps) {
   const { data: ensNameResp } = useEnsName(address);
@@ -42,7 +46,7 @@ export default function WalletInfo({
     }
   }, [address, disableEns, ensNameResp]);
 
-  return (
+  const content = (
     <div className="flex flex-row gap-2 items-center">
       {!hideAvatar &&
         (!disableEns && ensAvatarResp?.ensAvatar && !ensImgError ? (
@@ -62,5 +66,19 @@ export default function WalletInfo({
         ))}
       {!hideAddress && (size == "sm" ? <h6>{name}</h6> : <h3>{name}</h3>)}
     </div>
+  );
+
+  if (!link || !address) return content;
+
+  return (
+    <Link
+      href={getProfilePath({
+        address,
+        ensName: !disableEns ? ensNameResp?.ensName : undefined,
+      })}
+      className="transition hover:opacity-80"
+    >
+      {content}
+    </Link>
   );
 }

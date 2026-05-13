@@ -33,7 +33,7 @@ const daoItems = [
 ];
 
 const baseArtItems = [
-  { label: "Community", href: "/community" },
+  { label: "Projects", href: "/projects" },
   { label: "Playground", href: "/playground" },
   { label: "Probe", href: "/probe" },
   { label: "Noundry", href: "/noundry" },

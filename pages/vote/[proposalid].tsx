@@ -1,4 +1,4 @@
-import AddressLink from "@/components/AddressLink";
+import WalletIdentityLink from "@/components/WalletIdentityLink";
 import { useDAOAddresses, useGetAllProposals } from "hooks/fetch";
 import { TOKEN_CONTRACT } from "constants/addresses";
 import Image from "next/image";
@@ -116,7 +116,7 @@ export default function ProposalComponent() {
             </div>
             <div className="mt-3 text-lg font-heading text-skin-muted sm:mt-4 sm:text-2xl">
               Proposed by{" "}
-              <AddressLink
+              <WalletIdentityLink
                 address={proposal.proposal.proposer}
                 className="text-skin-highlighted underline"
               />

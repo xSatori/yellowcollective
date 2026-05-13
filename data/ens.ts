@@ -19,6 +19,24 @@ export async function getEnsName({
   }
 }
 
+export interface GetEnsAddressReturnType {
+  address?: Address;
+}
+
+export async function getEnsAddress({
+  ensName,
+}: {
+  ensName: string;
+}): Promise<GetEnsAddressReturnType> {
+  try {
+    const address = await viemMainnetClient.getEnsAddress({ name: ensName });
+    return { address: address ?? undefined };
+  } catch (error) {
+    console.warn("Unable to resolve ENS address", error);
+    return { address: undefined };
+  }
+}
+
 export interface GetEnsAvatarReturnType {
   ensAvatar?: string;
 }

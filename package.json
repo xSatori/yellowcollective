@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "node tests/profile-utils.test.mjs"
   },
   "dependencies": {
     "@buildersdk/sdk": "^0.1.0",
