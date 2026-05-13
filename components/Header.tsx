@@ -27,6 +27,7 @@ const homeItems: NavItem[] = [
 
 const daoItems = [
   { label: "About", href: "/about" },
+  { label: "Members", href: "/members" },
   { label: "Proposals", href: "/proposals" },
   { label: "Treasury", href: "/treasury" },
   { label: "Contracts", href: "/contracts" },

@@ -215,6 +215,37 @@ export const listApprovedNoundrySubmissions = async () => {
   return result.rows.map(mapSubmission);
 };
 
+export const countApprovedNoundrySubmissionsByArtists = async (
+  artists: string[]
+) => {
+  await ensureTable();
+
+  const normalizedArtists = Array.from(
+    new Set(
+      artists
+        .filter((artist) => WALLET_ADDRESS_PATTERN.test(artist))
+        .map((artist) => artist.toLowerCase())
+    )
+  );
+
+  if (normalizedArtists.length === 0) return new Map<string, number>();
+
+  const result = await getPool().query(
+    `
+      SELECT lower(artist) as artist, count(*)::int as count
+      FROM noundry_submissions
+      WHERE status = 'approved'
+        AND lower(artist) = ANY($1::text[])
+      GROUP BY lower(artist)
+    `,
+    [normalizedArtists]
+  );
+
+  return new Map<string, number>(
+    result.rows.map((row) => [String(row.artist), Number(row.count || 0)])
+  );
+};
+
 export const listNoundrySubmissions = listApprovedNoundrySubmissions;
 
 export const getNoundrySubmissionById = async (

@@ -56,10 +56,10 @@ test("compares own-profile addresses case-insensitively", () => {
   assert.equal(identity.areSameWalletAddress(checksumAddress, undefined), false);
 });
 
-test("builds profile paths from ENS when available and address otherwise", () => {
+test("builds profile paths from wallet addresses even when ENS is available", () => {
   assert.equal(
     identity.getProfilePath({ address: checksumAddress, ensName: "yellow.eth" }),
-    "/profile/yellow.eth"
+    `/profile/${checksumAddress}`
   );
   assert.equal(
     identity.getProfilePath({ address: checksumAddress }),

@@ -13,8 +13,8 @@ import type {
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import type { CSSProperties, TouchEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import useSWR from "swr";
 
@@ -62,9 +62,27 @@ type SelectionBounds = {
   top: number;
   bottom: number;
 };
-type PinchGesture = {
-  distance: number;
+type EditorViewport = {
   scale: number;
+  translateX: number;
+  translateY: number;
+};
+type TouchPointer = {
+  pointerId: number;
+  clientX: number;
+  clientY: number;
+};
+type ViewportGesture = {
+  distance: number;
+  midpoint: { x: number; y: number };
+  viewport: EditorViewport;
+};
+type TouchStrokeSnapshot = {
+  pixels: string[];
+  undoStack: string[][];
+  redoStack: string[][];
+  selectionBounds: SelectionBounds | null;
+  selectedColor: string;
 };
 
 const GRID_SIZE = 32;
@@ -108,18 +126,32 @@ const toolLabels: Record<EditorTool, string> = {
   move: "Move",
 };
 const toolbarTools = Object.keys(toolLabels) as EditorTool[];
-
-const getTouchDistance = (touches: TouchEvent<HTMLDivElement>["touches"]) => {
-  const firstTouch = touches.item(0);
-  const secondTouch = touches.item(1);
-
-  if (!firstTouch || !secondTouch) return 0;
-
-  return Math.hypot(
-    secondTouch.clientX - firstTouch.clientX,
-    secondTouch.clientY - firstTouch.clientY
-  );
+const MIN_EDITOR_SCALE = 1;
+const MAX_EDITOR_SCALE = 4;
+const DEFAULT_EDITOR_VIEWPORT: EditorViewport = {
+  scale: 1,
+  translateX: 0,
+  translateY: 0,
 };
+
+const getPointerDistance = (first: TouchPointer, second: TouchPointer) =>
+  Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+
+const getPointerMidpoint = (
+  first: TouchPointer,
+  second: TouchPointer,
+  container: HTMLDivElement
+) => {
+  const bounds = container.getBoundingClientRect();
+
+  return {
+    x: (first.clientX + second.clientX) / 2 - bounds.left,
+    y: (first.clientY + second.clientY) / 2 - bounds.top,
+  };
+};
+
+const clampValue = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -332,8 +364,17 @@ export default function NoundryPage() {
   const [isCircleCropEnabled, setIsCircleCropEnabled] = useState(false);
   const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
   const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
-  const [editorScale, setEditorScale] = useState(1);
-  const [pinchGesture, setPinchGesture] = useState<PinchGesture | null>(null);
+  const [editorViewport, setEditorViewport] = useState<EditorViewport>(
+    DEFAULT_EDITOR_VIEWPORT
+  );
+  const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const editorGridRef = useRef<HTMLDivElement | null>(null);
+  const activeTouchPointersRef = useRef<Map<number, TouchPointer>>(new Map());
+  const viewportGestureRef = useRef<ViewportGesture | null>(null);
+  const activeTouchPointerIdRef = useRef<number | null>(null);
+  const activeTouchPixelRef = useRef<number | null>(null);
+  const touchStrokeSnapshotRef = useRef<TouchStrokeSnapshot | null>(null);
+  const suppressTouchDrawRef = useRef(false);
   const selectedTraitName = selectedTraits[traitType];
   const submissions = submissionData?.submissions || [];
   const isAdmin = isAdminAddress(address);
@@ -374,6 +415,31 @@ export default function NoundryPage() {
     };
     window.addEventListener("mouseup", stopPainting);
     return () => window.removeEventListener("mouseup", stopPainting);
+  }, []);
+
+  useEffect(() => {
+    const cancelTouchInteraction = () => {
+      activeTouchPointersRef.current.clear();
+      viewportGestureRef.current = null;
+      activeTouchPointerIdRef.current = null;
+      activeTouchPixelRef.current = null;
+      touchStrokeSnapshotRef.current = null;
+      suppressTouchDrawRef.current = false;
+      setIsPainting(false);
+      setShapeStart(null);
+      setHoveredPixel(null);
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") cancelTouchInteraction();
+    };
+
+    window.addEventListener("blur", cancelTouchInteraction);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("blur", cancelTouchInteraction);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -667,32 +733,259 @@ export default function NoundryPage() {
     router.push("/noundry/submit");
   };
 
-  const handleEditorTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 2) return;
+  const clampEditorViewport = (viewport: EditorViewport): EditorViewport => {
+    const surface = editorSurfaceRef.current;
+    const grid = editorGridRef.current;
+    const scale = clampValue(
+      viewport.scale,
+      MIN_EDITOR_SCALE,
+      MAX_EDITOR_SCALE
+    );
 
-    setPinchGesture({
-      distance: getTouchDistance(event.touches),
-      scale: editorScale,
-    });
+    if (!surface || !grid || scale <= MIN_EDITOR_SCALE) {
+      return { ...DEFAULT_EDITOR_VIEWPORT, scale };
+    }
+
+    const surfaceWidth = surface.clientWidth;
+    const surfaceHeight = surface.clientHeight;
+    const contentWidth = grid.offsetWidth * scale;
+    const contentHeight = grid.offsetHeight * scale;
+    const xPadding = Math.min(96, surfaceWidth * 0.25);
+    const yPadding = Math.min(96, surfaceHeight * 0.25);
+    const translateX =
+      contentWidth <= surfaceWidth
+        ? (surfaceWidth - contentWidth) / 2
+        : clampValue(
+            viewport.translateX,
+            surfaceWidth - contentWidth - xPadding,
+            xPadding
+          );
+    const translateY =
+      contentHeight <= surfaceHeight
+        ? (surfaceHeight - contentHeight) / 2
+        : clampValue(
+            viewport.translateY,
+            surfaceHeight - contentHeight - yPadding,
+            yPadding
+          );
+
+    return {
+      scale: Number(scale.toFixed(3)),
+      translateX: Number(translateX.toFixed(2)),
+      translateY: Number(translateY.toFixed(2)),
+    };
   };
 
-  const handleEditorTouchMove = (event: TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 2 || !pinchGesture) return;
+  const getPixelIndexFromPoint = (clientX: number, clientY: number) => {
+    const target = document.elementFromPoint(clientX, clientY);
+    const pixelElement = target?.closest?.("[data-noundry-pixel]");
+
+    if (!pixelElement || !editorGridRef.current?.contains(pixelElement)) {
+      return null;
+    }
+
+    const pixelIndex = Number(
+      (pixelElement as HTMLElement).dataset.pixelIndex
+    );
+
+    return Number.isInteger(pixelIndex) ? pixelIndex : null;
+  };
+
+  const getGesturePointers = () =>
+    Array.from(activeTouchPointersRef.current.values()).slice(0, 2);
+
+  const startViewportGesture = () => {
+    const surface = editorSurfaceRef.current;
+    const [firstPointer, secondPointer] = getGesturePointers();
+
+    if (!surface || !firstPointer || !secondPointer) return;
+
+    viewportGestureRef.current = {
+      distance: getPointerDistance(firstPointer, secondPointer),
+      midpoint: getPointerMidpoint(firstPointer, secondPointer, surface),
+      viewport: editorViewport,
+    };
+  };
+
+  const restoreTouchStrokeSnapshot = () => {
+    const snapshot = touchStrokeSnapshotRef.current;
+    if (!snapshot) return;
+
+    setPixels(snapshot.pixels);
+    setUndoStack(snapshot.undoStack);
+    setRedoStack(snapshot.redoStack);
+    setSelectionBounds(snapshot.selectionBounds);
+    setSelectedColor(snapshot.selectedColor);
+    setIsPainting(false);
+    setShapeStart(null);
+    setHoveredPixel(null);
+    activeTouchPointerIdRef.current = null;
+    activeTouchPixelRef.current = null;
+    touchStrokeSnapshotRef.current = null;
+  };
+
+  const handleEditorPointerDown = (
+    event: ReactPointerEvent<HTMLDivElement>
+  ) => {
+    if (event.pointerType === "mouse") return;
 
     event.preventDefault();
-    const distance = getTouchDistance(event.touches);
-    if (!distance || !pinchGesture.distance) return;
+    activeTouchPointersRef.current.set(event.pointerId, {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
 
-    const nextScale = Math.min(
-      3,
-      Math.max(1, pinchGesture.scale * (distance / pinchGesture.distance))
-    );
-    setEditorScale(Number(nextScale.toFixed(2)));
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch (error) {
+      console.error("Unable to capture Noundry editor pointer", error);
+    }
+
+    if (activeTouchPointersRef.current.size >= 2) {
+      restoreTouchStrokeSnapshot();
+      suppressTouchDrawRef.current = true;
+      startViewportGesture();
+      return;
+    }
+
+    if (suppressTouchDrawRef.current) return;
+
+    const pixelIndex = getPixelIndexFromPoint(event.clientX, event.clientY);
+    if (pixelIndex === null) return;
+
+    touchStrokeSnapshotRef.current = {
+      pixels,
+      undoStack,
+      redoStack,
+      selectionBounds,
+      selectedColor,
+    };
+    activeTouchPointerIdRef.current = event.pointerId;
+    activeTouchPixelRef.current = pixelIndex;
+    setHoveredPixel(pixelIndex);
+    beginPixelAction(pixelIndex);
   };
 
-  const handleEditorTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length < 2) {
-      setPinchGesture(null);
+  const handleEditorPointerMove = (
+    event: ReactPointerEvent<HTMLDivElement>
+  ) => {
+    if (
+      event.pointerType === "mouse" ||
+      !activeTouchPointersRef.current.has(event.pointerId)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    activeTouchPointersRef.current.set(event.pointerId, {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    if (activeTouchPointersRef.current.size >= 2) {
+      const surface = editorSurfaceRef.current;
+      const [firstPointer, secondPointer] = getGesturePointers();
+      if (!surface || !firstPointer || !secondPointer) return;
+      if (!viewportGestureRef.current) startViewportGesture();
+      const gesture = viewportGestureRef.current;
+      if (!gesture || !gesture.distance) return;
+
+      const distance = getPointerDistance(firstPointer, secondPointer);
+      const midpoint = getPointerMidpoint(firstPointer, secondPointer, surface);
+      const nextScale = clampValue(
+        gesture.viewport.scale * (distance / gesture.distance),
+        MIN_EDITOR_SCALE,
+        MAX_EDITOR_SCALE
+      );
+      const contentX =
+        (gesture.midpoint.x - gesture.viewport.translateX) /
+        gesture.viewport.scale;
+      const contentY =
+        (gesture.midpoint.y - gesture.viewport.translateY) /
+        gesture.viewport.scale;
+
+      setEditorViewport(
+        clampEditorViewport({
+          scale: nextScale,
+          translateX: midpoint.x - contentX * nextScale,
+          translateY: midpoint.y - contentY * nextScale,
+        })
+      );
+      return;
+    }
+
+    if (
+      suppressTouchDrawRef.current ||
+      activeTouchPointerIdRef.current !== event.pointerId ||
+      activeTouchPixelRef.current === null
+    ) {
+      return;
+    }
+
+    const pixelIndex = getPixelIndexFromPoint(event.clientX, event.clientY);
+    if (pixelIndex === null) return;
+
+    activeTouchPixelRef.current = pixelIndex;
+    setHoveredPixel(pixelIndex);
+    continuePixelAction(pixelIndex);
+  };
+
+  const finishEditorPointer = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    shouldCommitTouchDraw: boolean
+  ) => {
+    if (event.pointerType === "mouse") return;
+
+    event.preventDefault();
+    const wasViewportGesture =
+      viewportGestureRef.current !== null ||
+      activeTouchPointersRef.current.size >= 2 ||
+      suppressTouchDrawRef.current;
+
+    if (
+      shouldCommitTouchDraw &&
+      !wasViewportGesture &&
+      activeTouchPointerIdRef.current === event.pointerId &&
+      activeTouchPixelRef.current !== null
+    ) {
+      endPixelAction(
+        getPixelIndexFromPoint(event.clientX, event.clientY) ??
+          activeTouchPixelRef.current
+      );
+    } else if (
+      !shouldCommitTouchDraw &&
+      activeTouchPointerIdRef.current === event.pointerId
+    ) {
+      setIsPainting(false);
+      setShapeStart(null);
+      setHoveredPixel(null);
+    } else if (wasViewportGesture) {
+      setIsPainting(false);
+      setShapeStart(null);
+      setHoveredPixel(null);
+    }
+
+    activeTouchPointersRef.current.delete(event.pointerId);
+
+    try {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    } catch (error) {
+      console.error("Unable to release Noundry editor pointer", error);
+    }
+
+    if (activeTouchPointersRef.current.size < 2) {
+      viewportGestureRef.current = null;
+    }
+
+    if (activeTouchPointersRef.current.size === 0) {
+      activeTouchPointerIdRef.current = null;
+      activeTouchPixelRef.current = null;
+      touchStrokeSnapshotRef.current = null;
+      suppressTouchDrawRef.current = false;
     }
   };
 
@@ -765,17 +1058,35 @@ export default function NoundryPage() {
 
             <div className="relative order-1 h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 xl:order-2">
               <div
+                ref={editorSurfaceRef}
                 className="max-h-[72vh] overflow-auto rounded-xl"
-                onTouchStart={handleEditorTouchStart}
-                onTouchMove={handleEditorTouchMove}
-                onTouchEnd={handleEditorTouchEnd}
-                style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+                onPointerDown={handleEditorPointerDown}
+                onPointerMove={handleEditorPointerMove}
+                onPointerUp={(event) => finishEditorPointer(event, true)}
+                onPointerCancel={(event) => finishEditorPointer(event, false)}
+                onLostPointerCapture={(event) =>
+                  finishEditorPointer(event, false)
+                }
+                style={
+                  {
+                    touchAction: "none",
+                    overscrollBehavior: "contain",
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                    WebkitTouchCallout: "none",
+                  } as CSSProperties & { WebkitTouchCallout: "none" }
+                }
               >
                 <div
-                  className="min-w-full transition-[width] duration-150"
-                  style={{ width: `${editorScale * 100}%` }}
+                  className="min-w-full"
+                  style={{
+                    transform: `translate3d(${editorViewport.translateX}px, ${editorViewport.translateY}px, 0) scale(${editorViewport.scale})`,
+                    transformOrigin: "top left",
+                    willChange: "transform",
+                  }}
                 >
                   <div
+                    ref={editorGridRef}
                     className="grid aspect-square w-full overflow-hidden rounded-xl border border-skin-stroke bg-[#909090]"
                     style={{
                       gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
@@ -789,6 +1100,8 @@ export default function NoundryPage() {
                       <button
                         key={index}
                         type="button"
+                        data-noundry-pixel
+                        data-pixel-index={index}
                         aria-label={`Pixel ${index + 1}`}
                         onMouseDown={() => {
                           beginPixelAction(index);
@@ -822,10 +1135,12 @@ export default function NoundryPage() {
                   </div>
                 </div>
               </div>
-              {editorScale > 1 && (
+              {(editorViewport.scale > 1 ||
+                editorViewport.translateX !== 0 ||
+                editorViewport.translateY !== 0) && (
                 <button
                   type="button"
-                  onClick={() => setEditorScale(1)}
+                  onClick={() => setEditorViewport(DEFAULT_EDITOR_VIEWPORT)}
                   className="mt-3 rounded-full border border-skin-stroke bg-white px-3 py-1 font-heading text-xs text-skin-base shadow-[0px_2px_0px_0px_#c9c9c9]"
                 >
                   Reset zoom

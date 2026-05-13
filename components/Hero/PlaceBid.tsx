@@ -1,14 +1,14 @@
 import { BigNumber, utils } from "ethers";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   usePrepareContractWrite,
   useContractWrite,
   useWaitForTransaction,
   useAccount,
+  useBalance,
   Address,
 } from "wagmi";
-import { AuctionABI } from "@buildersdk/sdk";
 import { useDebounce } from "@/hooks/useDebounce";
 import Button from "../Button";
 import clsx from "clsx";
@@ -16,6 +16,15 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { track } from "@vercel/analytics";
 import ExternalLink from "../ExternalLink";
 import { auctionAbi } from "abis/auction";
+import { COLLECTIVE_NOUNS_TREASURY } from "constants/addresses";
+import {
+  appendBidCommentDataSuffix,
+  getBidCommentByteLength,
+  getBidCommentDataSuffix,
+  MAX_BID_COMMENT_LENGTH,
+  truncateBidCommentToByteLimit,
+  validateBidCommentText,
+} from "@/utils/bid-comments";
 
 export const PlaceBid = ({
   highestBid,
@@ -30,8 +39,15 @@ export const PlaceBid = ({
   hidden: boolean;
   onNewBid: () => Promise<void>;
 }) => {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { data: baseBalance } = useBalance({
+    address,
+    chainId: 8453,
+    enabled: isConnected && Boolean(address),
+    watch: true,
+  });
   const [bid, setBid] = useState("");
+  const [bidComment, setBidComment] = useState("");
   const debouncedBid = useDebounce(bid, 500);
 
   const { openConnectModal } = useConnectModal();
@@ -40,25 +56,39 @@ export const PlaceBid = ({
     address: auction as Address,
     abi: auctionAbi,
     functionName: "createBidWithReferral",
-    args: [
-      BigNumber.from(tokenId || 1),
-      "0x1C937764e433878c6eB1820bC5a1A42c6f25dA81",
-    ],
+    args: [BigNumber.from(tokenId || 1), COLLECTIVE_NOUNS_TREASURY],
     overrides: {
       value: utils.parseEther(debouncedBid || "0"),
     },
     enabled: !!auction && !!debouncedBid,
   });
-  const { write, data } = useContractWrite(config);
+  const bidCommentDataSuffix = getBidCommentDataSuffix(bidComment);
+  const writeConfig = useMemo(() => {
+    if (!bidCommentDataSuffix || !config?.request?.data) return config;
+
+    return {
+      ...config,
+      request: {
+        ...config.request,
+        data: appendBidCommentDataSuffix(
+          config.request.data,
+          bidCommentDataSuffix
+        ),
+      },
+    };
+  }, [bidCommentDataSuffix, config]);
+  const { write, data } = useContractWrite(writeConfig);
   const { isLoading } = useWaitForTransaction({
     hash: data?.hash,
     onError: () => {
       track("placeBidError");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setBid("");
+      setBidComment("");
+
       track("placeBidSuccess");
-      onNewBid();
+      await onNewBid();
     },
   });
 
@@ -82,14 +112,15 @@ export const PlaceBid = ({
       return "Error invalid bid";
   };
 
+  const commentLength = getBidCommentByteLength(bidComment);
+  const commentError = bidComment.trim()
+    ? validateBidCommentText(bidComment) || ""
+    : "";
+  const showBridgeToBase =
+    isConnected && baseBalance?.value && baseBalance.value.isZero();
+
   return (
     <div className={clsx("flex flex-col gap-6", hidden && "hidden")}>
-      <ExternalLink href="https://bridge.base.org/deposit">
-        <div className="flex flex-row gap-2">
-          <Image src="/info-circle.svg" width={20} height={20} alt="" />
-          <span className="font-bold">Bridge to Base</span>
-        </div>
-      </ExternalLink>
       <div
         className={clsx(
           "flex w-full flex-col items-start gap-4 min-[390px]:flex-row min-[390px]:flex-wrap"
@@ -114,10 +145,11 @@ export const PlaceBid = ({
         </div>
         <div className="flex flex-col items-center justify-center gap-1">
           <Button
-            disabled={(!write || isLoading) && isConnected}
+            disabled={((!write || isLoading) && isConnected) || !!commentError}
             onClick={(e) => {
               e.preventDefault();
               if (isConnected) {
+                if (commentError) return;
                 track("placeBidTriggered");
                 write?.();
               } else {
@@ -132,6 +164,48 @@ export const PlaceBid = ({
             )}
           </Button>
         </div>
+        {showBridgeToBase && (
+          <ExternalLink href="https://bridge.base.org/deposit">
+            <div className="flex h-[59px] flex-row items-center gap-2">
+              <Image src="/info-circle.svg" width={20} height={20} alt="" />
+              <span className="font-bold">Bridge to Base</span>
+            </div>
+          </ExternalLink>
+        )}
+        <label className="flex w-full max-w-[420px] flex-col gap-2">
+          <div className="flex items-end justify-between gap-3">
+            <span className="font-bold">Add a comment</span>
+            <span
+              className={clsx(
+                "caption text-primary/60",
+                commentError && "text-negative"
+              )}
+            >
+              {commentLength}/{MAX_BID_COMMENT_LENGTH}
+            </span>
+          </div>
+          <textarea
+            value={bidComment}
+            onChange={(e) =>
+              setBidComment(truncateBidCommentToByteLimit(e.target.value))
+            }
+            className={clsx(
+              "min-h-[92px] w-full resize-none rounded-[18px] border-2 bg-primary px-5 py-4 outline-none focus:border-accent",
+              commentError && "border-negative"
+            )}
+            maxLength={MAX_BID_COMMENT_LENGTH}
+            placeholder="Say something about your bid..."
+          />
+          <p
+            className={clsx(
+              "caption text-primary/60",
+              commentError && "text-negative"
+            )}
+          >
+            {commentError ||
+              "Optional. Publicly shown with your bid on Yellow and nouns.build."}
+          </p>
+        </label>
       </div>
     </div>
   );

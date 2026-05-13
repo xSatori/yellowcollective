@@ -1,5 +1,5 @@
 import { viemMainnetClient } from "configs/wallet";
-import { Address } from "viem";
+import { Address, getAddress, isAddress } from "viem";
 
 export interface GetEnsNameReturnType {
   ensName?: string;
@@ -17,6 +17,31 @@ export async function getEnsName({
     console.warn("Unable to resolve ENS name", error);
     return { ensName: undefined };
   }
+}
+
+export async function getEnsNamesForAddresses(addresses: string[]) {
+  const normalizedAddresses = Array.from(
+    new Set(
+      addresses
+        .filter((address) => isAddress(address))
+        .map((address) => getAddress(address))
+    )
+  );
+  const names: Record<string, string> = {};
+  const results = await Promise.allSettled(
+    normalizedAddresses.map(async (address) => {
+      const { ensName } = await getEnsName({ address });
+      return [address.toLowerCase(), ensName || ""] as const;
+    })
+  );
+
+  results.forEach((result) => {
+    if (result.status === "fulfilled" && result.value[1]) {
+      names[result.value[0]] = result.value[1];
+    }
+  });
+
+  return names;
 }
 
 export interface GetEnsAddressReturnType {

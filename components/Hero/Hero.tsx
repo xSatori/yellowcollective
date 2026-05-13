@@ -140,6 +140,9 @@ const EndedAuction = ({
   const { data: auctionData } = usePreviousAuction({
     tokenId,
   });
+  const featuredBidComment = auctionData?.bids?.find(
+    (bid) => bid.comment?.trim()
+  )?.comment;
 
   return (
     <div className="flex flex-col items-start">
@@ -153,7 +156,7 @@ const EndedAuction = ({
           <div className="font-light">Winning Bid</div>
           <h3>
             {auctionData
-              ? `Ξ ${formatNumber(utils.formatEther(auctionData.amount || "0"), 3)}`
+              ? `Ξ ${formatNumber(utils.formatEther(auctionData.amount || "0"), 4)}`
               : "n/a"}
           </h3>
         </div>
@@ -165,6 +168,11 @@ const EndedAuction = ({
           />
         </div>
       </div>
+      {!hidden && featuredBidComment && (
+        <p className="mb-3 line-clamp-3 w-full max-w-[420px] rounded-[14px] bg-white px-4 py-3 text-sm leading-5 text-black">
+          &ldquo;{featuredBidComment}&rdquo;
+        </p>
+      )}
       {auctionData?.amount != undefined && (
         <BidHistory
           tokenId={tokenId}
@@ -218,7 +226,7 @@ const CurrentAuction = ({
           </div>
           <h3 className="text-[24px] leading-[30px] min-[360px]:text-[32px] min-[360px]:leading-[40px] md:text-[36px] md:leading-[44px]">
             Ξ{" "}
-            {formatNumber(utils.formatEther(auctionInfo?.highestBid || "0"), 3)}
+            {formatNumber(utils.formatEther(auctionInfo?.highestBid || "0"), 4)}
           </h3>
         </div>
 

@@ -11,7 +11,10 @@ import {
   type NoundrySubmission,
 } from "data/noundry/submissions";
 import { getAddresses } from "data/nouns-builder/manager";
-import { getCollectiveNounTokens, type ProbeToken } from "data/nouns-builder/probe";
+import {
+  getCollectiveNounTokens,
+  type ProbeToken,
+} from "data/nouns-builder/probe";
 import { getProposals, type Proposal } from "data/nouns-builder/governor";
 import { getProposalName } from "@/utils/getProposalName";
 import {
@@ -47,6 +50,7 @@ export type ProfileDaoVote = {
   support: number;
   weight: number;
   reason: string;
+  timestamp?: string;
 };
 
 export type ProfileAuctionBid = {
@@ -57,6 +61,7 @@ export type ProfileAuctionBid = {
   amount: string;
   transactionHash: string;
   createdAt?: string;
+  comment?: string;
 };
 
 export type ProfileAuctionWin = {
@@ -83,6 +88,7 @@ export type ProfileActivityItem = {
   href?: string;
   timestamp?: string;
   meta?: string;
+  comment?: string;
 };
 
 export type PublicProfileData = {
@@ -107,12 +113,17 @@ type ProfileVoteRow = {
   support: number | string;
   weight: number | string;
   reason?: string | null;
+  proposal?: {
+    timeCreated?: string | number | null;
+    voteStart?: string | number | null;
+  } | null;
 };
 
 type ProfileAuctionBidRow = {
   id: string;
   bidder: string;
   amount: string;
+  comment?: string | null;
   bidTime?: string | number | null;
 };
 
@@ -212,6 +223,31 @@ export const getProfileMetadata = async (address: string) => {
   return result.rows[0] ? mapMetadata(result.rows[0]) : null;
 };
 
+export const listProfileMetadata = async (addresses: string[]) => {
+  const normalizedAddresses = Array.from(
+    new Set(
+      addresses
+        .filter((address) => isAddress(address))
+        .map((address) => getAddress(address))
+    )
+  );
+
+  if (normalizedAddresses.length === 0) return [];
+
+  await ensureTable();
+
+  const result = await getPool().query(
+    `
+      SELECT wallet_address, username, website_url, farcaster, twitter, avatar_url, created_at, updated_at
+      FROM profile_metadata
+      WHERE lower(wallet_address) = ANY($1::text[])
+    `,
+    [normalizedAddresses.map((address) => address.toLowerCase())]
+  );
+
+  return result.rows.map(mapMetadata);
+};
+
 export const saveProfileMetadata = async ({
   address,
   input,
@@ -280,7 +316,9 @@ export const verifyProfileUpdate = ({
   if (Date.now() - parsed.issuedAt > fiveMinutesMs) return false;
 
   try {
-    return getAddress(utils.verifyMessage(message, signature)) === normalizedAddress;
+    return (
+      getAddress(utils.verifyMessage(message, signature)) === normalizedAddress
+    );
   } catch {
     return false;
   }
@@ -293,6 +331,10 @@ const proposalVotesQuery = gql`
       support
       weight
       reason
+      proposal {
+        timeCreated
+        voteStart
+      }
     }
   }
 `;
@@ -312,6 +354,7 @@ const profileAuctionActivityQuery = gql`
           id
           bidder
           amount
+          comment
           bidTime
         }
       }
@@ -349,6 +392,9 @@ const getProposalVotes = async (proposalId: string) => {
     support: normalizeSupport(vote.support),
     weight: Number(vote.weight || 0),
     reason: vote.reason || "",
+    timestamp: getTimestampFromBidTime(
+      vote.proposal?.voteStart || vote.proposal?.timeCreated
+    ),
   }));
 };
 
@@ -382,7 +428,9 @@ const getOwnedTokensForAddress = async (address: string) => {
 
   return tokens.filter(
     (token) =>
-      token.owner && isAddress(token.owner) && getAddress(token.owner) === normalizedAddress
+      token.owner &&
+      isAddress(token.owner) &&
+      getAddress(token.owner) === normalizedAddress
   );
 };
 
@@ -407,7 +455,8 @@ const getDaoActivityForAddress = async (address: string) => {
         return proposalVotes
           .filter(
             (vote) =>
-              isAddress(vote.voter) && getAddress(vote.voter) === normalizedAddress
+              isAddress(vote.voter) &&
+              getAddress(vote.voter) === normalizedAddress
           )
           .map((vote) => ({
             proposalId: proposal.proposalId,
@@ -415,6 +464,7 @@ const getDaoActivityForAddress = async (address: string) => {
             support: vote.support,
             weight: vote.weight,
             reason: vote.reason,
+            timestamp: vote.timestamp,
           }));
       })
     )
@@ -431,7 +481,8 @@ const getTokenIdFromAuctionId = (id: string) => {
 };
 
 const getTimestampFromBidTime = (bidTime?: string | number | null) => {
-  if (bidTime === undefined || bidTime === null || bidTime === "") return undefined;
+  if (bidTime === undefined || bidTime === null || bidTime === "")
+    return undefined;
 
   const seconds = Number(bidTime);
   if (!Number.isFinite(seconds)) return undefined;
@@ -484,6 +535,7 @@ const getAuctionActivityForAddress = async (address: string) => {
         ...getTokenMeta(tokenId),
         amount: bid.amount,
         transactionHash: getTransactionHashFromBidId(bid.id),
+        comment: bid.comment?.trim() || undefined,
         createdAt: getTimestampFromBidTime(bid.bidTime),
       };
     });
@@ -575,6 +627,7 @@ const buildActivity = ({
       type: "dao-vote" as const,
       title: `Voted ${supportLabel(vote.support)}`,
       href: `/proposals/${vote.proposalId}`,
+      timestamp: vote.timestamp,
       meta: vote.proposalTitle,
     })),
     ...auctionBids.map((bid) => ({
@@ -584,6 +637,7 @@ const buildActivity = ({
       href: `/?tokenid=${bid.tokenId}`,
       timestamp: bid.createdAt,
       meta: bid.amount,
+      comment: bid.comment,
     })),
     ...auctionWins.map((win) => ({
       id: win.id,
@@ -604,7 +658,9 @@ const buildActivity = ({
 
   return activity.sort((first, second) => {
     const firstTime = first.timestamp ? new Date(first.timestamp).getTime() : 0;
-    const secondTime = second.timestamp ? new Date(second.timestamp).getTime() : 0;
+    const secondTime = second.timestamp
+      ? new Date(second.timestamp).getTime()
+      : 0;
     return secondTime - firstTime;
   });
 };

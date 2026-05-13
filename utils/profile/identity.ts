@@ -55,12 +55,11 @@ export const shortenWalletAddress = (address: string, amount = 4) => {
 
 export const getProfilePath = ({
   address,
-  ensName,
 }: {
   address: string;
   ensName?: string | null;
 }) => {
-  const profileId = ensName?.trim() || normalizeWalletAddress(address) || address;
+  const profileId = normalizeWalletAddress(address) || address;
   return `/profile/${encodeURIComponent(profileId)}`;
 };
 

@@ -12,25 +12,32 @@ function BidRow({ bid, tight }: { bid: Bid; tight: boolean }) {
   return (
     <div
       className={twMerge(
-        "flex flex-row   justify-between items-center w-full",
+        "flex w-full flex-col gap-2",
         !tight && "py-3 border-b-2 border-transparent/10"
       )}
     >
-      <WalletInfo address={bid.bidder} size="sm" />
-      <ExternalLink href={`${ETHERSCAN_BASEURL}/tx/${bid.transactionHash}`}>
-        <div className="flex flex-row gap-2 items-center hover:opacity-70 transition-opacity">
-          <h6 className="text-primary/70">
-            Ξ {formatNumber(utils.formatEther(bid.bidAmount || "0"), 3)}
-          </h6>
-          <Image
-            src="/link.svg"
-            width={24}
-            height={24}
-            alt="view"
-            className=" "
-          />
-        </div>
-      </ExternalLink>
+      <div className="flex w-full flex-row items-center justify-between gap-3">
+        <WalletInfo address={bid.bidder} size="sm" />
+        <ExternalLink href={`${ETHERSCAN_BASEURL}/tx/${bid.transactionHash}`}>
+          <div className="flex flex-row gap-2 items-center hover:opacity-70 transition-opacity">
+            <h6 className="text-primary/70">
+              Ξ {formatNumber(utils.formatEther(bid.bidAmount || "0"), 4)}
+            </h6>
+            <Image
+              src="/link.svg"
+              width={24}
+              height={24}
+              alt="view"
+              className=" "
+            />
+          </div>
+        </ExternalLink>
+      </div>
+      {bid.comment && (
+        <p className="line-clamp-3 rounded-[14px] bg-white px-4 py-3 text-sm leading-5 text-black">
+          &ldquo;{bid.comment}&rdquo;
+        </p>
+      )}
     </div>
   );
 }

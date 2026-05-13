@@ -1,6 +1,4 @@
-import Button from "@/components/Button";
 import Layout from "@/components/Layout";
-import WalletIdentityLink from "@/components/WalletIdentityLink";
 import {
   SubmissionGalleryCard,
   type NoundrySubmission,
@@ -41,6 +39,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/20/solid";
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
@@ -58,11 +57,24 @@ type ProfilePageProps = {
 const MAINNET_ETHERSCAN_URL = "https://etherscan.io";
 const BASESCAN_URL = "https://basescan.org";
 type ActivityStatus = "bid" | "submission" | "vote" | "won";
+const PROFILE_BUTTON_BASE =
+  "inline-flex items-center justify-center rounded-[18px] px-5 py-3 font-heading transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none";
+const PROFILE_BUTTON_BLUE =
+  "bg-[#1d9bf0] text-white shadow-[0px_4.02px_0px_0px_#0f5f99] hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99]";
+const PROFILE_BUTTON_YELLOW =
+  "bg-accent text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400]";
+const PROFILE_BUTTON_GRAY =
+  "bg-[#6b7280] text-white shadow-[0px_4.02px_0px_0px_#3f4652] hover:bg-[#7b8493] hover:shadow-[0px_6px_0px_0px_#3f4652]";
+const PROFILE_BUTTON_RED =
+  "bg-[#c93d2f] text-white shadow-[0px_4.02px_0px_0px_#7f2219] hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219]";
+const PROFILE_BUTTON_PURPLE =
+  "bg-[#855DCD] text-white shadow-[0px_4.02px_0px_0px_#4f3285] hover:bg-[#9b75df] hover:shadow-[0px_6px_0px_0px_#4f3285]";
 type ProfileFeedItem = {
   id: string;
   href: string;
   title: string;
   meta?: string;
+  comment?: string;
   badge?: string;
   timestamp?: string;
   status: ActivityStatus;
@@ -89,6 +101,8 @@ export const getServerSideProps = async ({
 > => {
   const lookup =
     typeof params?.addressOrEns === "string" ? params.addressOrEns.trim() : "";
+  const lookupIsEnsName =
+    !isAddress(lookup) && lookup.toLowerCase().endsWith(".eth");
 
   if (!lookup) {
     return {
@@ -102,7 +116,7 @@ export const getServerSideProps = async ({
 
   const resolvedAddress = isAddress(lookup)
     ? getAddress(lookup)
-    : lookup.toLowerCase().endsWith(".eth")
+    : lookupIsEnsName
       ? (await getEnsAddress({ ensName: lookup })).address
       : undefined;
 
@@ -111,9 +125,18 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         profile: null,
-        error: lookup.endsWith(".eth")
+        error: lookupIsEnsName
           ? "That ENS name did not resolve to a wallet address."
           : "That profile identifier is not a valid wallet address or ENS name.",
+      },
+    };
+  }
+
+  if (lookup !== resolvedAddress) {
+    return {
+      redirect: {
+        destination: `/profile/${encodeURIComponent(resolvedAddress)}`,
+        permanent: false,
       },
     };
   }
@@ -165,6 +188,11 @@ export default function ProfilePage({
     profile?.noundrySubmissions.length ? "/api/playground/artwork" : null,
     fetcher
   );
+  const { data: roundsSettings } = useSWR<{ roundsPublicEnabled: boolean }>(
+    "/api/rounds/settings",
+    fetcher
+  );
+  const showRoundsActivity = Boolean(roundsSettings?.roundsPublicEnabled);
 
   const isOwnProfile = areSameWalletAddress(connectedAddress, profile?.address);
   const stats = useMemo(() => {
@@ -192,7 +220,9 @@ export default function ProfilePage({
 
     try {
       const walletMessage = createProfileUpdateMessage(profile.address);
-      const walletSignature = await signMessageAsync({ message: walletMessage });
+      const walletSignature = await signMessageAsync({
+        message: walletMessage,
+      });
       const response = await fetch(`/api/profile/${profile.address}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -231,23 +261,59 @@ export default function ProfilePage({
           <title>Profile not found | Yellow Collective</title>
         </Head>
         <div className="mx-auto max-w-[860px] rounded-2xl border border-skin-stroke bg-white p-8 text-center shadow-sm">
-          <h1 className="font-heading text-4xl leading-none">Profile not found</h1>
+          <h1 className="font-heading text-4xl leading-none">
+            Profile not found
+          </h1>
           <p className="mt-3 text-secondary">{error || lookup}</p>
         </div>
       </Layout>
     );
   }
 
+  const customDisplayName = metadata?.username?.trim() || "";
   const displayName =
-    metadata?.username || profile.ensName || shortenWalletAddress(profile.address);
+    customDisplayName || profile.ensName || shortenWalletAddress(profile.address);
+  const showEnsPill = Boolean(customDisplayName && profile.ensName);
   const avatarUrl = metadata?.avatarUrl || profile.ensAvatar || "";
-  const externalLinks = [
-    metadata?.websiteUrl ? ["Website", metadata.websiteUrl] : undefined,
-    metadata?.farcaster ? ["Farcaster", metadata.farcaster] : undefined,
-    metadata?.twitter ? ["Twitter/X", metadata.twitter] : undefined,
+  const explorerLinks = [
     ["Etherscan", `${MAINNET_ETHERSCAN_URL}/address/${profile.address}`],
     ["Basescan", `${BASESCAN_URL}/address/${profile.address}`],
-  ].filter((link): link is [string, string] => Boolean(link));
+  ] as const;
+  const socialLinks = [
+    metadata?.websiteUrl
+        ? {
+            label: "Website",
+            href: metadata.websiteUrl,
+            icon: "/chain-link.svg",
+            className: PROFILE_BUTTON_RED,
+          }
+        : undefined,
+    metadata?.farcaster
+      ? {
+          label: "Farcaster",
+          href: metadata.farcaster,
+          icon: "/farcaster.svg",
+          className: PROFILE_BUTTON_PURPLE,
+        }
+      : undefined,
+    metadata?.twitter
+      ? {
+          label: "X",
+          href: metadata.twitter,
+          icon: "/x.svg",
+          className: PROFILE_BUTTON_BLUE,
+        }
+      : undefined,
+  ].filter(
+    (
+      link
+    ): link is {
+      label: string;
+      href: string;
+      icon: string;
+      className: string;
+    } => Boolean(link)
+  );
 
   return (
     <Layout>
@@ -268,27 +334,58 @@ export default function ProfilePage({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
-                      <h1 className="break-words font-heading text-5xl leading-none">
-                        {displayName}
-                      </h1>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="break-words font-heading text-5xl leading-none">
+                          {displayName}
+                        </h1>
+                        {socialLinks.map(({ label, href, icon, className }) => (
+                          <a
+                            key={label}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={label}
+                            title={label}
+                            className={`flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-4 font-heading text-sm transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none ${className}`}
+                          >
+                            <Image
+                              src={icon}
+                              width={20}
+                              height={20}
+                              alt=""
+                              className="brightness-0 invert"
+                            />
+                            <span>{label}</span>
+                          </a>
+                        ))}
+                      </div>
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-secondary">
-                        {profile.ensName && (
+                        {showEnsPill && (
                           <span className="rounded-full bg-[#fff7bf] px-3 py-1 font-heading text-sm text-skin-base">
                             {profile.ensName}
                           </span>
                         )}
-                        <WalletIdentityLink
-                          address={profile.address}
-                          fallback="short"
-                          link={false}
-                          className="font-heading text-base text-secondary"
-                        />
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="break-all font-heading text-base text-secondary">
+                            {profile.address}
+                          </span>
+                          {explorerLinks.map(([label, href]) => (
+                            <a
+                              key={label}
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-heading text-sm text-skin-base underline underline-offset-4 transition hover:text-[#b89400]"
+                            >
+                              {label}
+                            </a>
+                          ))}
+                        </span>
                       </div>
                     </div>
                     {isOwnProfile && (
-                      <Button
+                      <button
                         type="button"
-                        variant="secondary"
                         onClick={() => {
                           setFormState({
                             username: metadata?.username || "",
@@ -300,24 +397,11 @@ export default function ProfilePage({
                           setSaveState({ status: "idle", message: "" });
                           setIsEditing(true);
                         }}
+                        className={`${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_YELLOW}`}
                       >
                         Edit Profile
-                      </Button>
+                      </button>
                     )}
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {externalLinks.map(([label, href]) => (
-                      <a
-                        key={label}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-full border border-skin-stroke bg-skin-muted px-4 py-2 font-heading text-sm text-skin-base transition hover:-translate-y-0.5 hover:bg-[#fff7bf]"
-                      >
-                        {label}
-                      </a>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -330,16 +414,16 @@ export default function ProfilePage({
               )}
             </div>
 
-            <div className="grid grid-cols-5 border-t border-skin-stroke bg-[#f7f7f7]">
+            <div className="grid grid-cols-[repeat(5,minmax(0,1fr))] border-t border-skin-stroke bg-[#f7f7f7]">
               {stats.map(([label, value]) => (
                 <div
                   key={label}
-                  className="border-r border-skin-stroke p-3 last:border-r-0 sm:p-5"
+                  className="min-w-0 border-r border-skin-stroke p-3 text-center last:border-r-0 sm:p-5"
                 >
                   <div className="font-heading text-3xl leading-none text-skin-base sm:text-4xl">
                     {value}
                   </div>
-                  <div className="mt-1 text-[11px] leading-tight text-secondary sm:text-sm">
+                  <div className="mt-1 break-words text-[11px] leading-tight text-secondary sm:text-sm">
                     {label}
                   </div>
                 </div>
@@ -358,10 +442,12 @@ export default function ProfilePage({
           auctionBids={profile.auctionBids}
           auctionWins={profile.auctionWins}
         />
-        <RoundsActivityFeed
-          submissions={profile.roundSubmissions}
-          votes={profile.roundVotes}
-        />
+        {showRoundsActivity && (
+          <RoundsActivityFeed
+            submissions={profile.roundSubmissions}
+            votes={profile.roundVotes}
+          />
+        )}
         <OwnedTokensSection tokens={profile.ownedTokens} />
       </div>
 
@@ -381,9 +467,7 @@ export default function ProfilePage({
               onChange={(avatarUrl) =>
                 setFormState((current) => ({ ...current, avatarUrl }))
               }
-              onError={(message) =>
-                setSaveState({ status: "error", message })
-              }
+              onError={(message) => setSaveState({ status: "error", message })}
             />
             <ProfileField
               label="Username"
@@ -429,22 +513,28 @@ export default function ProfilePage({
               </p>
             )}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <Button
+              <button
                 type="button"
-                variant="secondary"
                 onClick={() => setIsEditing(false)}
+                className={`${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_GRAY}`}
               >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
                 onClick={saveProfile}
                 disabled={
-                  !isConnected || !isOwnProfile || isSigning || saveState.status === "saving"
+                  !isConnected ||
+                  !isOwnProfile ||
+                  isSigning ||
+                  saveState.status === "saving"
                 }
+                className={`${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_BLUE}`}
               >
-                {isSigning || saveState.status === "saving" ? "Saving..." : "Save"}
-              </Button>
+                {isSigning || saveState.status === "saving"
+                  ? "Saving..."
+                  : "Save"}
+              </button>
             </div>
           </div>
         </DialogContent>
@@ -467,7 +557,10 @@ const ProfileAvatar = ({
       // eslint-disable-next-line @next/next/no-img-element
       <img src={avatar} alt={label} className="h-full w-full object-cover" />
     ) : (
-      <Jazzicon diameter={86} seed={jsNumberForAddress(address || zeroAddress)} />
+      <Jazzicon
+        diameter={86}
+        seed={jsNumberForAddress(address || zeroAddress)}
+      />
     )}
   </div>
 );
@@ -542,7 +635,9 @@ const ProfileAvatarUpload = ({
     try {
       onChange(await resizeAvatarFile(file));
     } catch (error) {
-      onError(error instanceof Error ? error.message : "Unable to upload image.");
+      onError(
+        error instanceof Error ? error.message : "Unable to upload image."
+      );
     } finally {
       event.target.value = "";
     }
@@ -562,7 +657,9 @@ const ProfileAvatarUpload = ({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <label className="flex w-fit cursor-pointer items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+            <label
+              className={`w-fit cursor-pointer text-lg ${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_BLUE}`}
+            >
               Upload image
               <input
                 type="file"
@@ -575,7 +672,7 @@ const ProfileAvatarUpload = ({
               <button
                 type="button"
                 onClick={() => onChange("")}
-                className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+                className={`text-lg ${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_YELLOW}`}
               >
                 Use ENS default
               </button>
@@ -664,11 +761,7 @@ const RoundsActivityFeed = ({
   );
 };
 
-const OwnedTokensSection = ({
-  tokens,
-}: {
-  tokens: ProbeToken[];
-}) => (
+const OwnedTokensSection = ({ tokens }: { tokens: ProbeToken[] }) => (
   <ProfileSection
     title="Owned Collective Nouns"
     emptyTitle="No DAO tokens owned"
@@ -684,7 +777,11 @@ const OwnedTokensSection = ({
         >
           {token.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={token.image} alt={token.name} className="aspect-square w-full bg-[#ffcc00] object-cover" />
+            <img
+              src={token.image}
+              alt={token.name}
+              className="aspect-square w-full bg-[#ffcc00] object-cover"
+            />
           ) : (
             <div className="aspect-square bg-[#ffcc00]" />
           )}
@@ -714,7 +811,7 @@ const DaoActivityFeed = ({
       href: `/proposals/${proposal.proposalId}`,
       title: `Proposal: ${proposal.title}`,
       meta: "Proposal submitted",
-      badge: `State ${proposal.state}`,
+      badge: getProposalStateLabel(proposal.state),
       status: "submission" as const,
       isProposal: true,
       timestamp: proposal.timeCreated
@@ -730,13 +827,14 @@ const DaoActivityFeed = ({
       badge: `${vote.weight} votes`,
       status: getVoteStatus(vote.support),
       isProposal: true,
-      timestamp: undefined,
+      timestamp: vote.timestamp,
     })),
     ...auctionBids.map((bid) => ({
       id: bid.id,
       href: `/?tokenid=${bid.tokenId}`,
       title: bid.tokenName,
       meta: "Bid placed",
+      comment: bid.comment,
       badge: formatEthAmount(bid.amount),
       status: "bid" as const,
       imageUrl: bid.tokenImage,
@@ -768,6 +866,7 @@ const DaoActivityFeed = ({
             href={item.href}
             title={item.title}
             meta={item.meta}
+            comment={item.comment}
             badge={item.badge}
             imageUrl={item.imageUrl}
             status={item.status}
@@ -805,7 +904,9 @@ const ProfileSection = ({
       {isEmpty ? (
         <div className="rounded-2xl border border-dashed border-skin-stroke bg-skin-muted p-8 text-center">
           <h3 className="font-heading text-2xl leading-none">{emptyTitle}</h3>
-          <p className="mx-auto mt-2 max-w-[520px] text-secondary">{emptyBody}</p>
+          <p className="mx-auto mt-2 max-w-[520px] text-secondary">
+            {emptyBody}
+          </p>
         </div>
       ) : (
         children
@@ -818,6 +919,7 @@ const ProfileListLink = ({
   href,
   title,
   meta,
+  comment,
   badge,
   imageUrl,
   status,
@@ -827,6 +929,7 @@ const ProfileListLink = ({
   href: string;
   title: string;
   meta?: string;
+  comment?: string;
   badge?: string;
   imageUrl?: string;
   status: ActivityStatus;
@@ -853,6 +956,11 @@ const ProfileListLink = ({
           )}
         </div>
         {meta && <div className="mt-1 text-sm text-secondary">{meta}</div>}
+        {comment && (
+          <p className="mt-2 line-clamp-3 text-sm leading-5 text-secondary">
+            &ldquo;{comment}&rdquo;
+          </p>
+        )}
       </div>
     </div>
     {badge && (
@@ -873,13 +981,13 @@ const ActivityStatusButton = ({
   const statusConfig = {
     bid: {
       label: "Bid",
-      className:
-        "bg-[#1d9bf0] text-white shadow-[0px_4px_0px_0px_#0f5f99]",
+      className: "bg-[#1d9bf0] text-white shadow-[0px_4px_0px_0px_#0f5f99]",
       Icon: CurrencyDollarIcon,
     },
     submission: {
       label: "Submitted",
-      className: "bg-[#fff7bf] shadow-[0px_4px_0px_0px_#d8b414]",
+      className:
+        "bg-[#ffcc00] text-skin-base shadow-[0px_4px_0px_0px_#b89400]",
       Icon: DocumentTextIcon,
     },
     vote: {
@@ -893,7 +1001,7 @@ const ActivityStatusButton = ({
     won: {
       label: "Won",
       className:
-        "bg-skin-proposal-success text-white shadow-[0px_4px_0px_0px_#0d8f49]",
+        "bg-[#ffcc00] text-skin-base shadow-[0px_4px_0px_0px_#b89400]",
       Icon: TrophyIcon,
     },
   }[status];
@@ -901,7 +1009,7 @@ const ActivityStatusButton = ({
 
   return (
     <span
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-skin-stroke text-skin-base ${statusConfig.className}`}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-0 ${statusConfig.className}`}
       aria-label={statusConfig.label}
       title={statusConfig.label}
     >
@@ -946,6 +1054,31 @@ const getVoteTone = (support: number) => {
 
 const getVoteStatus = (_support: number): ActivityStatus => "vote";
 
+const getProposalStateLabel = (state: number) => {
+  switch (state) {
+    case 0:
+      return "Pending";
+    case 1:
+      return "Active";
+    case 2:
+      return "Canceled";
+    case 3:
+      return "Defeated";
+    case 4:
+      return "Succeeded";
+    case 5:
+      return "Queued";
+    case 6:
+      return "Expired";
+    case 7:
+      return "Executed";
+    case 8:
+      return "Vetoed";
+    default:
+      return "Unknown";
+  }
+};
+
 const getActivityBorderClass = (voteTone?: "for" | "against") => {
   if (voteTone === "against") return "border-skin-proposal-danger";
   if (voteTone === "for") return "border-skin-proposal-success";
@@ -966,7 +1099,7 @@ const formatEthAmount = (value: string) => {
     if (!Number.isFinite(formatted)) return "0 ETH";
 
     return `${formatted.toLocaleString("en-US", {
-      maximumFractionDigits: 3,
+      maximumFractionDigits: 4,
     })} ETH`;
   } catch {
     return "0 ETH";
