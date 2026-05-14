@@ -1,9 +1,14 @@
 import Layout from "@/components/Layout";
+import ProjectMemberSelector from "@/components/community/ProjectMemberSelector";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type { CommunityProject } from "data/community";
+import type { DaoMemberSummary } from "data/members";
 import Head from "next/head";
 import Link from "next/link";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
+import { useAccount } from "wagmi";
+import { areSameWalletAddress } from "@/utils/profile/identity";
 
 const slugify = (value: string) =>
   value
@@ -31,8 +36,23 @@ type UploadedImage = {
   dataUrl: string;
 };
 
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) throw new Error(data.error || "Unable to load data.");
+  return data;
+};
+
 export default function SubmitCommunityProjectPage() {
+  const { address: connectedAddress } = useAccount();
+  const { data: membersData, error: membersError } = useSWR<{
+    members: DaoMemberSummary[];
+  }>("/api/members", fetcher);
+  const members = useMemo(() => membersData?.members || [], [membersData]);
   const [values, setValues] = useState(initialValues);
+  const [memberAddresses, setMemberAddresses] = useState<string[]>([]);
+  const [defaultedAddress, setDefaultedAddress] = useState<string | null>(null);
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
     null
   );
@@ -58,6 +78,7 @@ export default function SubmitCommunityProjectPage() {
     description: values.description.trim(),
     details,
     artist: values.artist.trim(),
+    memberAddresses,
     category: values.category.trim(),
     date: values.date.trim(),
     href: values.href.trim(),
@@ -65,6 +86,9 @@ export default function SubmitCommunityProjectPage() {
     galleryImages,
     links,
   };
+  const isResolvingConnectedMember = Boolean(
+    connectedAddress && !membersData && !membersError
+  );
   const canSubmit = Boolean(
     slug &&
       projectData.title &&
@@ -74,7 +98,8 @@ export default function SubmitCommunityProjectPage() {
       projectData.category &&
       projectData.date &&
       projectData.href &&
-      projectData.image
+      projectData.image &&
+      !isResolvingConnectedMember
   );
 
   const updateValue = (field: keyof typeof values, value: string) => {
@@ -155,8 +180,30 @@ export default function SubmitCommunityProjectPage() {
   };
   const resetForm = () => {
     setValues(initialValues);
+    setMemberAddresses([]);
+    setDefaultedAddress(null);
     setUploadedImage(null);
   };
+
+  useEffect(() => {
+    if (!connectedAddress || defaultedAddress === connectedAddress) return;
+
+    const connectedMember = members.find((member) =>
+      areSameWalletAddress(member.address, connectedAddress)
+    );
+
+    if (!connectedMember) return;
+
+    setMemberAddresses((currentAddresses) =>
+      currentAddresses.some((address) =>
+        areSameWalletAddress(address, connectedMember.address)
+      )
+        ? currentAddresses
+        : [...currentAddresses, connectedMember.address]
+    );
+    setDefaultedAddress(connectedAddress);
+  }, [connectedAddress, defaultedAddress, members]);
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
@@ -233,6 +280,19 @@ export default function SubmitCommunityProjectPage() {
               onChange={(value) => updateValue("artist", value)}
               placeholder="Artist or creator name"
             />
+            <div className="md:col-span-2">
+              <ProjectMemberSelector
+                members={members}
+                selectedAddresses={memberAddresses}
+                onChange={setMemberAddresses}
+                isLoading={!membersData && !membersError}
+                error={
+                  membersError
+                    ? "Members could not be loaded. You can still submit without linked members."
+                    : undefined
+                }
+              />
+            </div>
             <div>
               <label className="font-heading text-base text-skin-base">
                 Category
@@ -393,7 +453,11 @@ export default function SubmitCommunityProjectPage() {
                   : "bg-skin-button-muted text-skin-inverted opacity-70"
               }`}
             >
-              {isSubmitting ? "Submitting..." : "Submit for review"}
+              {isSubmitting
+                ? "Submitting..."
+                : isResolvingConnectedMember
+                  ? "Loading members..."
+                  : "Submit for review"}
             </button>
             <button
               type="button"

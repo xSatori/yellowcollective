@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import ProjectMemberSelector from "@/components/community/ProjectMemberSelector";
 import { isAdminAddress } from "@/utils/admin";
 import {
   createAdminAuthMessage,
@@ -6,6 +7,7 @@ import {
 } from "@/utils/admin-auth";
 import type { CommunityProject } from "data/community";
 import type { CommunityProjectRecord } from "data/community-project-submissions";
+import type { DaoMemberSummary } from "data/members";
 import type { NoundrySubmission } from "data/noundry/submissions";
 import type {
   Round,
@@ -101,6 +103,17 @@ const createAdminFetcher =
 
     return data;
   };
+
+const memberSummariesFetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to load members.");
+  }
+
+  return data as { members: DaoMemberSummary[] };
+};
 
 const communityProjectsFetcher = createAdminFetcher<{
   projects: CommunityProjectRecord[];
@@ -504,8 +517,15 @@ const CommunityAdminPanel = ({
 }) => {
   const router = useRouter();
   const requestedSlug = getQueryValue(router.query.project);
+  const requestedMode = getQueryValue(router.query.mode);
+  const requestedProject = requestedSlug
+    ? projects.find((project) => project.slug === requestedSlug)
+    : undefined;
   const activeMode: CommunityListMode =
-    getQueryValue(router.query.mode) === "existing" ? "existing" : "queue";
+    requestedMode === "existing" ||
+    (!requestedMode && requestedProject?.status === "approved")
+      ? "existing"
+      : "queue";
   const visibleProjects = useMemo(
     () =>
       activeMode === "queue"
@@ -2028,6 +2048,9 @@ const ProjectEditor = ({
   const [date, setDate] = useState(project.date);
   const [href, setHref] = useState(project.href);
   const [image, setImage] = useState(project.image);
+  const [memberAddresses, setMemberAddresses] = useState<string[]>(
+    project.memberAddresses || []
+  );
   const [details, setDetails] = useState(toLines(project.details));
   const [galleryImages, setGalleryImages] = useState(
     toLines(project.galleryImages)
@@ -2036,6 +2059,10 @@ const ProjectEditor = ({
   const [editorMode, setEditorMode] = useState<ProjectEditorMode>("edit");
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { data: membersData, error: membersError } = useSWR(
+    "/api/members",
+    memberSummariesFetcher
+  );
   const previewProject: CommunityProject = {
     title,
     slug,
@@ -2045,6 +2072,7 @@ const ProjectEditor = ({
     date,
     href,
     image,
+    memberAddresses,
     details: fromLines(details),
     galleryImages: fromLines(galleryImages),
     links: parseLinks(links),
@@ -2063,6 +2091,7 @@ const ProjectEditor = ({
         date,
         href,
         image,
+        memberAddresses,
         details: fromLines(details),
         galleryImages: fromLines(galleryImages),
         links: parseLinks(links),
@@ -2072,7 +2101,7 @@ const ProjectEditor = ({
         `/api/admin/community-projects/${project.id}`,
         adminAuth,
         action === "remove" ? "DELETE" : "PATCH",
-        action ? { action } : { project: projectPayload }
+        action ? { action, project: projectPayload } : { project: projectPayload }
       );
       await mutate();
       setMessage(
@@ -2168,6 +2197,17 @@ const ProjectEditor = ({
             <FormField label="Project URL" value={href} onChange={setHref} />
           </div>
           <FormField label="Image URL" value={image} onChange={setImage} />
+          <ProjectMemberSelector
+            members={membersData?.members || []}
+            selectedAddresses={memberAddresses}
+            onChange={setMemberAddresses}
+            isLoading={!membersData && !membersError}
+            error={
+              membersError
+                ? "Members could not be loaded. Existing linked addresses can still be saved or removed."
+                : undefined
+            }
+          />
           <FormField
             label="Description"
             value={description}
@@ -2263,6 +2303,18 @@ const ProjectPreview = ({ project }: { project: CommunityProject }) => {
                 {project.artist || "Unknown artist"}
               </dd>
             </div>
+            {project.memberAddresses && project.memberAddresses.length > 0 && (
+              <div>
+                <dt className="font-heading text-xl">Project Members</dt>
+                <dd className="mt-1 flex flex-col gap-1 text-secondary">
+                  {project.memberAddresses.map((address) => (
+                    <span key={address} className="break-all">
+                      {address}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            )}
           </dl>
 
           {project.href && (

@@ -62,6 +62,7 @@ const ensureTable = async () => {
       project_date text NOT NULL,
       href text NOT NULL,
       image text NOT NULL,
+      member_addresses jsonb NOT NULL DEFAULT '[]'::jsonb,
       gallery_images jsonb NOT NULL DEFAULT '[]'::jsonb,
       links jsonb NOT NULL DEFAULT '[]'::jsonb,
       status text NOT NULL DEFAULT 'pending',
@@ -70,6 +71,11 @@ const ensureTable = async () => {
       approved_at timestamptz,
       removed_at timestamptz
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE community_project_submissions
+      ADD COLUMN IF NOT EXISTS member_addresses jsonb NOT NULL DEFAULT '[]'::jsonb
   `);
 
   await pool.query(`
@@ -136,6 +142,7 @@ const upsertProject = async (project) => {
         project_date,
         href,
         image,
+        member_addresses,
         gallery_images,
         links,
         status,
@@ -155,6 +162,7 @@ const upsertProject = async (project) => {
         $10,
         $11::jsonb,
         $12::jsonb,
+        $13::jsonb,
         'approved',
         now(),
         NULL
@@ -168,6 +176,7 @@ const upsertProject = async (project) => {
         project_date = EXCLUDED.project_date,
         href = EXCLUDED.href,
         image = EXCLUDED.image,
+        member_addresses = EXCLUDED.member_addresses,
         gallery_images = EXCLUDED.gallery_images,
         links = EXCLUDED.links,
         status = 'approved',
@@ -186,6 +195,7 @@ const upsertProject = async (project) => {
       project.date,
       project.href,
       project.image,
+      JSON.stringify(project.memberAddresses || []),
       JSON.stringify(project.galleryImages),
       JSON.stringify(project.links),
     ]

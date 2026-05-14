@@ -1,4 +1,9 @@
-import { communityProjects, type CommunityProject } from "data/community";
+import {
+  communityProjects,
+  getInvalidCommunityProjectMemberAddresses,
+  normalizeCommunityProjectMemberAddresses,
+  type CommunityProject,
+} from "data/community";
 import {
   getApprovedCommunityProjectBySlug,
   listApprovedCommunityProjects,
@@ -24,6 +29,13 @@ const isProjectLinks = (value: unknown): value is CommunityProject["links"] =>
       typeof (item as { title?: unknown }).title === "string" &&
       typeof (item as { href?: unknown }).href === "string"
   );
+
+const normalizeProject = (project: CommunityProject): CommunityProject => ({
+  ...project,
+  memberAddresses: normalizeCommunityProjectMemberAddresses(
+    project.memberAddresses
+  ),
+});
 
 const isCommunityProject = (value: unknown): value is CommunityProject => {
   if (!value || typeof value !== "object") return false;
@@ -51,6 +63,10 @@ const isCommunityProject = (value: unknown): value is CommunityProject => {
     return false;
   }
 
+  if (getInvalidCommunityProjectMemberAddresses(project.memberAddresses).length) {
+    return false;
+  }
+
   return Boolean(
     project.slug.trim() &&
       project.title.trim() &&
@@ -75,7 +91,7 @@ const getLocalCommunityProjects = (): CommunityProject[] => {
 
       try {
         const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
-        return isCommunityProject(parsed) ? parsed : null;
+        return isCommunityProject(parsed) ? normalizeProject(parsed) : null;
       } catch (error) {
         console.warn(`Unable to parse community project ${fileName}`, error);
         return null;
@@ -83,7 +99,10 @@ const getLocalCommunityProjects = (): CommunityProject[] => {
     })
     .filter((project): project is CommunityProject => Boolean(project));
 
-  return [...communityProjects, ...submittedProjects];
+  return [
+    ...communityProjects.map(normalizeProject),
+    ...submittedProjects,
+  ];
 };
 
 const dedupeProjects = (projects: CommunityProject[]) => {
@@ -116,5 +135,24 @@ export const getCommunityProject = async (slug: string) => {
     console.warn(`Unable to load approved community project ${slug}`, error);
   }
 
-  return getLocalCommunityProjects().find((project) => project.slug === slug);
+  const project = getLocalCommunityProjects().find(
+    (project) => project.slug === slug
+  );
+
+  return project ? normalizeProject(project) : undefined;
+};
+
+export const getCommunityProjectsForMember = async (address: string) => {
+  const normalizedAddress =
+    normalizeCommunityProjectMemberAddresses([address])[0];
+  if (!normalizedAddress) return [];
+
+  const projects = await getCommunityProjects();
+  const normalizedKey = normalizedAddress.toLowerCase();
+
+  return projects.filter((project) =>
+    normalizeCommunityProjectMemberAddresses(project.memberAddresses).some(
+      (memberAddress) => memberAddress.toLowerCase() === normalizedKey
+    )
+  );
 };

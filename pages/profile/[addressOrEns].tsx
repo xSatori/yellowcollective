@@ -432,6 +432,7 @@ export default function ProfilePage({
           </div>
         </section>
 
+        <CommunityProjectsSection projects={profile.communityProjects} />
         <GalleryTab
           artwork={artwork}
           submissions={profile.noundrySubmissions}
@@ -705,6 +706,47 @@ const GalleryTab = ({
           artwork={artwork}
           compact
         />
+      ))}
+    </div>
+  </ProfileSection>
+);
+
+const CommunityProjectsSection = ({
+  projects,
+}: {
+  projects: PublicProfileData["communityProjects"];
+}) => (
+  <ProfileSection
+    title="Projects"
+    emptyTitle="No associated projects yet"
+    emptyBody="Projects linked to this member will appear here."
+    isEmpty={projects.length === 0}
+  >
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <Link
+          key={project.slug}
+          href={`/projects/${project.slug}`}
+          className="group overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf]"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={project.image}
+            alt={project.title}
+            className="aspect-square w-full bg-skin-muted object-cover transition duration-200 group-hover:scale-[1.02]"
+          />
+          <div className="border-t border-skin-stroke p-4">
+            <div className="caption font-semibold text-secondary">
+              {project.category} / {project.date}
+            </div>
+            <h3 className="mt-2 font-heading text-xl leading-tight text-skin-base">
+              {project.title}
+            </h3>
+            <p className="mt-2 line-clamp-3 text-sm leading-5 text-secondary">
+              {project.description}
+            </p>
+          </div>
+        </Link>
       ))}
     </div>
   </ProfileSection>

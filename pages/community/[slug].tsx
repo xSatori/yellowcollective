@@ -5,7 +5,12 @@ import {
   getCommunityProject,
   getCommunityProjects,
 } from "@/utils/community-projects";
+import { areSameWalletAddress } from "@/utils/profile/identity";
 import { isAdminAddress } from "@/utils/admin";
+import {
+  getDaoMemberSummaries,
+  type DaoMemberSummary,
+} from "data/members";
 import type {
   GetStaticPaths,
   GetStaticPropsResult,
@@ -19,7 +24,13 @@ import { useAccount } from "wagmi";
 
 type CommunityDetailProps = {
   project: CommunityProject;
+  projectMembers: ProjectMemberSummary[];
 };
+
+type ProjectMemberSummary = Pick<
+  DaoMemberSummary,
+  "address" | "displayName" | "avatarUrl" | "firstTokenImage"
+>;
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const projects = await getCommunityProjects();
@@ -43,14 +54,49 @@ export const getStaticProps = async ({
 
   if (!project) return { notFound: true, revalidate: 60 };
 
+  const memberAddresses = project.memberAddresses || [];
+  const projectMembers =
+    memberAddresses.length > 0
+      ? await getProjectMembers(memberAddresses)
+      : [];
+
   return {
-    props: { project },
+    props: { project, projectMembers },
     revalidate: 60,
   };
 };
 
+const getProjectMembers = async (memberAddresses: string[]) => {
+  try {
+    const daoMembers = await getDaoMemberSummaries();
+
+    return memberAddresses.map((address) => {
+      const member = daoMembers.find((daoMember) =>
+        areSameWalletAddress(daoMember.address, address)
+      );
+
+      return {
+        address,
+        displayName: member?.displayName || "",
+        avatarUrl: member?.avatarUrl || null,
+        firstTokenImage: member?.firstTokenImage || "",
+      };
+    });
+  } catch (error) {
+    console.warn("Unable to load project members", error);
+
+    return memberAddresses.map((address) => ({
+      address,
+      displayName: "",
+      avatarUrl: null,
+      firstTokenImage: "",
+    }));
+  }
+};
+
 export default function CommunityDetailPage({
   project,
+  projectMembers,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const isExternal = project.href.startsWith("http");
   const { address } = useAccount();
@@ -133,6 +179,41 @@ export default function CommunityDetailPage({
                   />
                 </dd>
               </div>
+              {projectMembers.length > 0 && (
+                <div>
+                  <dt className="font-heading text-xl">Project Members</dt>
+                  <dd className="mt-2 flex flex-col gap-2">
+                    {projectMembers.map((member) => {
+                      const imageUrl =
+                        member.avatarUrl || member.firstTokenImage || "";
+
+                      return (
+                        <WalletIdentityLink
+                          key={member.address}
+                          address={member.address}
+                          className="flex min-w-0 items-center gap-2 rounded-xl border border-skin-stroke bg-white p-2 text-skin-base transition hover:bg-[#fff7bf]"
+                        >
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#ffcc00] font-heading text-xs text-skin-base">
+                            {imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={imageUrl}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              "YC"
+                            )}
+                          </span>
+                          <span className="min-w-0 truncate font-heading text-sm">
+                            {member.displayName || member.address}
+                          </span>
+                        </WalletIdentityLink>
+                      );
+                    })}
+                  </dd>
+                </div>
+              )}
             </dl>
 
             <Link
@@ -145,7 +226,7 @@ export default function CommunityDetailPage({
             </Link>
             {isAdmin && (
               <Link
-                href={`/admin/dashboard?section=community&project=${project.slug}`}
+                href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
                 className="mt-3 flex w-full items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
               >
                 Admin edit

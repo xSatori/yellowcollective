@@ -1,5 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { CommunityProject } from "data/community";
+import {
+  getInvalidCommunityProjectMemberAddresses,
+  type CommunityProject,
+} from "data/community";
 import {
   createCommunityProjectSubmission,
   normalizeCommunityProjectInput,
@@ -64,16 +67,26 @@ export default async function handler(
 
   try {
     const body = req.body as SubmitCommunityProjectBody;
+    const invalidMemberAddresses = getInvalidCommunityProjectMemberAddresses(
+      body.project?.memberAddresses
+    );
+
+    if (invalidMemberAddresses.length > 0) {
+      return res.status(400).json({
+        error: "Project members must be valid wallet addresses.",
+      });
+    }
+
     const project = normalizeCommunityProjectInput(body.project || {});
     const uploadedImage = validateUploadedImage(body.image);
     const submission = {
       ...project,
       image: uploadedImage || project.image,
     };
-    const validationError = validateCommunityProjectInput(submission);
+    const submissionValidationError = validateCommunityProjectInput(submission);
 
-    if (validationError) {
-      return res.status(400).json({ error: validationError });
+    if (submissionValidationError) {
+      return res.status(400).json({ error: submissionValidationError });
     }
 
     const savedProject = await createCommunityProjectSubmission(submission);

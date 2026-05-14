@@ -24,6 +24,8 @@ import {
   type NormalizedProfileMetadata,
   type ProfileMetadataInput,
 } from "@/utils/profile/identity";
+import { getCommunityProjectsForMember } from "@/utils/community-projects";
+import type { CommunityProject } from "data/community";
 import {
   listProfileRoundSubmissions,
   listProfileRoundVotes,
@@ -83,6 +85,7 @@ export type ProfileActivityItem = {
     | "dao-vote"
     | "auction-bid"
     | "auction-win"
+    | "community-project"
     | "token";
   title: string;
   href?: string;
@@ -102,6 +105,7 @@ export type PublicProfileData = {
   daoVotes: ProfileDaoVote[];
   auctionBids: ProfileAuctionBid[];
   auctionWins: ProfileAuctionWin[];
+  communityProjects: CommunityProject[];
   roundSubmissions: ProfileRoundSubmission[];
   roundVotes: ProfileRoundVote[];
   activity: ProfileActivityItem[];
@@ -577,8 +581,9 @@ const buildActivity = ({
   daoVotes,
   auctionBids,
   auctionWins,
-  ownedTokens,
-}: Pick<
+    ownedTokens,
+    communityProjects,
+  }: Pick<
   PublicProfileData,
   | "noundrySubmissions"
   | "roundSubmissions"
@@ -588,6 +593,7 @@ const buildActivity = ({
   | "auctionBids"
   | "auctionWins"
   | "ownedTokens"
+  | "communityProjects"
 >) => {
   const activity: ProfileActivityItem[] = [
     ...noundrySubmissions.map((submission) => ({
@@ -648,6 +654,14 @@ const buildActivity = ({
       timestamp: win.createdAt,
       meta: win.amount,
     })),
+    ...communityProjects.map((project) => ({
+      id: `community-project-${project.slug}`,
+      type: "community-project" as const,
+      title: `Contributed to ${project.title}`,
+      href: `/projects/${project.slug}`,
+      timestamp: project.date,
+      meta: project.category,
+    })),
     ...ownedTokens.map((token) => ({
       id: `token-${token.id}`,
       type: "token" as const,
@@ -695,6 +709,7 @@ export const getPublicProfileData = async (
     roundVotes,
     daoActivity,
     auctionActivity,
+    communityProjects,
   ] = await Promise.all([
     settled(
       "profile metadata",
@@ -738,6 +753,12 @@ export const getPublicProfileData = async (
       errors,
       { auctionBids: [], auctionWins: [] }
     ),
+    settled(
+      "community projects",
+      getCommunityProjectsForMember(normalizedAddress),
+      errors,
+      []
+    ),
   ]);
 
   return {
@@ -751,6 +772,7 @@ export const getPublicProfileData = async (
     daoVotes: daoActivity.daoVotes,
     auctionBids: auctionActivity.auctionBids,
     auctionWins: auctionActivity.auctionWins,
+    communityProjects,
     roundSubmissions,
     roundVotes,
     activity: buildActivity({
@@ -762,6 +784,7 @@ export const getPublicProfileData = async (
       auctionBids: auctionActivity.auctionBids,
       auctionWins: auctionActivity.auctionWins,
       ownedTokens,
+      communityProjects,
     }),
     errors,
   };

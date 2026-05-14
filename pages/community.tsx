@@ -78,7 +78,7 @@ export default function CommunityPage({
                 {isAdmin && (
                   <div className="border-t border-skin-stroke bg-[#fff7bf] p-3">
                     <Link
-                      href={`/admin/dashboard?section=community&project=${project.slug}`}
+                      href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
                       className="flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fffdf0] active:translate-y-1 active:shadow-none"
                     >
                       Admin edit

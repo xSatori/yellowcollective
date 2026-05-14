@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto";
 import { Pool } from "pg";
-import type { CommunityProject } from "./community";
+import {
+  getInvalidCommunityProjectMemberAddresses,
+  normalizeCommunityProjectMemberAddresses,
+  type CommunityProject,
+} from "./community";
 
 export type CommunityProjectStatus = "pending" | "approved" | "removed";
 
@@ -63,6 +67,7 @@ const ensureTable = async () => {
             project_date text NOT NULL,
             href text NOT NULL,
             image text NOT NULL,
+            member_addresses jsonb NOT NULL DEFAULT '[]'::jsonb,
             gallery_images jsonb NOT NULL DEFAULT '[]'::jsonb,
             links jsonb NOT NULL DEFAULT '[]'::jsonb,
             status text NOT NULL DEFAULT 'pending',
@@ -78,6 +83,7 @@ const ensureTable = async () => {
           ALTER TABLE community_project_submissions
             ADD COLUMN IF NOT EXISTS gallery_images jsonb NOT NULL DEFAULT '[]'::jsonb,
             ADD COLUMN IF NOT EXISTS links jsonb NOT NULL DEFAULT '[]'::jsonb,
+            ADD COLUMN IF NOT EXISTS member_addresses jsonb NOT NULL DEFAULT '[]'::jsonb,
             ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending',
             ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now(),
             ADD COLUMN IF NOT EXISTS approved_at timestamptz,
@@ -135,6 +141,9 @@ export const normalizeCommunityProjectInput = (
   date: String(input.date || "").trim(),
   href: String(input.href || "").trim(),
   image: String(input.image || "").trim(),
+  memberAddresses: normalizeCommunityProjectMemberAddresses(
+    input.memberAddresses
+  ),
   galleryImages: normalizeOptionalStringArray(input.galleryImages),
   links: normalizeProjectLinks(input.links),
 });
@@ -143,6 +152,9 @@ export const validateCommunityProjectInput = (
   input: Partial<CommunityProjectSubmissionInput>
 ) => {
   const project = normalizeCommunityProjectInput(input);
+  const invalidMemberAddresses = getInvalidCommunityProjectMemberAddresses(
+    input.memberAddresses
+  );
 
   if (!project.slug || !/^[a-z0-9-]+$/.test(project.slug)) {
     return "A valid project slug is required.";
@@ -165,6 +177,10 @@ export const validateCommunityProjectInput = (
     return "Complete all required project fields before submitting.";
   }
 
+  if (invalidMemberAddresses.length > 0) {
+    return "Project members must be valid wallet addresses.";
+  }
+
   return undefined;
 };
 
@@ -184,6 +200,7 @@ const mapProject = (row: {
   project_date: string;
   href: string;
   image: string;
+  member_addresses?: string[] | string | null;
   gallery_images: string[] | string;
   links: CommunityProject["links"] | string;
   status: CommunityProjectStatus;
@@ -202,6 +219,9 @@ const mapProject = (row: {
   date: row.project_date,
   href: row.href,
   image: row.image,
+  memberAddresses: normalizeCommunityProjectMemberAddresses(
+    row.member_addresses ? parseJson(row.member_addresses) : []
+  ),
   galleryImages: parseJson(row.gallery_images),
   links: parseJson(row.links),
   status: row.status,
@@ -222,6 +242,7 @@ const selectFields = `
   project_date,
   href,
   image,
+  member_addresses,
   gallery_images,
   links,
   status,
@@ -306,10 +327,11 @@ export const createCommunityProjectSubmission = async (
         project_date,
         href,
         image,
+        member_addresses,
         gallery_images,
         links
       )
-      VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb)
+      VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb)
       RETURNING ${selectFields}
     `,
     [
@@ -323,6 +345,7 @@ export const createCommunityProjectSubmission = async (
       project.date,
       project.href,
       project.image,
+      JSON.stringify(project.memberAddresses || []),
       JSON.stringify(project.galleryImages || []),
       JSON.stringify(project.links || []),
     ]
@@ -363,10 +386,11 @@ export const updateCommunityProject = async (
   const current = currentResult.rows[0] ? mapProject(currentResult.rows[0]) : null;
   if (!current) return null;
 
-  const project = normalizeCommunityProjectInput({ ...current, ...input });
-  const validationError = validateCommunityProjectInput(project);
+  const mergedInput = { ...current, ...input };
+  const validationError = validateCommunityProjectInput(mergedInput);
   if (validationError) throw new Error(validationError);
 
+  const project = normalizeCommunityProjectInput(mergedInput);
   const result = await getPool().query(
     `
       UPDATE community_project_submissions
@@ -379,8 +403,9 @@ export const updateCommunityProject = async (
         project_date = $8,
         href = $9,
         image = $10,
-        gallery_images = $11::jsonb,
-        links = $12::jsonb,
+        member_addresses = $11::jsonb,
+        gallery_images = $12::jsonb,
+        links = $13::jsonb,
         updated_at = now()
       WHERE id = $1
       RETURNING ${selectFields}
@@ -396,6 +421,7 @@ export const updateCommunityProject = async (
       project.date,
       project.href,
       project.image,
+      JSON.stringify(project.memberAddresses || []),
       JSON.stringify(project.galleryImages || []),
       JSON.stringify(project.links || []),
     ]

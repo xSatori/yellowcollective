@@ -8,7 +8,7 @@ import { SUBGRAPH_ENDPOINT } from "constants/urls";
 import { GraphQLClient, gql } from "graphql-request";
 import { getAddress, isAddress } from "viem";
 
-export type DaoMember = {
+export type DaoMemberSummary = {
   address: string;
   displayName: string;
   ensName: string | null;
@@ -18,6 +18,9 @@ export type DaoMember = {
   firstTokenName: string;
   firstTokenImage: string;
   tokenCount: number;
+};
+
+export type DaoMember = DaoMemberSummary & {
   noundrySubmissionCount: number;
   proposalVoteCount: number;
 };
@@ -54,8 +57,24 @@ const getMetadataByAddress = async (addresses: string[]) => {
 const getEarliestToken = (tokens: ProbeToken[]) =>
   [...tokens].sort((first, second) => first.id - second.id)[0];
 
-const hasPrimaryEthName = (member: DaoMember) =>
+const hasPrimaryEthName = (member: DaoMemberSummary) =>
   Boolean(member.ensName?.toLowerCase().endsWith(".eth"));
+
+const sortMemberSummaries = <T extends DaoMemberSummary>(members: T[]) =>
+  members.sort((first, second) => {
+    const firstHasEthName = hasPrimaryEthName(first);
+    const secondHasEthName = hasPrimaryEthName(second);
+
+    if (firstHasEthName !== secondHasEthName) {
+      return firstHasEthName ? -1 : 1;
+    }
+
+    if (firstHasEthName && secondHasEthName && first.ensName && second.ensName) {
+      return first.ensName.localeCompare(second.ensName);
+    }
+
+    return first.displayName.localeCompare(second.displayName);
+  });
 
 const proposalVotesByVoterQuery = gql`
   query proposalVotesByVoter(
@@ -152,6 +171,28 @@ const getProposalVoteCountsByVoter = async (addresses: string[]) => {
 };
 
 export const getDaoMembers = async (): Promise<DaoMember[]> => {
+  const memberSummaries = await getDaoMemberSummaries();
+  const addresses = memberSummaries.map((member) => member.address.toLowerCase());
+  const [noundrySubmissionCounts, proposalVoteCounts] = await Promise.all([
+    countApprovedNoundrySubmissionsByArtists(addresses).catch((error) => {
+      console.warn("Unable to load member Noundry counts", error);
+      return new Map<string, number>();
+    }),
+    getProposalVoteCountsByVoter(addresses),
+  ]);
+
+  return memberSummaries.map((member) => {
+    const address = member.address.toLowerCase();
+
+    return {
+      ...member,
+      noundrySubmissionCount: noundrySubmissionCounts.get(address) || 0,
+      proposalVoteCount: proposalVoteCounts.get(address) || 0,
+    };
+  });
+};
+
+export const getDaoMemberSummaries = async (): Promise<DaoMemberSummary[]> => {
   const { tokens } = await getCollectiveNounTokens();
   const tokensByOwner = new Map<string, ProbeToken[]>();
 
@@ -166,23 +207,13 @@ export const getDaoMembers = async (): Promise<DaoMember[]> => {
   });
 
   const addresses = Array.from(tokensByOwner.keys());
-  const [
-    ensNames,
-    metadataByAddress,
-    noundrySubmissionCounts,
-    proposalVoteCounts,
-  ] = await Promise.all([
+  const [ensNames, metadataByAddress] = await Promise.all([
     getEnsNamesForAddresses(addresses),
     getMetadataByAddress(addresses),
-    countApprovedNoundrySubmissionsByArtists(addresses).catch((error) => {
-      console.warn("Unable to load member Noundry counts", error);
-      return new Map<string, number>();
-    }),
-    getProposalVoteCountsByVoter(addresses),
   ]);
 
-  return addresses
-    .map((address) => {
+  return sortMemberSummaries(
+    addresses.map((address) => {
       const ownerTokens = tokensByOwner.get(address) || [];
       const firstToken = getEarliestToken(ownerTokens);
       const metadata = metadataByAddress.get(address);
@@ -202,22 +233,7 @@ export const getDaoMembers = async (): Promise<DaoMember[]> => {
           firstToken?.name || `Collective Noun #${firstToken?.id || "0"}`,
         firstTokenImage: firstToken?.image || "",
         tokenCount: ownerTokens.length,
-        noundrySubmissionCount: noundrySubmissionCounts.get(address) || 0,
-        proposalVoteCount: proposalVoteCounts.get(address) || 0,
       };
     })
-    .sort((first, second) => {
-      const firstHasEthName = hasPrimaryEthName(first);
-      const secondHasEthName = hasPrimaryEthName(second);
-
-      if (firstHasEthName !== secondHasEthName) {
-        return firstHasEthName ? -1 : 1;
-      }
-
-      if (firstHasEthName && secondHasEthName && first.ensName && second.ensName) {
-        return first.ensName.localeCompare(second.ensName);
-      }
-
-      return first.displayName.localeCompare(second.displayName);
-    });
+  );
 };

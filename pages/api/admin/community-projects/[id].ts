@@ -42,12 +42,14 @@ export default async function handler(
 
   try {
     const body = req.body as CommunityProjectAdminBody;
-    const project =
+    let project =
       req.method === "DELETE" || body.action === "remove"
         ? await removeCommunityProject(id)
-        : body.action === "approve"
-          ? await approveCommunityProject(id)
-          : await updateCommunityProject(id, body.project || {});
+        : await updateCommunityProject(id, body.project || {});
+
+    if (project && body.action === "approve") {
+      project = await approveCommunityProject(id);
+    }
 
     if (!project) return res.status(404).json({ error: "Project not found." });
 
