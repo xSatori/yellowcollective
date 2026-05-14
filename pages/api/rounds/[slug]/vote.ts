@@ -4,14 +4,11 @@ import {
   getOrCreateRoundVotingSnapshotBlock,
   getRoundBySlug,
 } from "data/rounds";
-import { verifyRoundWalletAuth } from "@/utils/rounds/auth";
+import { verifyRoundWalletSignedRequest } from "@/utils/rounds/server-auth";
 import { getRoundVotingPower } from "@/utils/rounds/getRoundVotingPower";
 import type { RoundVoteAllocationInput } from "@/utils/rounds/validateRoundVote";
 
 type VoteRoundBody = {
-  walletAddress?: string;
-  walletMessage?: string;
-  walletSignature?: string;
   votes?: RoundVoteAllocationInput[];
 };
 
@@ -34,11 +31,12 @@ export default async function handler(
 
   try {
     const body = req.body as VoteRoundBody;
-    const walletAddress = await verifyRoundWalletAuth({
-      payload: body,
+    const walletAddress = await verifyRoundWalletSignedRequest({
+      req,
+      res,
       action: "vote",
-      roundSlug: slug,
     });
+    if (!walletAddress) return;
     const round = await getRoundBySlug(slug);
 
     if (!round || round.status !== "published" || !round.active) {

@@ -31,8 +31,6 @@ export type MiniAppSdk = {
   };
 };
 
-const SDK_URL = "https://esm.sh/@farcaster/miniapp-sdk";
-
 let sdkPromise: Promise<MiniAppSdk | null> | null = null;
 let miniAppCheckPromise: Promise<boolean> | null = null;
 
@@ -42,10 +40,7 @@ export const loadMiniAppSdk = async () => {
   if (!sdkPromise) {
     sdkPromise = (async () => {
       try {
-        const importRemote = new Function("url", "return import(url)") as (
-          url: string
-        ) => Promise<{ sdk?: MiniAppSdk; default?: MiniAppSdk }>;
-        const module = await importRemote(SDK_URL);
+        const module = await import("@farcaster/miniapp-sdk");
 
         return module.sdk || module.default || null;
       } catch (error) {

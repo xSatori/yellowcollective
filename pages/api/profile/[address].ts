@@ -1,15 +1,13 @@
 import {
   getProfileMetadata,
   saveProfileMetadata,
-  verifyProfileUpdate,
 } from "data/profile";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getAddress, isAddress } from "viem";
+import { PROFILE_UPDATE_SIGNED_REQUEST_ACTION } from "@/utils/profile/identity";
+import { verifySignedRequest } from "@/utils/signature-auth-server";
 
 type UpdateProfileBody = {
-  walletAddress?: string;
-  walletMessage?: string;
-  walletSignature?: string;
   profile?: {
     username?: string;
     websiteUrl?: string;
@@ -44,26 +42,14 @@ export default async function handler(
 
     if (req.method === "PUT") {
       const body = req.body as UpdateProfileBody;
-      const walletAddress = body.walletAddress || "";
-      const walletMessage = body.walletMessage || "";
-      const walletSignature = body.walletSignature || "";
-
-      if (!isAddress(walletAddress) || getAddress(walletAddress) !== address) {
-        return res.status(403).json({ error: "You can only edit your own profile." });
-      }
-
-      const verified = verifyProfileUpdate({
-        address,
-        message: walletMessage,
-        signature: walletSignature,
+      const walletAddress = await verifySignedRequest(req, res, {
+        action: PROFILE_UPDATE_SIGNED_REQUEST_ACTION,
+        expectedWalletAddress: address,
       });
-
-      if (!verified) {
-        return res.status(403).json({ error: "Profile update signature is invalid." });
-      }
+      if (!walletAddress) return;
 
       const profile = await saveProfileMetadata({
-        address,
+        address: walletAddress,
         input: body.profile || {},
       });
 

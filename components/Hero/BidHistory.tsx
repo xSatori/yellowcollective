@@ -87,13 +87,16 @@ export default function BidHistory({
           <DialogContent className="flex flex-col max-h-[90vh] md:max-h-[70vh]">
             <DialogHeader>
               <div className="flex flex-row gap-4 items-center border-b-2 p-6">
-                <Image
-                  src={tokenImage ?? ""}
-                  width={64}
-                  height={64}
-                  alt=""
-                  className="rounded-xl border-transparent/10 border-2"
-                />
+                {tokenImage && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={tokenImage}
+                    width={64}
+                    height={64}
+                    alt=""
+                    className="h-16 w-16 rounded-xl border-2 border-transparent/10 object-cover"
+                  />
+                )}
                 <div className="flex flex-col items-start">
                   <h6 className="text-secondary">Bids for</h6>
                   <h5>Collective Noun #{parseInt(tokenId, 16)}</h5>

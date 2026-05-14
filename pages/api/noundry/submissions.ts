@@ -5,6 +5,7 @@ import {
   validateNoundrySubmission,
   type CreateNoundrySubmissionInput,
 } from "data/noundry/submissions";
+import { applyRateLimit } from "@/utils/rate-limit";
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,6 +18,16 @@ export default async function handler(
     }
 
     if (req.method === "POST") {
+      if (
+        !applyRateLimit(req, res, {
+          keyPrefix: "noundry-submissions",
+          limit: 10,
+          windowMs: 10 * 60 * 1000,
+        })
+      ) {
+        return;
+      }
+
       const input = req.body as Partial<CreateNoundrySubmissionInput>;
       const validationError = validateNoundrySubmission(input);
 

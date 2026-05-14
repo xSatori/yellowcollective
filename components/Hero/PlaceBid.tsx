@@ -2,12 +2,12 @@ import { BigNumber, utils } from "ethers";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
-  usePrepareContractWrite,
-  useContractWrite,
   useWaitForTransaction,
   useAccount,
   useBalance,
   Address,
+  usePrepareSendTransaction,
+  useSendTransaction,
 } from "wagmi";
 import { useDebounce } from "@/hooks/useDebounce";
 import Button from "../Button";
@@ -26,6 +26,17 @@ import {
   validateBidCommentText,
 } from "@/utils/bid-comments";
 
+const auctionInterface = new utils.Interface(auctionAbi as any);
+const BASE_CHAIN_ID = 8453;
+
+const parseBidAmount = (value: string) => {
+  try {
+    return value ? utils.parseEther(value) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const PlaceBid = ({
   highestBid,
   auction,
@@ -42,7 +53,7 @@ export const PlaceBid = ({
   const { address, isConnected } = useAccount();
   const { data: baseBalance } = useBalance({
     address,
-    chainId: 8453,
+    chainId: BASE_CHAIN_ID,
     enabled: isConnected && Boolean(address),
     watch: true,
   });
@@ -51,33 +62,44 @@ export const PlaceBid = ({
   const debouncedBid = useDebounce(bid, 500);
 
   const { openConnectModal } = useConnectModal();
-
-  const { config, error } = usePrepareContractWrite({
-    address: auction as Address,
-    abi: auctionAbi,
-    functionName: "createBidWithReferral",
-    args: [BigNumber.from(tokenId || 1), COLLECTIVE_NOUNS_TREASURY],
-    overrides: {
-      value: utils.parseEther(debouncedBid || "0"),
-    },
-    enabled: !!auction && !!debouncedBid,
-  });
   const bidCommentDataSuffix = getBidCommentDataSuffix(bidComment);
-  const writeConfig = useMemo(() => {
-    if (!bidCommentDataSuffix || !config?.request?.data) return config;
+  const parsedBid = useMemo(() => parseBidAmount(debouncedBid), [debouncedBid]);
+  const finalBidCalldata = useMemo(() => {
+    if (!tokenId) return undefined;
 
-    return {
-      ...config,
-      request: {
-        ...config.request,
-        data: appendBidCommentDataSuffix(
-          config.request.data,
-          bidCommentDataSuffix
-        ),
-      },
-    };
-  }, [bidCommentDataSuffix, config]);
-  const { write, data } = useContractWrite(writeConfig);
+    const baseCalldata = auctionInterface.encodeFunctionData(
+      "createBidWithReferral",
+      [BigNumber.from(tokenId || 1), COLLECTIVE_NOUNS_TREASURY]
+    );
+
+    return appendBidCommentDataSuffix(
+      baseCalldata,
+      bidCommentDataSuffix
+    ) as `0x${string}`;
+  }, [bidCommentDataSuffix, tokenId]);
+  const highestBidBN = BigNumber.from(highestBid);
+  const amountIncrease = highestBidBN.div("10");
+  const nextBidAmount = highestBidBN.add(amountIncrease);
+  const commentLength = getBidCommentByteLength(bidComment);
+  const commentError = bidComment.trim()
+    ? validateBidCommentText(bidComment) || ""
+    : "";
+
+  const { config, error } = usePrepareSendTransaction({
+    chainId: BASE_CHAIN_ID,
+    request:
+      auction && finalBidCalldata && parsedBid
+        ? {
+            to: auction as Address,
+            data: finalBidCalldata,
+            value: parsedBid,
+          }
+        : undefined,
+    enabled:
+      Boolean(auction && finalBidCalldata && parsedBid && debouncedBid) &&
+      !commentError,
+  });
+  const { sendTransaction: write, data } = useSendTransaction(config);
   const { isLoading } = useWaitForTransaction({
     hash: data?.hash,
     onError: () => {
@@ -92,13 +114,10 @@ export const PlaceBid = ({
     },
   });
 
-  const highestBidBN = BigNumber.from(highestBid);
-  const amountIncrease = highestBidBN.div("10");
-  const nextBidAmount = highestBidBN.add(amountIncrease);
-
   const getError = () => {
     const minNextBid = utils.formatEther(nextBidAmount);
-    if (bid != "" && bid < minNextBid) {
+    const bidAmount = parseBidAmount(bid);
+    if (bid && (!bidAmount || bidAmount.lt(nextBidAmount))) {
       return `Bid must be at least ${minNextBid}`;
     }
 
@@ -108,14 +127,9 @@ export const PlaceBid = ({
     if (reason.includes("insufficient funds"))
       return "Error insufficient funds for bid";
 
-    if (debouncedBid && debouncedBid < utils.formatEther(nextBidAmount))
+    if (parsedBid && parsedBid.lt(nextBidAmount))
       return "Error invalid bid";
   };
-
-  const commentLength = getBidCommentByteLength(bidComment);
-  const commentError = bidComment.trim()
-    ? validateBidCommentText(bidComment) || ""
-    : "";
   const showBridgeToBase =
     isConnected && baseBalance?.value && baseBalance.value.isZero();
 

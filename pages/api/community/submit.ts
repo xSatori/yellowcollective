@@ -8,6 +8,7 @@ import {
   normalizeCommunityProjectInput,
   validateCommunityProjectInput,
 } from "data/community-project-submissions";
+import { applyRateLimit } from "@/utils/rate-limit";
 
 type UploadedImagePayload = {
   name: string;
@@ -63,6 +64,16 @@ export default async function handler(
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed." });
+  }
+
+  if (
+    !applyRateLimit(req, res, {
+      keyPrefix: "community-submit",
+      limit: 8,
+      windowMs: 10 * 60 * 1000,
+    })
+  ) {
+    return;
   }
 
   try {

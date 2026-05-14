@@ -1,11 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRoundTraitSubmission, getRoundBySlug } from "data/rounds";
-import { verifyRoundWalletAuth } from "@/utils/rounds/auth";
+import { verifyRoundWalletSignedRequest } from "@/utils/rounds/server-auth";
 
 type SubmitTraitBody = {
-  walletAddress?: string;
-  walletMessage?: string;
-  walletSignature?: string;
   traitId?: string;
   description?: string;
 };
@@ -29,11 +26,12 @@ export default async function handler(
 
   try {
     const body = req.body as SubmitTraitBody;
-    const walletAddress = await verifyRoundWalletAuth({
-      payload: body,
+    const walletAddress = await verifyRoundWalletSignedRequest({
+      req,
+      res,
       action: "submit-trait",
-      roundSlug: slug,
     });
+    if (!walletAddress) return;
     const round = await getRoundBySlug(slug);
 
     if (!round) return res.status(404).json({ error: "Round not found." });

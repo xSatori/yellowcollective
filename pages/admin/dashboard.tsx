@@ -1,10 +1,14 @@
 import Layout from "@/components/Layout";
 import ProjectMemberSelector from "@/components/community/ProjectMemberSelector";
 import { isAdminAddress } from "@/utils/admin";
+import { getAdminSignedRequestAction } from "@/utils/admin-auth";
+import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
+import type { SignedRequestMethod } from "@/utils/signature-auth";
 import {
-  createAdminAuthMessage,
-  type AdminAuthPayload,
-} from "@/utils/admin-auth";
+  getSafeLinkProps,
+  normalizeSafeImageUrl,
+} from "@/utils/url-safety";
+import { TOKEN_NETWORK } from "constants/addresses";
 import type { CommunityProject } from "data/community";
 import type { CommunityProjectRecord } from "data/community-project-submissions";
 import type { DaoMemberSummary } from "data/members";
@@ -29,8 +33,10 @@ type RoundListMode = "draft" | "published" | "archived";
 type RoundSubmissionMode = "pending" | "approved" | "closed";
 
 type AdminAuth = Required<
-  Pick<AdminAuthPayload, "adminAddress" | "adminMessage" | "adminSignature">
->;
+  Pick<{ adminAddress?: string }, "adminAddress">
+> & {
+  signMessageAsync: (args: { message: string }) => Promise<string>;
+};
 
 type AdminRequestBody = Record<string, unknown>;
 type AdminSWRKey = readonly [string, AdminAuth];
@@ -83,18 +89,33 @@ const dangerButtonClass =
 const blueButtonClass =
   "whitespace-nowrap rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 
-const createAuthQuery = (auth: AdminAuth) =>
-  new URLSearchParams({
-    adminAddress: auth.adminAddress,
-    adminMessage: auth.adminMessage,
-    adminSignature: auth.adminSignature,
-  }).toString();
+const ADMIN_CHAIN_ID = Number(TOKEN_NETWORK);
+
+const signAdminRequest = async (
+  auth: AdminAuth,
+  path: string,
+  method: SignedRequestMethod,
+  body: AdminRequestBody = {}
+) =>
+  createSignedRequestAuthHeader({
+    walletAddress: auth.adminAddress,
+    chainId: ADMIN_CHAIN_ID,
+    action: getAdminSignedRequestAction(method),
+    method,
+    path,
+    payload: method === "GET" ? {} : body,
+    signMessageAsync: auth.signMessageAsync,
+  });
 
 const createAdminFetcher =
   <T,>(): Fetcher<T, AdminSWRKey> =>
   async (key) => {
     const [url, auth] = key;
-    const response = await fetch(`${url}?${createAuthQuery(auth)}`);
+    const authorization = await signAdminRequest(auth, url, "GET");
+    const response = await fetch(url, {
+      headers: { Authorization: authorization },
+      cache: "no-store",
+    });
     const data = await response.json();
 
     if (!response.ok) {
@@ -145,10 +166,15 @@ const sendAdminRequest = async (
   method: "PATCH" | "DELETE" | "POST",
   body: AdminRequestBody = {}
 ) => {
+  const authorization = await signAdminRequest(auth, path, method, body);
   const response = await fetch(path, {
     method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, ...auth }),
+    headers: {
+      Authorization: authorization,
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+    body: JSON.stringify(body),
   });
   const responseText = await response.text();
   const data = responseText
@@ -322,12 +348,9 @@ export default function AdminDashboardPage() {
 
     try {
       setAuthError(null);
-      const adminMessage = createAdminAuthMessage(address);
-      const adminSignature = await signMessageAsync({ message: adminMessage });
       setAdminAuth({
         adminAddress: address,
-        adminMessage,
-        adminSignature,
+        signMessageAsync,
       });
     } catch (error) {
       const message =
@@ -370,10 +393,10 @@ export default function AdminDashboardPage() {
                 className={dangerButtonClass}
               >
                 {adminAuth
-                  ? "Refresh admin signature"
+                  ? "Refresh admin access"
                   : isSigning
                     ? "Signing..."
-                    : "Authorize admin"}
+                    : "Unlock admin requests"}
               </button>
             )}
           </div>
@@ -394,7 +417,8 @@ export default function AdminDashboardPage() {
         )}
         {isAdmin && !adminAuth && (
           <AdminNotice title="Signature required">
-            Sign the admin message to unlock project and gallery controls.
+            Unlock admin requests. Protected reads and writes will ask your
+            wallet for request-bound signatures.
           </AdminNotice>
         )}
 
@@ -2241,16 +2265,32 @@ const ProjectEditor = ({
 };
 
 const ProjectPreview = ({ project }: { project: CommunityProject }) => {
-  const isExternal = project.href.startsWith("http");
+  const imageUrl = normalizeSafeImageUrl(project.image, {
+    allowInternal: true,
+    allowDataImages: true,
+  });
+  const galleryImages = (project.galleryImages || [])
+    .map((image) =>
+      normalizeSafeImageUrl(image, {
+        allowInternal: true,
+        allowDataImages: true,
+      })
+    )
+    .filter(Boolean);
+  const sourceLinkProps = getSafeLinkProps(project.href, {
+    allowInternal: true,
+  });
 
   return (
     <div className="rounded-2xl border border-skin-stroke bg-[#ffcc00]/20 p-4">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={project.image}
-        alt={project.title}
-        className="max-h-[420px] w-full rounded-2xl border border-skin-stroke bg-skin-muted object-cover shadow-sm"
-      />
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={project.title}
+          className="max-h-[420px] w-full rounded-2xl border border-skin-stroke bg-skin-muted object-cover shadow-sm"
+        />
+      )}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
         <section className="flex flex-col gap-4 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
@@ -2270,9 +2310,9 @@ const ProjectPreview = ({ project }: { project: CommunityProject }) => {
               ))}
             </div>
           )}
-          {project.galleryImages && project.galleryImages.length > 0 && (
+          {galleryImages.length > 0 && (
             <div className="grid grid-cols-2 gap-4 pt-2">
-              {project.galleryImages.map((image, index) => (
+              {galleryImages.map((image, index) => (
                 <div
                   key={`${image}-${index}`}
                   className="overflow-hidden rounded-2xl border border-skin-stroke bg-skin-muted shadow-sm"
@@ -2317,11 +2357,9 @@ const ProjectPreview = ({ project }: { project: CommunityProject }) => {
             )}
           </dl>
 
-          {project.href && (
+          {sourceLinkProps && (
             <a
-              href={project.href}
-              target={isExternal ? "_blank" : undefined}
-              rel={isExternal ? "noreferrer" : undefined}
+              {...sourceLinkProps}
               className="mt-6 flex w-full items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none"
             >
               View source
@@ -2331,18 +2369,20 @@ const ProjectPreview = ({ project }: { project: CommunityProject }) => {
           {project.links && project.links.length > 0 && (
             <div className="mt-5 flex flex-col gap-3">
               {project.links.map((link) => {
-                const isLinkExternal = link.href.startsWith("http");
+                const linkProps = getSafeLinkProps(link.href, {
+                  allowInternal: true,
+                });
 
                 return (
-                  <a
-                    key={`${link.title}-${link.href}`}
-                    href={link.href}
-                    target={isLinkExternal ? "_blank" : undefined}
-                    rel={isLinkExternal ? "noreferrer" : undefined}
-                    className="font-heading text-base text-skin-base underline transition hover:opacity-70"
-                  >
-                    {link.title}
-                  </a>
+                  linkProps && (
+                    <a
+                      key={`${link.title}-${link.href}`}
+                      {...linkProps}
+                      className="font-heading text-base text-skin-base underline transition hover:opacity-70"
+                    >
+                      {link.title}
+                    </a>
+                  )
                 );
               })}
             </div>

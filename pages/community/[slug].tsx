@@ -8,6 +8,10 @@ import {
 import { areSameWalletAddress } from "@/utils/profile/identity";
 import { isAdminAddress } from "@/utils/admin";
 import {
+  getSafeLinkProps,
+  normalizeSafeImageUrl,
+} from "@/utils/url-safety";
+import {
   getDaoMemberSummaries,
   type DaoMemberSummary,
 } from "data/members";
@@ -98,10 +102,24 @@ export default function CommunityDetailPage({
   project,
   projectMembers,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const isExternal = project.href.startsWith("http");
   const { address } = useAccount();
   const isAdmin = isAdminAddress(address);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const imageUrl = normalizeSafeImageUrl(project.image, {
+    allowInternal: true,
+    allowDataImages: true,
+  });
+  const galleryImages = (project.galleryImages || [])
+    .map((image) =>
+      normalizeSafeImageUrl(image, {
+        allowInternal: true,
+        allowDataImages: true,
+      })
+    )
+    .filter(Boolean);
+  const sourceLinkProps = getSafeLinkProps(project.href, {
+    allowInternal: true,
+  });
 
   return (
     <Layout>
@@ -121,11 +139,13 @@ export default function CommunityDetailPage({
         </Link>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={project.image}
-          alt={project.title}
-          className="max-h-[520px] w-full rounded-2xl border border-skin-stroke bg-skin-muted object-cover shadow-sm"
-        />
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt={project.title}
+            className="max-h-[520px] w-full rounded-2xl border border-skin-stroke bg-skin-muted object-cover shadow-sm"
+          />
+        )}
 
         <div className="grid gap-8 md:grid-cols-[1fr_280px]">
           <section className="flex flex-col gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-7">
@@ -143,9 +163,9 @@ export default function CommunityDetailPage({
                 <p key={detail}>{detail}</p>
               ))}
             </div>
-            {project.galleryImages && project.galleryImages.length > 0 && (
+            {galleryImages.length > 0 && (
               <div className="grid grid-cols-2 gap-4 pt-2">
-                {project.galleryImages.map((image, index) => (
+                {galleryImages.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     type="button"
@@ -216,14 +236,14 @@ export default function CommunityDetailPage({
               )}
             </dl>
 
-            <Link
-              href={project.href}
-              target={isExternal ? "_blank" : undefined}
-              rel={isExternal ? "noreferrer" : undefined}
-              className="mt-6 flex w-full items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none"
-            >
-              View source
-            </Link>
+            {sourceLinkProps && (
+              <Link
+                {...sourceLinkProps}
+                className="mt-6 flex w-full items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none"
+              >
+                View source
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
@@ -235,18 +255,20 @@ export default function CommunityDetailPage({
             {project.links && project.links.length > 0 && (
               <div className="mt-5 flex flex-col gap-3">
                 {project.links.map((link) => {
-                  const isLinkExternal = link.href.startsWith("http");
+                  const linkProps = getSafeLinkProps(link.href, {
+                    allowInternal: true,
+                  });
 
                   return (
-                    <Link
-                      key={`${link.title}-${link.href}`}
-                      href={link.href}
-                      target={isLinkExternal ? "_blank" : undefined}
-                      rel={isLinkExternal ? "noreferrer" : undefined}
-                      className="font-heading text-base text-skin-base underline transition hover:opacity-70"
-                    >
-                      {link.title}
-                    </Link>
+                    linkProps && (
+                      <Link
+                        key={`${link.title}-${link.href}`}
+                        {...linkProps}
+                        className="font-heading text-base text-skin-base underline transition hover:opacity-70"
+                      >
+                        {link.title}
+                      </Link>
+                    )
                   );
                 })}
               </div>

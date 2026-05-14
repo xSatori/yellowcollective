@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRoundRequest, type RoundRequestInput } from "data/rounds";
+import { applyRateLimit } from "@/utils/rate-limit";
 
 type RequestRoundBody = {
   request?: RoundRequestInput;
@@ -20,6 +21,16 @@ export default async function handler(
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed." });
+  }
+
+  if (
+    !applyRateLimit(req, res, {
+      keyPrefix: "round-request",
+      limit: 6,
+      windowMs: 10 * 60 * 1000,
+    })
+  ) {
+    return;
   }
 
   try {

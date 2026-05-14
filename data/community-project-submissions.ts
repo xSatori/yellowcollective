@@ -5,6 +5,10 @@ import {
   normalizeCommunityProjectMemberAddresses,
   type CommunityProject,
 } from "./community";
+import {
+  normalizeSafeImageUrl,
+  normalizeSafeProjectUrl,
+} from "@/utils/url-safety";
 
 export type CommunityProjectStatus = "pending" | "approved" | "removed";
 
@@ -113,14 +117,23 @@ const parseJson = <T>(value: T | string): T =>
   typeof value === "string" ? JSON.parse(value) : value;
 
 const normalizeOptionalStringArray = (value: unknown) =>
-  isStringArray(value) ? value.map((item) => item.trim()).filter(Boolean) : [];
+  isStringArray(value)
+    ? value
+        .map((item) =>
+          normalizeSafeImageUrl(item, {
+            allowInternal: true,
+            allowDataImages: true,
+          })
+        )
+        .filter(Boolean)
+    : [];
 
 const normalizeProjectLinks = (value: unknown): ProjectLinks =>
   isProjectLinks(value)
     ? value
         .map((link) => ({
           title: link.title.trim(),
-          href: link.href.trim(),
+          href: normalizeSafeProjectUrl(link.href, { allowInternal: true }),
         }))
         .filter((link) => link.title && link.href)
     : [];
@@ -139,8 +152,11 @@ export const normalizeCommunityProjectInput = (
   artist: String(input.artist || "").trim(),
   category: String(input.category || "").trim(),
   date: String(input.date || "").trim(),
-  href: String(input.href || "").trim(),
-  image: String(input.image || "").trim(),
+  href: normalizeSafeProjectUrl(input.href, { allowInternal: true }),
+  image: normalizeSafeImageUrl(input.image, {
+    allowInternal: true,
+    allowDataImages: true,
+  }),
   memberAddresses: normalizeCommunityProjectMemberAddresses(
     input.memberAddresses
   ),
@@ -179,6 +195,44 @@ export const validateCommunityProjectInput = (
 
   if (invalidMemberAddresses.length > 0) {
     return "Project members must be valid wallet addresses.";
+  }
+
+  if (!normalizeSafeProjectUrl(input.href, { allowInternal: true })) {
+    return "Project source URL must be a valid HTTPS or internal URL.";
+  }
+
+  if (
+    !normalizeSafeImageUrl(input.image, {
+      allowInternal: true,
+      allowDataImages: true,
+    })
+  ) {
+    return "Project image must be a valid HTTPS, internal, or uploaded image URL.";
+  }
+
+  if (
+    isStringArray(input.galleryImages) &&
+    input.galleryImages.some(
+      (image) =>
+        image.trim() &&
+        !normalizeSafeImageUrl(image, {
+          allowInternal: true,
+          allowDataImages: true,
+        })
+    )
+  ) {
+    return "Gallery images must use valid HTTPS, internal, or uploaded image URLs.";
+  }
+
+  if (
+    isProjectLinks(input.links) &&
+    input.links.some(
+      (link) =>
+        link.href.trim() &&
+        !normalizeSafeProjectUrl(link.href, { allowInternal: true })
+    )
+  ) {
+    return "Project links must use valid HTTPS or internal URLs.";
   }
 
   return undefined;

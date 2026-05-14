@@ -2,9 +2,11 @@ import CustomConnectButton from "@/components/CustomConnectButton";
 import Layout from "@/components/Layout";
 import type { Round } from "data/rounds";
 import { getPublicRoundBySlug } from "data/rounds";
-import { createRoundActionMessage } from "@/utils/rounds/auth";
+import { getRoundSignedRequestAction } from "@/utils/rounds/auth";
+import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
 import { getRoundState } from "@/utils/rounds/state";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
+import { TOKEN_NETWORK } from "constants/addresses";
 import type { GetServerSidePropsContext, GetServerSidePropsResult, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
@@ -15,6 +17,8 @@ type SubmitRoundProps = {
   round: Round | null;
   error?: string;
 };
+
+const ROUND_SIGNED_REQUEST_CHAIN_ID = Number(TOKEN_NETWORK);
 
 export const getServerSideProps = async ({
   params,
@@ -84,21 +88,25 @@ export default function SubmitRoundPage({
     setMessage("");
 
     try {
-      const walletMessage = createRoundActionMessage({
-        action: "submit",
-        roundSlug: round.slug,
+      const path = `/api/rounds/${round.slug}/submit`;
+      const payload = { submission: values };
+      const authorization = await createSignedRequestAuthHeader({
         walletAddress: address,
-      });
-      const walletSignature = await signMessageAsync({ message: walletMessage });
-      const response = await fetch(`/api/rounds/${round.slug}/submit`, {
+        chainId: ROUND_SIGNED_REQUEST_CHAIN_ID,
+        action: getRoundSignedRequestAction("submit"),
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          walletAddress: address,
-          walletMessage,
-          walletSignature,
-          submission: values,
-        }),
+        path,
+        payload,
+        signMessageAsync,
+      });
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          Authorization: authorization,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
 

@@ -1,0 +1,28 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const read = (path) => readFileSync(resolve(process.cwd(), path), "utf8");
+
+const farcaster = read("utils/farcasterMiniApp.ts");
+assert.equal(farcaster.includes("new Function"), false);
+assert.equal(farcaster.includes("https://esm.sh"), false);
+assert.equal(farcaster.includes("return import(url)"), false);
+console.log("ok - Farcaster SDK uses no remote runtime import");
+
+const adminDashboard = read("pages/admin/dashboard.tsx");
+assert.equal(adminDashboard.includes("URLSearchParams"), false);
+assert.equal(adminDashboard.includes("adminSignature"), false);
+assert.equal(adminDashboard.includes("adminMessage"), false);
+console.log("ok - admin dashboard does not put signatures in URLs");
+
+const adminApi = read("utils/admin-api.ts");
+assert.equal(adminApi.includes("req.query.adminSignature"), false);
+assert.equal(adminApi.includes("req.query.adminMessage"), false);
+console.log("ok - admin API does not accept signed auth from query params");
+
+const nextConfig = read("next.config.js");
+assert.equal(nextConfig.includes('hostname: "**"'), false);
+assert.equal(nextConfig.includes("Content-Security-Policy"), true);
+assert.equal(nextConfig.includes("X-Content-Type-Options"), true);
+console.log("ok - global security headers and restricted image hosts are configured");

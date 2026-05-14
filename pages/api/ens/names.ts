@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getEnsNamesForAddresses } from "data/ens";
 import { getAddress, isAddress } from "viem";
+import { applyRateLimit } from "@/utils/rate-limit";
 
 export type GetEnsNamesReturnType = {
   names: Record<string, string>;
@@ -10,6 +11,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  if (
+    !applyRateLimit(req, res, {
+      keyPrefix: "ens-names",
+      limit: 30,
+      windowMs: 60 * 1000,
+    })
+  ) {
     return;
   }
 

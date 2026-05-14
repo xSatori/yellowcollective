@@ -58,12 +58,15 @@ export default function Hero() {
     <div className="bg-transparent flex w-full max-w-[374px] flex-col items-center justify-center gap-8 px-4 py-[48px] md:max-w-[500px] md:gap-16 md:px-10 md:py-[64px] lg:w-[1100px] lg:max-w-6xl lg:flex-row lg:items-start lg:justify-start">
       <div className="relative flex aspect-square w-full max-w-[342px] shrink-0 items-center justify-center overflow-hidden rounded-[48px] border-[3px] border-transparent/10 md:h-[420px] md:w-[420px] md:max-w-none md:rounded-[64px]">
         {tokenInfo && (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={tokenInfo?.image}
             onLoad={() => setImageLoaded(true)}
-            fill={true}
             alt=""
-            className={clsx(imageLoaded ? "visible" : "invisible")}
+            className={clsx(
+              "h-full w-full object-cover",
+              imageLoaded ? "visible" : "invisible"
+            )}
           />
         )}
         <Image

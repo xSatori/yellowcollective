@@ -8,6 +8,10 @@ import {
   getApprovedCommunityProjectBySlug,
   listApprovedCommunityProjects,
 } from "data/community-project-submissions";
+import {
+  normalizeSafeImageUrl,
+  normalizeSafeProjectUrl,
+} from "@/utils/url-safety";
 import fs from "fs";
 import path from "path";
 
@@ -32,6 +36,17 @@ const isProjectLinks = (value: unknown): value is CommunityProject["links"] =>
 
 const normalizeProject = (project: CommunityProject): CommunityProject => ({
   ...project,
+  href: normalizeSafeProjectUrl(project.href, { allowInternal: true }),
+  image: normalizeSafeImageUrl(project.image, { allowInternal: true }),
+  galleryImages: (project.galleryImages || [])
+    .map((image) => normalizeSafeImageUrl(image, { allowInternal: true }))
+    .filter(Boolean),
+  links: (project.links || [])
+    .map((link) => ({
+      ...link,
+      href: normalizeSafeProjectUrl(link.href, { allowInternal: true }),
+    }))
+    .filter((link) => link.title && link.href),
   memberAddresses: normalizeCommunityProjectMemberAddresses(
     project.memberAddresses
   ),
@@ -64,6 +79,29 @@ const isCommunityProject = (value: unknown): value is CommunityProject => {
   }
 
   if (getInvalidCommunityProjectMemberAddresses(project.memberAddresses).length) {
+    return false;
+  }
+
+  if (
+    !normalizeSafeProjectUrl(project.href, { allowInternal: true }) ||
+    !normalizeSafeImageUrl(project.image, { allowInternal: true })
+  ) {
+    return false;
+  }
+
+  if (
+    project.galleryImages?.some(
+      (image) => !normalizeSafeImageUrl(image, { allowInternal: true })
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    project.links?.some(
+      (link) => !normalizeSafeProjectUrl(link.href, { allowInternal: true })
+    )
+  ) {
     return false;
   }
 

@@ -1,5 +1,4 @@
 import { Pool } from "pg";
-import { utils } from "ethers";
 import { GraphQLClient, gql } from "graphql-request";
 import type { Address } from "viem";
 import { getAddress, isAddress } from "viem";
@@ -19,7 +18,6 @@ import { getProposals, type Proposal } from "data/nouns-builder/governor";
 import { getProposalName } from "@/utils/getProposalName";
 import {
   normalizeProfileMetadata,
-  parseProfileUpdateMessage,
   validateProfileMetadata,
   type NormalizedProfileMetadata,
   type ProfileMetadataInput,
@@ -297,36 +295,6 @@ export const saveProfileMetadata = async ({
   );
 
   return mapMetadata(result.rows[0]);
-};
-
-export const verifyProfileUpdate = ({
-  address,
-  message,
-  signature,
-}: {
-  address: string;
-  message: string;
-  signature: string;
-}) => {
-  if (!isAddress(address)) return false;
-
-  const parsed = parseProfileUpdateMessage(message);
-  if (!parsed) return false;
-
-  const normalizedAddress = getAddress(address);
-  const fiveMinutesMs = 5 * 60 * 1000;
-
-  if (parsed.wallet !== normalizedAddress) return false;
-  if (Date.now() - parsed.issuedAt < 0) return false;
-  if (Date.now() - parsed.issuedAt > fiveMinutesMs) return false;
-
-  try {
-    return (
-      getAddress(utils.verifyMessage(message, signature)) === normalizedAddress
-    );
-  } catch {
-    return false;
-  }
 };
 
 const proposalVotesQuery = gql`

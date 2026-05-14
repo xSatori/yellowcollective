@@ -11,11 +11,13 @@ import {
 } from "@/components/Dialog";
 import {
   areSameWalletAddress,
-  createProfileUpdateMessage,
   normalizeProfileMetadata,
+  PROFILE_UPDATE_SIGNED_REQUEST_ACTION,
   shortenWalletAddress,
   validateProfileMetadata,
 } from "@/utils/profile/identity";
+import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
+import { TOKEN_NETWORK } from "constants/addresses";
 import { getEnsAddress } from "data/ens";
 import {
   getPublicProfileData,
@@ -56,6 +58,7 @@ type ProfilePageProps = {
 
 const MAINNET_ETHERSCAN_URL = "https://etherscan.io";
 const BASESCAN_URL = "https://basescan.org";
+const PROFILE_SIGNED_REQUEST_CHAIN_ID = Number(TOKEN_NETWORK);
 type ActivityStatus = "bid" | "submission" | "vote" | "won";
 const PROFILE_BUTTON_BASE =
   "inline-flex items-center justify-center rounded-[18px] px-5 py-3 font-heading transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none";
@@ -219,19 +222,25 @@ export default function ProfilePage({
     setSaveState({ status: "saving", message: "Saving profile..." });
 
     try {
-      const walletMessage = createProfileUpdateMessage(profile.address);
-      const walletSignature = await signMessageAsync({
-        message: walletMessage,
-      });
-      const response = await fetch(`/api/profile/${profile.address}`, {
+      const path = `/api/profile/${profile.address}`;
+      const payload = { profile: formState };
+      const authorization = await createSignedRequestAuthHeader({
+        walletAddress: connectedAddress,
+        chainId: PROFILE_SIGNED_REQUEST_CHAIN_ID,
+        action: PROFILE_UPDATE_SIGNED_REQUEST_ACTION,
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          walletAddress: connectedAddress,
-          walletMessage,
-          walletSignature,
-          profile: formState,
-        }),
+        path,
+        payload,
+        signMessageAsync,
+      });
+      const response = await fetch(path, {
+        method: "PUT",
+        headers: {
+          Authorization: authorization,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
 

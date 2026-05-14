@@ -25,6 +25,8 @@ const TWITTER_HANDLE_PATTERN = /^@?[a-zA-Z0-9_]{1,50}$/;
 const AVATAR_DATA_URL_PATTERN =
   /^data:image\/(?:png|jpeg|jpg|webp);base64,[a-zA-Z0-9+/=]+$/;
 
+export const PROFILE_UPDATE_SIGNED_REQUEST_ACTION = "profile:update";
+
 export const normalizeWalletAddress = (value?: string | null) => {
   if (!value || !isAddress(value)) return undefined;
   return getAddress(value);

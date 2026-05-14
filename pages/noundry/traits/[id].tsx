@@ -13,13 +13,17 @@ import {
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type { PlaygroundArtwork } from "data/nouns-builder/artwork";
 import type { Round } from "data/rounds";
-import { createRoundActionMessage } from "@/utils/rounds/auth";
+import { getRoundSignedRequestAction } from "@/utils/rounds/auth";
+import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
+import { TOKEN_NETWORK } from "constants/addresses";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { useAccount, useSignMessage } from "wagmi";
+
+const ROUND_SIGNED_REQUEST_CHAIN_ID = Number(TOKEN_NETWORK);
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -302,26 +306,29 @@ const SubmitTraitToRoundModal = ({
     try {
       setIsSubmitting(true);
       setMessage("");
-      const walletMessage = createRoundActionMessage({
-        action: "submit-trait",
-        roundSlug: selectedRound.slug,
+      const path = `/api/rounds/${selectedRound.slug}/submit-trait`;
+      const payload = {
+        traitId: submission.id,
+        description,
+      };
+      const authorization = await createSignedRequestAuthHeader({
         walletAddress: address,
+        chainId: ROUND_SIGNED_REQUEST_CHAIN_ID,
+        action: getRoundSignedRequestAction("submit-trait"),
+        method: "POST",
+        path,
+        payload,
+        signMessageAsync,
       });
-      const walletSignature = await signMessageAsync({ message: walletMessage });
-      const response = await fetch(
-        `/api/rounds/${selectedRound.slug}/submit-trait`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            walletAddress: address,
-            walletMessage,
-            walletSignature,
-            traitId: submission.id,
-            description,
-          }),
-        }
-      );
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          Authorization: authorization,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        body: JSON.stringify(payload),
+      });
       const result = await response.json();
 
       if (!response.ok) {
