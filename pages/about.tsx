@@ -62,7 +62,7 @@ const getFallbackContract = (): ContractInfo => ({
   description:
     "The Yellow Collective is an onchain club on the Base Ethereum L2 network, designed to support and empower artists and creatives in the Nouns and Superchain ecosystems.",
   image: "",
-  external_url: "https://yellowcollective.xyz",
+  external_url: "https://yellowcollective.art",
   total_supply: "0",
   auction: YELLOW_COLLECTIVE_CONTRACTS.auctionHouse.address,
 });

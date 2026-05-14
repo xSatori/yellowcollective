@@ -1,0 +1,23 @@
+{
+  "miniapp": {
+    "version": "1",
+    "name": "Yellow Collective",
+    "homeUrl": "https://yellowcollective.art",
+    "iconUrl": "https://yellowcollective.art/miniapp-icon.png",
+    "imageUrl": "https://yellowcollective.art/miniapp-embed.png",
+    "buttonTitle": "Open Yellow",
+    "splashImageUrl": "https://yellowcollective.art/miniapp-splash.png",
+    "splashBackgroundColor": "#FCD100",
+    "subtitle": "Nouns artists on Base",
+    "description": "A club on Base supporting artists and creatives in the Nouns and Superchain ecosystems.",
+    "tagline": "Collective art on Base",
+    "primaryCategory": "art-creativity",
+    "tags": ["nouns", "base", "dao", "artists", "collective"],
+    "heroImageUrl": "https://yellowcollective.art/miniapp-hero.png",
+    "ogTitle": "Yellow Collective",
+    "ogDescription": "A club on Base supporting Nouns and Superchain artists.",
+    "ogImageUrl": "https://yellowcollective.art/miniapp-hero.png",
+    "canonicalDomain": "yellowcollective.art",
+    "requiredChains": ["eip155:8453"]
+  }
+}

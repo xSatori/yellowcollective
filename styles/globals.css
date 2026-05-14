@@ -5,6 +5,13 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --miniapp-safe-area-top: 0px;
+    --miniapp-safe-area-bottom: 0px;
+    --miniapp-safe-area-left: 0px;
+    --miniapp-safe-area-right: 0px;
+  }
+
   * {
     @apply antialiased font-pally;
     font-synthesis: none !important;
@@ -12,7 +19,12 @@
 
   html,
   body {
-    @apply w-screen overflow-x-hidden text-primary;
+    @apply w-full overflow-x-hidden text-primary;
+    min-height: 100dvh;
+  }
+
+  #__next {
+    min-height: 100dvh;
   }
 
   h1 {

@@ -2,7 +2,10 @@ import { InformationCircleIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import Button from "./Button";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { FARCASTER_URL } from "constants/urls";
+import { getAbsoluteUrl } from "@/utils/site";
+import { isInMiniApp, loadMiniAppSdk } from "@/utils/farcasterMiniApp";
+import { useEffect, useState, type MouseEvent } from "react";
 
 const navItems = [
   {
@@ -19,6 +22,42 @@ const navItems = [
 
 export default function Footer() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isMiniApp, setIsMiniApp] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    isInMiniApp().then((inMiniApp) => {
+      if (!cancelled) setIsMiniApp(inMiniApp);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleFarcasterClick = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isMiniApp) return;
+
+    event.preventDefault();
+
+    const sdk = await loadMiniAppSdk();
+    try {
+      if (sdk?.actions.composeCast) {
+        await sdk.actions.composeCast({
+          text: "Explore Yellow Collective",
+          embeds: [getAbsoluteUrl("/")],
+          channelKey: "yellow",
+        });
+        return;
+      }
+
+      await sdk?.actions.openUrl?.(FARCASTER_URL);
+    } catch (error) {
+      console.warn("Unable to open Farcaster Mini App action", error);
+      window.open(FARCASTER_URL, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center gap-16 pb-16 pt-4">
@@ -30,6 +69,9 @@ export default function Footer() {
               target="_blank"
               rel="noreferrer noopener"
               aria-label={item.label}
+              onClick={
+                item.href === FARCASTER_URL ? handleFarcasterClick : undefined
+              }
             >
               <Image src={item.src} width={24} height={24} alt="" />
             </Link>

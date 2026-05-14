@@ -178,7 +178,13 @@ export default function Header() {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="absolute left-4 right-4 top-[72px] z-50 flex flex-col gap-2 rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4.02px_0px_0px_#BBB] lg:hidden">
+        <div
+          className="absolute left-4 right-4 top-[72px] z-50 flex flex-col gap-2 overflow-y-auto rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4.02px_0px_0px_#BBB] lg:hidden"
+          style={{
+            maxHeight:
+              "calc(100dvh - 88px - env(safe-area-inset-bottom) - var(--miniapp-safe-area-bottom))",
+          }}
+        >
           <Link
             href={treasuryHref}
             rel="noreferer noopener noreferrer"

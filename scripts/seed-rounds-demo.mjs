@@ -332,7 +332,7 @@ const run = async () => {
             submission[0],
             submission[1],
             image(submission[2], index % 2 === 0 ? "fff7bf" : "ffcc00"),
-            `https://yellowcollective.xyz/rounds/${round.slug}`,
+            `https://yellowcollective.art/rounds/${round.slug}`,
           ]
         );
 

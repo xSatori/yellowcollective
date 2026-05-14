@@ -425,7 +425,7 @@ export default function RoundDetailPage({
         </section>
 
         {state === "voting_open" && votingPower > 0 && (
-          <div className="sticky bottom-4 z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_#BBB]">
+          <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_#BBB]">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="text-base text-secondary">
                 Allocating{" "}

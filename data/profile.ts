@@ -313,6 +313,7 @@ export const verifyProfileUpdate = ({
   const fiveMinutesMs = 5 * 60 * 1000;
 
   if (parsed.wallet !== normalizedAddress) return false;
+  if (Date.now() - parsed.issuedAt < 0) return false;
   if (Date.now() - parsed.issuedAt > fiveMinutesMs) return false;
 
   try {
