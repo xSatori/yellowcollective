@@ -32,7 +32,12 @@ const sortMembers = (members: DaoMember[], sort: SortMode) =>
         return firstHasEthName ? -1 : 1;
       }
 
-      if (firstHasEthName && secondHasEthName && first.ensName && second.ensName) {
+      if (
+        firstHasEthName &&
+        secondHasEthName &&
+        first.ensName &&
+        second.ensName
+      ) {
         return first.ensName.localeCompare(second.ensName);
       }
 
@@ -83,10 +88,10 @@ export default function MembersPage({
   members,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const [sort, setSort] = useState<SortMode>("name");
-  const sortedMembers = useMemo(() => sortMembers(members, sort), [
-    members,
-    sort,
-  ]);
+  const sortedMembers = useMemo(
+    () => sortMembers(members, sort),
+    [members, sort]
+  );
 
   return (
     <Layout>
@@ -97,7 +102,7 @@ export default function MembersPage({
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
         <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div>
+            <div className="text-center md:text-left">
               <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
                 Members
               </h1>
@@ -186,18 +191,9 @@ const MemberCard = ({ member }: { member: DaoMember }) => {
           )}
         </div>
         <div className="mt-auto grid grid-cols-3 gap-1 text-center sm:gap-2">
-          <MemberStat
-            label="Tokens"
-            value={member.tokenCount}
-          />
-          <MemberStat
-            label="Traits"
-            value={member.noundrySubmissionCount}
-          />
-          <MemberStat
-            label="Votes"
-            value={member.proposalVoteCount}
-          />
+          <MemberStat label="Tokens" value={member.tokenCount} />
+          <MemberStat label="Traits" value={member.noundrySubmissionCount} />
+          <MemberStat label="Votes" value={member.proposalVoteCount} />
         </div>
       </div>
     </Link>

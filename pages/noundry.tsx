@@ -210,7 +210,8 @@ const layerLabels: Record<string, string> = {
 const getLayerLabel = (trait: string) =>
   layerLabels[trait] || trait.replace(/[-_]+/g, " ");
 
-const isEditableLayer = (trait: string) => !EDITABLE_TRAIT_EXCLUSIONS.has(trait);
+const isEditableLayer = (trait: string) =>
+  !EDITABLE_TRAIT_EXCLUSIONS.has(trait);
 
 const getPixelPoint = (index: number) => ({
   x: index % GRID_SIZE,
@@ -248,7 +249,11 @@ const imageToPixels = async (src: string) => {
     const alpha = imageData[offset + 3];
     if (alpha < 16) return EMPTY_PIXEL;
 
-    return toHexColor(imageData[offset], imageData[offset + 1], imageData[offset + 2]);
+    return toHexColor(
+      imageData[offset],
+      imageData[offset + 1],
+      imageData[offset + 2]
+    );
   });
 };
 
@@ -284,7 +289,11 @@ const collectPreviewColors = async (
 
   for (let offset = 0; offset < imageData.length; offset += 4) {
     if (imageData[offset + 3] < 16) continue;
-    const color = toHexColor(imageData[offset], imageData[offset + 1], imageData[offset + 2]);
+    const color = toHexColor(
+      imageData[offset],
+      imageData[offset + 1],
+      imageData[offset + 2]
+    );
     colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
   }
 
@@ -332,10 +341,11 @@ const downloadCanvas = async ({
 export default function NoundryPage() {
   const router = useRouter();
   const { address } = useAccount();
-  const { data: artwork, error: artworkError, isLoading } = useSWR<PlaygroundArtwork>(
-    "/api/playground/artwork",
-    fetcher
-  );
+  const {
+    data: artwork,
+    error: artworkError,
+    isLoading,
+  } = useSWR<PlaygroundArtwork>("/api/playground/artwork", fetcher);
   const { data: submissionData, error: submissionsError } = useSWR<{
     submissions: NoundrySubmission[];
   }>("/api/noundry/submissions", fetcher);
@@ -358,9 +368,8 @@ export default function NoundryPage() {
   const [redoStack, setRedoStack] = useState<string[][]>([]);
   const [previewColors, setPreviewColors] = useState<string[]>([]);
   const [hoveredPixel, setHoveredPixel] = useState<number | null>(null);
-  const [selectionBounds, setSelectionBounds] = useState<SelectionBounds | null>(
-    null
-  );
+  const [selectionBounds, setSelectionBounds] =
+    useState<SelectionBounds | null>(null);
   const [isCircleCropEnabled, setIsCircleCropEnabled] = useState(false);
   const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
   const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
@@ -380,7 +389,9 @@ export default function NoundryPage() {
   const isAdmin = isAdminAddress(address);
 
   const editableLayers = useMemo(
-    () => artwork?.orderedLayers.filter((layer) => isEditableLayer(layer.trait)) || [],
+    () =>
+      artwork?.orderedLayers.filter((layer) => isEditableLayer(layer.trait)) ||
+      [],
     [artwork]
   );
 
@@ -399,7 +410,9 @@ export default function NoundryPage() {
       )
     );
     setVisibleTraits(
-      Object.fromEntries(artwork.orderedLayers.map((layer) => [layer.trait, true]))
+      Object.fromEntries(
+        artwork.orderedLayers.map((layer) => [layer.trait, true])
+      )
     );
     setTraitType(
       editableLayers.find((layer) => layer.trait === "heads")?.trait ||
@@ -729,7 +742,10 @@ export default function NoundryPage() {
       selectedTraits,
     };
 
-    window.sessionStorage.setItem("noundry-submit-draft", JSON.stringify(draft));
+    window.sessionStorage.setItem(
+      "noundry-submit-draft",
+      JSON.stringify(draft)
+    );
     router.push("/noundry/submit");
   };
 
@@ -784,9 +800,7 @@ export default function NoundryPage() {
       return null;
     }
 
-    const pixelIndex = Number(
-      (pixelElement as HTMLElement).dataset.pixelIndex
-    );
+    const pixelIndex = Number((pixelElement as HTMLElement).dataset.pixelIndex);
 
     return Number.isInteger(pixelIndex) ? pixelIndex : null;
   };
@@ -998,7 +1012,7 @@ export default function NoundryPage() {
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
         <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+            <div className="text-center lg:text-left">
               <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
                 Noundry
               </h1>
@@ -1118,7 +1132,10 @@ export default function NoundryPage() {
                         }}
                       >
                         {displayedSelectionBounds &&
-                          isPixelInSelection(index, displayedSelectionBounds) && (
+                          isPixelInSelection(
+                            index,
+                            displayedSelectionBounds
+                          ) && (
                             <span
                               className="pointer-events-none absolute inset-0 bg-[#d9d9d9]/55"
                               style={getSelectionEdgeStyle(
@@ -1166,8 +1183,8 @@ export default function NoundryPage() {
             </div>
 
             <div className="order-3 flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-heading text-2xl leading-none text-skin-base">
+              <div className="flex items-center justify-center gap-3 xl:justify-between">
+                <h2 className="text-center font-heading text-2xl leading-none text-skin-base xl:text-left">
                   Preview
                 </h2>
               </div>
@@ -1394,7 +1411,8 @@ const movePixels = (
     .map((color, index) => ({ color, index }))
     .filter(
       ({ color, index }) =>
-        color !== EMPTY_PIXEL && (!selection || isPixelInSelection(index, selection))
+        color !== EMPTY_PIXEL &&
+        (!selection || isPixelInSelection(index, selection))
     );
 
   selectedIndexes.forEach(({ index }) => {
@@ -1579,21 +1597,19 @@ const ToolRail = ({
     </div>
 
     <label className="mt-4 block xl:mt-6">
-      <span className="block text-right font-heading text-xs uppercase text-secondary">
+      <span className="block font-heading text-xs uppercase text-secondary xl:text-right">
         Color
       </span>
       <input
         type="color"
         value={selectedColor === EMPTY_PIXEL ? "#000000" : selectedColor}
         onChange={(event) => onColorChange(event.target.value)}
-        className="mt-2 block aspect-square h-12 w-12 cursor-pointer rounded-none border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6] xl:h-20 xl:w-20"
+        className="mt-2 block h-12 w-full cursor-pointer rounded-md border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6] xl:aspect-square xl:h-20 xl:w-20 xl:rounded-none"
       />
     </label>
 
     <div className="mt-4 border-t border-skin-stroke pt-3 xl:mt-5 xl:pt-4">
-      <div className="font-heading text-xs uppercase text-secondary">
-        Used
-      </div>
+      <div className="font-heading text-xs uppercase text-secondary">Used</div>
       <div className="mt-2 grid grid-cols-8 gap-1 xl:grid-cols-4">
         {(usedColors.length ? usedColors : starterPalette.slice(0, 8)).map(
           (color) => (
@@ -1685,12 +1701,14 @@ const PixelToolIcon = ({
       }}
     >
       {pattern.flatMap((row, y) =>
-        row.split("").map((cell, x) => (
-          <span
-            key={`${kind}-${x}-${y}`}
-            className={cell === "1" ? "bg-current" : "bg-transparent"}
-          />
-        ))
+        row
+          .split("")
+          .map((cell, x) => (
+            <span
+              key={`${kind}-${x}-${y}`}
+              className={cell === "1" ? "bg-current" : "bg-transparent"}
+            />
+          ))
       )}
     </span>
   );
@@ -1773,10 +1791,7 @@ const BucketGlyph = () => (
       d="M7.8 3 18 13.2 11.2 20H4.4L2 17.6V10.8l6.2-6.2L7.8 3Zm1.7 4.8-4.8 4.8v3.8l.9.9h4.2l5.4-5.4-5.7-4.1Z"
       fill="currentColor"
     />
-    <path
-      d="M4.8 13h11.4l-5.4 5.4H6.4l-1.6-1.6V13Z"
-      fill="currentColor"
-    />
+    <path d="M4.8 13h11.4l-5.4 5.4H6.4l-1.6-1.6V13Z" fill="currentColor" />
     <path
       d="M19 15.4c1.4 1.6 2.2 2.9 2.2 4 0 1.4-1 2.4-2.2 2.4s-2.2-1-2.2-2.4c0-1.1.8-2.4 2.2-4Z"
       fill="currentColor"
@@ -1874,7 +1889,16 @@ const RedoGlyph = () => (
 
 const DiceGlyph = () => (
   <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-    <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="3" />
+    <rect
+      x="4"
+      y="4"
+      width="16"
+      height="16"
+      rx="2"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+    />
     <circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" />
     <circle cx="15.5" cy="8.5" r="1.6" fill="currentColor" />
     <circle cx="12" cy="12" r="1.6" fill="currentColor" />
@@ -1885,7 +1909,15 @@ const DiceGlyph = () => (
 
 const LoadNounGlyph = () => (
   <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-    <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" />
+    <rect
+      x="4"
+      y="4"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
     <rect x="7" y="7" width="4" height="4" fill="currentColor" />
     <rect x="13" y="7" width="4" height="4" fill="currentColor" />
     <rect x="7" y="13" width="10" height="4" fill="currentColor" />
@@ -1908,7 +1940,10 @@ const CropMaskGlyph = () => (
 
 const SaveGlyph = () => (
   <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-    <path d="M5 3h12l2 2v16H5V3Zm3 2v5h8V5H8Zm0 10v4h8v-4H8Z" fill="currentColor" />
+    <path
+      d="M5 3h12l2 2v16H5V3Zm3 2v5h8V5H8Zm0 10v4h8v-4H8Z"
+      fill="currentColor"
+    />
   </svg>
 );
 
@@ -2182,11 +2217,7 @@ const LayerControl = ({
             <LayerPartIcon trait={layer.trait} />
           )}
         </button>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="min-w-0 text-left"
-        >
+        <button type="button" onClick={onEdit} className="min-w-0 text-left">
           <div className="font-heading text-base leading-tight text-skin-base transition hover:text-[#6a5400]">
             {getLayerLabel(layer.trait)}
           </div>

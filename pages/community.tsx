@@ -33,8 +33,8 @@ export default function CommunityPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-7 pb-12">
-        <section className="flex flex-col justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:flex-row md:items-start md:p-8">
-          <div className="flex flex-col gap-3">
+        <section className="flex flex-col items-center justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 text-center shadow-sm md:flex-row md:items-start md:p-8 md:text-left">
+          <div className="flex flex-col items-center gap-3 md:items-start">
             <h1 className="font-heading text-[36px] leading-none md:text-[44px]">
               Projects
             </h1>

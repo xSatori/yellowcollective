@@ -204,7 +204,7 @@ export default function TreasuryPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-10 pb-12">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
           <h1 className="text-[30px] leading-none sm:text-[36px] md:text-[44px]">
             Treasury
           </h1>
@@ -254,7 +254,7 @@ export default function TreasuryPage({
         </section>
 
         <section className="flex flex-col gap-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
             <h2 className="font-heading text-4xl leading-none">Tokens</h2>
             <div className="font-heading text-4xl leading-none">
               {formatUsd(tokenTotalUsd)}
@@ -294,7 +294,9 @@ export default function TreasuryPage({
         </section>
 
         <section className="flex flex-col gap-6">
-          <h2 className="font-heading text-4xl leading-none">NFTs</h2>
+          <h2 className="text-center font-heading text-4xl leading-none sm:text-left">
+            NFTs
+          </h2>
           <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-12 text-center text-base text-secondary shadow-sm md:text-lg">
             No NFTs Found
           </div>
