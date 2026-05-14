@@ -126,14 +126,15 @@ export async function getBidHistory({ tokenId }: { tokenId: BigNumber }) {
   const resp = await client.request({ document: query, variables: { id } });
 
   return (
-    resp.auction?.bids.map(
-      (entry) =>
-        ({
-          bidder: entry.bidder,
-          bidAmount: entry.amount,
-          transactionHash: entry.id.split(":")[0],
-          comment: entry.comment?.trim() || undefined,
-        }) as Bid
-    ) ?? []
+    resp.auction?.bids.map((entry) => {
+      const comment = entry.comment?.trim();
+
+      return {
+        bidder: entry.bidder,
+        bidAmount: entry.amount,
+        transactionHash: entry.id.split(":")[0],
+        ...(comment ? { comment } : {}),
+      } as Bid;
+    }) ?? []
   );
 }
