@@ -139,7 +139,7 @@ export default function MembersPage({
         </section>
 
         {sortedMembers.length > 0 ? (
-          <section className="grid grid-cols-3 gap-3 sm:gap-4">
+          <section className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-6">
             {sortedMembers.map((member) => (
               <MemberCard key={member.address} member={member} />
             ))}
