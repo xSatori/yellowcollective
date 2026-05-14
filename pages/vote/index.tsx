@@ -15,17 +15,35 @@ import { Fragment } from "react";
 import { useUserVotes } from "@/hooks/fetch/useUserVotes";
 import { useCurrentThreshold } from "@/hooks/fetch/useCurrentThreshold";
 
+const defaultVoteDescription = "# Governance";
+const voteDescriptionPath = path.join(
+  process.cwd(),
+  "templates",
+  "vote",
+  "description.md"
+);
+
+const isMissingFileError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as NodeJS.ErrnoException).code === "ENOENT";
+
 export const getStaticProps = async (): Promise<
   GetStaticPropsResult<{
     descriptionSource: MDXRemoteSerializeResult<Record<string, unknown>>;
   }>
 > => {
-  // Get description markdown
-  const templateDirectory = path.join(process.cwd(), "templates");
-  const descFile = await fs.readFile(
-    templateDirectory + "/vote/description.md",
-    "utf8"
-  );
+  let descFile = defaultVoteDescription;
+
+  try {
+    descFile = await fs.readFile(voteDescriptionPath, "utf8");
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      throw error;
+    }
+  }
+
   const descMD = await serialize(descFile);
 
   return {
