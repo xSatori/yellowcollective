@@ -2,16 +2,13 @@ import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import DefaultProvider from "@/utils/DefaultProvider";
 import { TOKEN_CONTRACT } from "constants/addresses";
-import { ETHERSCAN_BASEURL, SUBGRAPH_ENDPOINT } from "constants/urls";
+import { SUBGRAPH_ENDPOINT } from "constants/urls";
 import { YELLOW_COLLECTIVE_CONTRACTS } from "data/contracts";
 import { BigNumber, Contract, utils } from "ethers";
 import { GraphQLClient, gql } from "graphql-request";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
-import {
-  ArrowTopRightOnSquareIcon,
-  ClipboardDocumentIcon,
-} from "@heroicons/react/24/outline";
+import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 
 type TreasuryToken = {
   name: string;
@@ -208,23 +205,16 @@ export default function TreasuryPage({
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-10 pb-12">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <h1 className="text-[36px] leading-none md:text-[44px]">Treasury</h1>
+          <h1 className="text-[30px] leading-none sm:text-[36px] md:text-[44px]">
+            Treasury
+          </h1>
 
-          <div className="flex items-center gap-4 rounded-2xl border border-skin-stroke bg-skin-muted px-5 py-4 text-base shadow-sm md:text-lg">
+          <div className="flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-skin-stroke bg-skin-muted px-4 py-3 text-sm shadow-sm sm:w-auto sm:justify-start md:px-5 md:py-4 md:text-lg">
             <AddressLink
               address={treasuryAddress}
               fallbackAmount={8}
               link={false}
             />
-            <a
-              href={`${ETHERSCAN_BASEURL}/address/${treasuryAddress}`}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Open treasury on explorer"
-              className="text-secondary transition hover:text-skin-base"
-            >
-              <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-            </a>
             <button
               type="button"
               onClick={copyTreasuryAddress}

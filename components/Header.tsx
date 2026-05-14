@@ -185,15 +185,6 @@ export default function Header() {
               "calc(100dvh - 88px - env(safe-area-inset-bottom) - var(--miniapp-safe-area-bottom))",
           }}
         >
-          <Link
-            href={treasuryHref}
-            rel="noreferer noopener noreferrer"
-            target="_blank"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="rounded-xl border border-skin-stroke bg-[#fff7bf] px-4 py-3 font-heading text-base text-skin-base"
-          >
-            &Xi; {balanceLabel}
-          </Link>
           {isAdmin ? (
             <MobileNavGroup
               label="Home"

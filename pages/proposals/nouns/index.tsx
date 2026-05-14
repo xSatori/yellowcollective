@@ -188,15 +188,20 @@ const ProposalRow = ({
       </div>
 
       <div className="min-w-0">
-        <h2 className="truncate font-heading text-xl leading-none text-skin-base md:text-2xl">
+        <h2 className="font-heading text-xl leading-tight text-skin-base md:text-2xl">
           {proposal.title}
         </h2>
-        <div className="mt-3 text-base text-secondary md:text-lg">
-          {formatDate(proposal.timeCreated)}
+        <div className="mt-3 flex items-center justify-between gap-3 text-base text-secondary md:block md:text-lg">
+          <span>{formatDate(proposal.timeCreated)}</span>
+          <div
+            className={`${status.className} w-auto shrink-0 rounded-md px-2 py-1 text-center text-xs ${status.className.includes("text-") ? "" : "text-white"} md:hidden`}
+          >
+            {status.label}
+          </div>
         </div>
       </div>
 
-      <div className="col-span-2 flex items-center justify-start gap-5 md:col-span-1 md:justify-end">
+      <div className="hidden items-center justify-start gap-5 md:col-span-1 md:flex md:justify-end">
         <div className="hidden text-base text-secondary sm:block md:text-lg">
           {getDaysFromTimestamp(proposal.timeCreated)}
         </div>

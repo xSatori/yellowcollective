@@ -324,8 +324,8 @@ export default function ProfilePage({
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7 pb-12">
         <section className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_#BBB]">
           <div className="grid gap-0">
-            <div className="flex flex-col gap-6 p-6 md:p-8">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+            <div className="flex flex-col gap-6 p-5 sm:p-6 md:p-8">
+              <div className="flex flex-row items-start gap-4 sm:gap-5">
                 <ProfileAvatar
                   address={profile.address}
                   avatar={avatarUrl}
@@ -335,7 +335,7 @@ export default function ProfilePage({
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="break-words font-heading text-5xl leading-none">
+                        <h1 className="break-words font-heading text-[30px] leading-none min-[360px]:text-[34px] md:text-5xl">
                           {displayName}
                         </h1>
                         {socialLinks.map(({ label, href, icon, className }) => (
@@ -365,8 +365,8 @@ export default function ProfilePage({
                             {profile.ensName}
                           </span>
                         )}
-                        <span className="flex flex-wrap items-center gap-2">
-                          <span className="break-all font-heading text-base text-secondary">
+                        <span className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="break-all font-heading text-xs text-secondary min-[360px]:text-sm sm:text-base">
                             {profile.address}
                           </span>
                           {explorerLinks.map(([label, href]) => (
@@ -418,12 +418,12 @@ export default function ProfilePage({
               {stats.map(([label, value]) => (
                 <div
                   key={label}
-                  className="min-w-0 border-r border-skin-stroke p-3 text-center last:border-r-0 sm:p-5"
+                  className="min-w-0 border-r border-skin-stroke px-1.5 py-3 text-center last:border-r-0 sm:p-5"
                 >
-                  <div className="font-heading text-3xl leading-none text-skin-base sm:text-4xl">
+                  <div className="font-heading text-2xl leading-none text-skin-base min-[360px]:text-3xl sm:text-4xl">
                     {value}
                   </div>
-                  <div className="mt-1 break-words text-[11px] leading-tight text-secondary sm:text-sm">
+                  <div className="mt-1 whitespace-nowrap text-[9px] leading-tight text-secondary min-[360px]:text-[10px] sm:text-sm">
                     {label}
                   </div>
                 </div>
@@ -552,13 +552,13 @@ const ProfileAvatar = ({
   avatar?: string;
   label: string;
 }) => (
-  <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-skin-stroke bg-[#ffcc00] shadow-[0px_5px_0px_0px_#b89400]">
+  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-skin-stroke bg-[#ffcc00] shadow-[0px_5px_0px_0px_#b89400] sm:h-28 sm:w-28">
     {avatar ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={avatar} alt={label} className="h-full w-full object-cover" />
     ) : (
       <Jazzicon
-        diameter={86}
+        diameter={72}
         seed={jsNumberForAddress(address || zeroAddress)}
       />
     )}

@@ -8,7 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "../Dialog";
 import { twMerge } from "tailwind-merge";
 import WalletInfo from "../WalletInfo";
 
-function BidRow({ bid, tight }: { bid: Bid; tight: boolean }) {
+function BidRow({
+  bid,
+  tight,
+  showComment,
+}: {
+  bid: Bid;
+  tight: boolean;
+  showComment: boolean;
+}) {
   return (
     <div
       className={twMerge(
@@ -33,7 +41,7 @@ function BidRow({ bid, tight }: { bid: Bid; tight: boolean }) {
           </div>
         </ExternalLink>
       </div>
-      {bid.comment && (
+      {showComment && bid.comment && (
         <p className="line-clamp-3 rounded-[14px] bg-white px-4 py-3 text-sm leading-5 text-black">
           &ldquo;{bid.comment}&rdquo;
         </p>
@@ -48,17 +56,26 @@ export default function BidHistory({
   bids,
   numToShow,
   title,
+  shouldShowPreviewComment,
 }: {
   tokenId: string;
   tokenImage?: string;
   bids?: Bid[];
   numToShow: number;
   title: string;
+  shouldShowPreviewComment?: (bid: Bid) => boolean;
 }) {
   return (
     <div className="flex flex-col items-center">
       {bids?.slice(0, numToShow).map((bid, i) => {
-        return <BidRow bid={bid} tight={false} key={i} />;
+        return (
+          <BidRow
+            bid={bid}
+            tight={false}
+            showComment={Boolean(shouldShowPreviewComment?.(bid))}
+            key={i}
+          />
+        );
       })}
       {(bids?.length ?? 0) > numToShow && (
         <Dialog>
@@ -84,7 +101,9 @@ export default function BidHistory({
               </div>
             </DialogHeader>
             <div className="flex flex-col gap-6 p-6 overflow-y-auto">
-              {bids?.map((bid, i) => <BidRow bid={bid} tight={true} key={i} />)}
+              {bids?.map((bid, i) => (
+                <BidRow bid={bid} tight={true} showComment key={i} />
+              ))}
             </div>
           </DialogContent>
         </Dialog>

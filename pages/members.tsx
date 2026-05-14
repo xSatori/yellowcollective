@@ -134,7 +134,7 @@ export default function MembersPage({
         </section>
 
         {sortedMembers.length > 0 ? (
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+          <section className="grid grid-cols-3 gap-3 sm:gap-4">
             {sortedMembers.map((member) => (
               <MemberCard key={member.address} member={member} />
             ))}
@@ -174,18 +174,18 @@ const MemberCard = ({ member }: { member: DaoMember }) => {
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <div className="flex flex-1 flex-col gap-2 p-2 sm:gap-3 sm:p-4">
         <div className="min-w-0">
-          <h2 className="truncate font-heading text-2xl leading-none text-skin-base">
+          <h2 className="truncate font-heading text-sm leading-none text-skin-base sm:text-2xl">
             {member.displayName}
           </h2>
           {member.ensName && member.username && (
-            <p className="mt-1 truncate text-sm text-secondary">
+            <p className="mt-1 truncate text-[11px] leading-tight text-secondary sm:text-sm">
               {member.username}
             </p>
           )}
         </div>
-        <div className="mt-auto grid grid-cols-3 gap-2 text-center">
+        <div className="mt-auto grid grid-cols-3 gap-1 text-center sm:gap-2">
           <MemberStat
             label="Tokens"
             value={member.tokenCount}
@@ -205,11 +205,11 @@ const MemberCard = ({ member }: { member: DaoMember }) => {
 };
 
 const MemberStat = ({ label, value }: { label: string; value: number }) => (
-  <span className="rounded-xl bg-[#fff7bf] px-2 py-2">
-    <span className="block font-heading text-lg leading-none text-skin-base">
+  <span className="rounded-lg bg-[#fff7bf] px-1 py-1.5 sm:rounded-xl sm:px-2 sm:py-2">
+    <span className="block font-heading text-xs leading-none text-skin-base sm:text-lg">
       {value}
     </span>
-    <span className="mt-1 block text-[11px] leading-none text-secondary">
+    <span className="mt-1 block text-[9px] leading-none text-secondary sm:text-[11px]">
       {label}
     </span>
   </span>

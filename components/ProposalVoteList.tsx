@@ -101,22 +101,24 @@ const ProposalVoteRow = ({ vote }: { vote: ProposalVote }) => {
     <div
       className={`rounded-xl border-2 ${support.borderClassName} bg-white p-4`}
     >
-      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-        {isWallet ? (
-          <WalletIdentityLink
-            address={vote.voter}
-            className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
-          />
-        ) : (
-          <span className="font-heading text-base font-bold text-skin-base">
-            {vote.voter}
-          </span>
-        )}
-        <div className="flex items-center gap-3 text-sm text-skin-base">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          {isWallet ? (
+            <WalletIdentityLink
+              address={vote.voter}
+              className="font-heading text-base font-bold text-skin-base transition hover:text-skin-highlighted"
+            />
+          ) : (
+            <span className="font-heading text-base font-bold text-skin-base">
+              {vote.voter}
+            </span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-right text-sm text-skin-base sm:gap-3">
+          <span className="font-bold text-skin-base">{vote.weight} votes</span>
           <span className={`font-heading font-bold ${support.textClassName}`}>
             {support.label}
           </span>
-          <span className="font-bold text-skin-base">{vote.weight} votes</span>
         </div>
       </div>
       {vote.reason && (

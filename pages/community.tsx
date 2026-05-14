@@ -33,7 +33,7 @@ export default function CommunityPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-7 pb-12">
-        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+        <section className="flex flex-col justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:flex-row md:items-start md:p-8">
           <div className="flex flex-col gap-3">
             <h1 className="font-heading text-[36px] leading-none md:text-[44px]">
               Projects
@@ -49,7 +49,7 @@ export default function CommunityPage({
           >
             Submit project
           </Link>
-        </div>
+        </section>
 
         {projects.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">

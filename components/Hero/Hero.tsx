@@ -141,7 +141,12 @@ const EndedAuction = ({
     tokenId,
   });
   const featuredBidComment = auctionData?.bids?.find(
-    (bid) => bid.comment?.trim()
+    (bid) =>
+      bid.comment?.trim() &&
+      compareAddress(bid.bidder, auctionData.winner) &&
+      BigNumber.from(bid.bidAmount || "0").eq(
+        BigNumber.from(auctionData.amount || "0")
+      )
   )?.comment;
 
   return (
@@ -274,6 +279,12 @@ const CurrentAuction = ({
               bids={auctionInfo?.bids}
               numToShow={3}
               title="View all bids"
+              shouldShowPreviewComment={(bid) =>
+                compareAddress(bid.bidder, auctionInfo.highestBidder) &&
+                BigNumber.from(bid.bidAmount || "0").eq(
+                  BigNumber.from(auctionInfo.highestBid || "0")
+                )
+              }
             />
           </>
         )}

@@ -1586,7 +1586,7 @@ const ToolRail = ({
         type="color"
         value={selectedColor === EMPTY_PIXEL ? "#000000" : selectedColor}
         onChange={(event) => onColorChange(event.target.value)}
-        className="mt-2 h-12 w-full cursor-pointer border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6] xl:h-20"
+        className="mt-2 block aspect-square h-12 w-12 cursor-pointer rounded-none border border-[#d1d5db] bg-white p-1 shadow-[inset_0px_0px_0px_3px_#f3f4f6] xl:h-20 xl:w-20"
       />
     </label>
 
