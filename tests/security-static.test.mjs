@@ -25,4 +25,6 @@ const nextConfig = read("next.config.js");
 assert.equal(nextConfig.includes('hostname: "**"'), false);
 assert.equal(nextConfig.includes("Content-Security-Policy"), true);
 assert.equal(nextConfig.includes("X-Content-Type-Options"), true);
+assert.equal(nextConfig.includes("https://nouns.build"), true);
+assert.equal(nextConfig.includes('hostname: "nouns.build"'), true);
 console.log("ok - global security headers and restricted image hosts are configured");

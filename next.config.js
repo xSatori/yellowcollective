@@ -57,6 +57,7 @@ const contentSecurityPolicy = [
     "blob:",
     "https://api.zora.co",
     "https://zora.co",
+    "https://nouns.build",
     "https://gateway.pinata.cloud",
     "https://nouns-builder.mypinata.cloud",
     "https://*.mypinata.cloud",
@@ -115,6 +116,12 @@ const nextConfig = {
         protocol: "https",
         hostname: "api.zora.co",
         pathname: "/renderer/**",
+      },
+      // Builder renderer URLs used by Collective Noun token artwork.
+      {
+        protocol: "https",
+        hostname: "nouns.build",
+        pathname: "/api/renderer/**",
       },
       // Primary IPFS gateway configured for app media.
       {
