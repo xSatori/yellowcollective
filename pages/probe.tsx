@@ -184,7 +184,7 @@ export default function ProbePage() {
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
-        <section className="grid gap-5 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8 lg:grid-cols-[1fr_320px]">
+        <section className="yc-dark-yellow-surface grid gap-5 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8 lg:grid-cols-[1fr_320px]">
           <div>
             <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
               Probe
@@ -200,7 +200,7 @@ export default function ProbePage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+        <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
           <div className="grid gap-4 lg:grid-cols-[1fr_180px_140px]">
             <label className="block">
               <span className="font-heading text-base text-skin-base">
@@ -230,7 +230,7 @@ export default function ProbePage() {
             <button
               type="button"
               onClick={resetFilters}
-              className="self-end rounded-[18px] border border-skin-stroke bg-white px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="self-end rounded-[18px] border border-skin-stroke bg-white px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>
@@ -256,19 +256,19 @@ export default function ProbePage() {
         </section>
 
         {isLoading && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm">
             Loading Collective Nouns...
           </section>
         )}
 
         {error && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
             {error.message}
           </section>
         )}
 
         {data && filteredTokens.length === 0 && (
-          <section className="rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center text-secondary">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center text-secondary">
             No Collective Nouns match these filters.
           </section>
         )}
@@ -280,7 +280,7 @@ export default function ProbePage() {
                 key={token.id}
                 type="button"
                 onClick={() => setSelectedToken(token)}
-                className="group relative overflow-hidden rounded-2xl border border-skin-stroke bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="yc-dark-yellow-surface group relative overflow-hidden rounded-2xl border border-skin-stroke bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <TokenImage token={token} />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-white/90 p-3 opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100">
@@ -403,7 +403,7 @@ const TokenModal = ({
     role="presentation"
   >
     <div
-      className="grid w-full max-w-4xl gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-xl md:grid-cols-[360px_1fr]"
+      className="yc-dark-yellow-surface grid w-full max-w-4xl gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-xl md:grid-cols-[360px_1fr]"
       onClick={(event) => event.stopPropagation()}
     >
       <TokenImage token={token} />

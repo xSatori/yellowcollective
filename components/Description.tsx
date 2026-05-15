@@ -1,14 +1,16 @@
-import Image from "next/image";
 import ExternalLink from "./ExternalLink";
 
 export default function Description() {
   return (
     <>
       <div className="w-full flex flex-col justify-center items-center gap-0">
-        <div className="w-full h-[60px] relative translate-y-1">
-          <Image src="/white-drip.png" fill={true} alt="" />
+        <div className="relative h-[60px] w-full translate-y-1">
+          <div
+            aria-hidden="true"
+            className="theme-surface-drip-mask theme-surface-drip-mask-top h-full w-full"
+          />
         </div>
-        <div className="bg-white w-full flex justify-center pt-8">
+        <div className="flex w-full justify-center bg-primary pt-8">
           <div className="max-w-[720px] px-6 w-full flex flex-col gap-4 [&>p]:text-secondary">
             <h2>
               What is The Yellow Collective and What Are Collective Nouns?

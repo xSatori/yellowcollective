@@ -131,7 +131,7 @@ export default function NoundryTraitPage() {
             href="/noundry?tab=gallery"
             className="flex w-fit items-center gap-2 font-heading text-sm uppercase text-skin-base transition hover:opacity-80"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
               <ArrowLeftIcon className="h-4 text-skin-base" />
             </span>
             Back to gallery
@@ -139,7 +139,7 @@ export default function NoundryTraitPage() {
           {submission && (
             <Link
               href={getProfilePath({ address: submission.artist })}
-              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
             >
               Artist profile
             </Link>
@@ -355,7 +355,7 @@ const SubmitTraitToRoundModal = ({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-[620px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_#BBB]"
+        className="max-h-[90vh] w-full max-w-[620px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
@@ -445,7 +445,7 @@ const SubmitTraitToRoundModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+            className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
           >
             Close
           </button>

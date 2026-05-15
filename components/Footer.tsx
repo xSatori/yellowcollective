@@ -73,7 +73,13 @@ export default function Footer() {
                 item.href === FARCASTER_URL ? handleFarcasterClick : undefined
               }
             >
-              <Image src={item.src} width={24} height={24} alt="" />
+              <Image
+                src={item.src}
+                width={24}
+                height={24}
+                alt=""
+                className="theme-tonal-icon"
+              />
             </Link>
           </Button>
         ))}
@@ -84,7 +90,7 @@ export default function Footer() {
           aria-label="Open site information"
           onClick={() => setIsInfoOpen(true)}
         >
-          <InformationCircleIcon className="h-[25px] w-[25px] text-[#212529]" />
+          <InformationCircleIcon className="h-[25px] w-[25px] text-skin-base" />
         </Button>
       </div>
 
@@ -97,13 +103,13 @@ export default function Footer() {
           onClick={() => setIsInfoOpen(false)}
         >
           <div
-            className="relative max-w-[420px] rounded-2xl border border-skin-stroke bg-white p-6 text-center text-base leading-snug text-skin-base shadow-[0px_4.02px_0px_0px_#BBB]"
+            className="relative max-w-[420px] rounded-2xl border border-skin-stroke bg-primary p-6 text-center text-base leading-snug text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))]"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               aria-label="Close site information"
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-skin-stroke bg-white text-skin-base shadow-[0px_3px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-skin-stroke bg-primary text-skin-base shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
               onClick={() => setIsInfoOpen(false)}
             >
               <XMarkIcon className="h-4 w-4" />

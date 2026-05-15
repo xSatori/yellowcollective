@@ -77,7 +77,7 @@ export default function SiteComponent({
       }}
     >
       {isMounted && (
-        <div className="bg-accent flex min-h-dvh w-full flex-col items-center justify-start">
+        <div className="flex min-h-dvh w-full flex-col items-center justify-start bg-skin-backdrop text-skin-base">
           <Banner />
           <div className="max-w-[1400px] w-full">
             <Header />

@@ -72,16 +72,16 @@ export default function ProposalsPage() {
               <h1 className="text-[36px] leading-none md:text-[44px]">
                 Proposals
               </h1>
-              <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_#b6b6b6] md:w-fit md:max-w-none md:gap-1.5 md:shadow-[0px_4px_0px_0px_#b6b6b6]">
+              <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_rgb(var(--color-stroke-strong))] md:w-fit md:max-w-none md:gap-1.5 md:shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
                 <Link
                   href="/proposals"
-                  className="flex min-h-11 flex-1 translate-y-[-1px] items-center justify-center rounded-lg bg-accent px-3 py-2 text-center font-heading text-sm leading-tight text-skin-base shadow-[0px_2px_0px_0px_#b89400] transition md:flex-none md:px-5 md:py-3 md:text-base md:shadow-[0px_3px_0px_0px_#b89400]"
+                  className="proposal-tab-button flex min-h-11 flex-1 translate-y-[-1px] items-center justify-center rounded-lg bg-accent px-3 py-2 text-center font-heading text-sm leading-tight shadow-[0px_2px_0px_0px_#b89400] transition md:flex-none md:px-5 md:py-3 md:text-base md:shadow-[0px_3px_0px_0px_#b89400]"
                 >
                   Yellow Collective
                 </Link>
                 <Link
                   href="/proposals/nouns"
-                  className="flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-heading text-sm leading-tight text-secondary transition hover:bg-[#fff7bf] hover:text-skin-base md:flex-none md:px-5 md:py-3 md:text-base"
+                  className="proposal-tab-button flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-heading text-sm leading-tight transition hover:bg-[#fff7bf] md:flex-none md:px-5 md:py-3 md:text-base"
                 >
                   Nouns DAO
                 </Link>
@@ -136,7 +136,7 @@ const ProposalRow = ({
   return (
     <Link
       href={`/proposals/${proposal.proposalId}`}
-      className="grid min-h-[96px] grid-cols-[34px_1fr] items-start gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md md:grid-cols-[44px_1fr_auto] md:items-center"
+      className="proposal-hover-row grid min-h-[96px] grid-cols-[34px_1fr] items-start gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md md:grid-cols-[44px_1fr_auto] md:items-center"
     >
       <div className="font-heading text-xl text-skin-base">
         {proposalNumber}

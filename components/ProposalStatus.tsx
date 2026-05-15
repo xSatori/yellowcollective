@@ -47,7 +47,7 @@ export default function ProposalStatus({
       );
     case 5:
       return (
-        <div className={`${statusClassName} bg-[#ffcc00] text-skin-base`}>
+        <div className={`${statusClassName} bg-[#ffcc00] text-[#212529]`}>
           Queued
         </div>
       );

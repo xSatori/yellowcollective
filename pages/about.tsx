@@ -365,7 +365,7 @@ export default function AboutPage({
             href={externalUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-skin-muted font-heading text-2xl text-skin-base shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-accent font-heading text-2xl text-[#212529] shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400]"
             aria-label="Open DAO website"
           >
             <ArrowTopRightOnSquareIcon className="h-7 w-7" />
@@ -467,7 +467,7 @@ export default function AboutPage({
               type="button"
               onClick={exportDelegates}
               disabled={delegates.length === 0}
-              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
               Export CSV
             </button>

@@ -12,9 +12,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent-blue text-white hover:bg-[#319CFF] shadow-[0px_4.02px_0px_0px_#0464BC] active:translate-y-1",
+          "bg-accent-blue text-white hover:bg-[rgb(var(--color-action-hover))] shadow-[0px_4.02px_0px_0px_rgb(var(--color-action-shadow))] active:translate-y-1",
         secondary:
-          "bg-primary text-primary hover:bg-secondary shadow-[0px_4.02px_0px_0px_#BBB] active:translate-y-1",
+          "bg-primary text-primary hover:bg-secondary shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1",
         negative:
           "bg-negative text-white hover:bg-negative/80 shadow-[0px_4.02px_0px_0px_#bd1c11] active:translate-y-1",
         outline:

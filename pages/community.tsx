@@ -34,12 +34,12 @@ export default function CommunityPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-7 pb-12">
-        <section className="flex flex-col items-center justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 text-center shadow-sm md:flex-row md:items-start md:p-8 md:text-left">
+        <section className="yc-dark-yellow-surface flex flex-col items-center justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 text-center text-[#212529] shadow-sm md:flex-row md:items-start md:p-8 md:text-left">
           <div className="flex flex-col items-center gap-3 md:items-start">
             <h1 className="font-heading text-[36px] leading-none md:text-[44px]">
               Projects
             </h1>
-            <p className="max-w-[720px] text-base leading-snug text-secondary md:text-lg">
+            <p className="max-w-[720px] text-base leading-snug text-[#212529] md:text-lg">
               A gallery of projects, events, art, and community work from the
               Yellow Collective.
             </p>
@@ -63,7 +63,7 @@ export default function CommunityPage({
               return (
                 <div
                   key={project.slug}
-                  className="group overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+                  className="yc-dark-yellow-surface group overflow-hidden rounded-2xl border border-skin-stroke bg-white text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
                 >
                   <Link
                     href={`/projects/${project.slug}`}
@@ -75,20 +75,20 @@ export default function CommunityPage({
                       <img
                         src={imageUrl}
                         alt={project.title}
-                        className="aspect-square w-full bg-skin-muted object-cover transition duration-200 group-hover:scale-[1.03]"
+                        className="aspect-square w-full bg-white object-cover transition duration-200 group-hover:scale-[1.03]"
                       />
                     )}
                     <div className="min-h-[86px] border-t border-skin-stroke bg-white p-4">
-                      <h2 className="font-heading text-xl leading-tight text-skin-base">
+                      <h2 className="font-heading text-xl leading-tight text-[#212529]">
                         {project.title}
                       </h2>
                     </div>
                   </Link>
                   {isAdmin && (
-                    <div className="border-t border-skin-stroke bg-[#fff7bf] p-3">
+                    <div className="border-t border-skin-stroke bg-white p-3">
                       <Link
                         href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
-                        className="flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fffdf0] active:translate-y-1 active:shadow-none"
+                        className="flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-[#212529] shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[rgb(var(--color-accent-hover))] active:translate-y-1 active:shadow-none"
                       >
                         Admin edit
                       </Link>
@@ -99,7 +99,7 @@ export default function CommunityPage({
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-6 text-base text-secondary md:text-lg">
+          <div className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-base text-[#212529] md:text-lg">
             No projects have been submitted yet.
           </div>
         )}

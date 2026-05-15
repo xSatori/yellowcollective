@@ -19,6 +19,11 @@ module.exports = {
         positive: "#198754",
         warning: "#FFC107",
         negative: "#DC3545",
+        accent: {
+          DEFAULT: withOpacity("--color-accent"),
+          blue: withOpacity("--color-action"),
+          light: withOpacity("--color-accent-soft"),
+        },
         skin: {
           base: withOpacity("--color-text-base"),
           muted: withOpacity("--color-text-muted"),
@@ -26,12 +31,12 @@ module.exports = {
         },
       },
       textColor: {
-        primary: "#212529",
-        secondary: "#777B7F",
+        primary: withOpacity("--color-text-base"),
+        secondary: withOpacity("--color-text-muted"),
         accent: {
-          DEFAULT: "#FBCB07",
-          blue: "#0786FB",
-          light: "#d2dcf9",
+          DEFAULT: withOpacity("--color-accent"),
+          blue: withOpacity("--color-action"),
+          light: withOpacity("--color-accent-soft"),
         },
         skin: {
           base: withOpacity("--color-text-base"),
@@ -45,17 +50,19 @@ module.exports = {
         },
       },
       backgroundColor: {
-        primary: "#FFFFFF",
-        secondary: "#E9ECEF",
+        primary: withOpacity("--color-surface"),
+        secondary: withOpacity("--color-surface-muted"),
         accent: {
-          DEFAULT: "#FBCB07",
-          blue: "#0786FB",
+          DEFAULT: withOpacity("--color-accent"),
+          blue: withOpacity("--color-action"),
         },
-        dark: "#222",
-        disabled: "#CED4DA",
+        dark: withOpacity("--color-header-bg"),
+        disabled: withOpacity("--color-disabled"),
         skin: {
           fill: withOpacity("--color-fill"),
           muted: withOpacity("--color-muted"),
+          surface: withOpacity("--color-surface"),
+          "surface-muted": withOpacity("--color-surface-muted"),
           backdrop: withOpacity("--color-backdrop"),
           "button-accent": withOpacity("--color-button-accent"),
           "button-accent-hover": withOpacity("--color-button-accent-hover"),
@@ -67,14 +74,15 @@ module.exports = {
         },
       },
       borderColor: {
-        primary: "rgba(24, 24, 24, 0.10)",
-        secondary: "#E9ECEF",
+        primary: withOpacity("--color-stroke"),
+        secondary: withOpacity("--color-surface-muted"),
         accent: {
-          DEFAULT: "#0D6EFD",
-          light: "#C9DFFF",
+          DEFAULT: withOpacity("--color-accent"),
+          light: withOpacity("--color-accent-soft"),
         },
         skin: {
           stroke: withOpacity("--color-stroke"),
+          strong: withOpacity("--color-stroke-strong"),
         },
       },
       gradientColorStops: {

@@ -10,6 +10,75 @@
     --miniapp-safe-area-bottom: 0px;
     --miniapp-safe-area-left: 0px;
     --miniapp-safe-area-right: 0px;
+    --color-accent: 251, 203, 7;
+    --color-accent-hover: 255, 216, 77;
+    --color-accent-soft: 255, 247, 191;
+    --color-action: 0, 102, 204;
+    --color-action-hover: 7, 94, 174;
+    --color-action-shadow: 0, 76, 153;
+    --color-disabled: 206, 212, 218;
+    --color-fill: 255, 255, 255;
+    --color-muted: 243, 244, 246;
+    --color-surface: 255, 255, 255;
+    --color-surface-muted: 247, 247, 247;
+    --color-stroke: 215, 215, 215;
+    --color-stroke-strong: 182, 182, 182;
+    --color-backdrop: 251, 203, 7;
+    --color-header-bg: 34, 34, 34;
+    --color-header-text: 255, 255, 255;
+    --color-shadow-neutral: 187, 187, 187;
+    --color-shadow-neutral-hover: 187, 187, 187;
+    --color-shadow-accent: 184, 148, 0;
+    --color-focus-ring: 251, 203, 7;
+    --color-focus-offset: 255, 255, 255;
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 85, 91, 97;
+    --color-text-inverted: 255, 255, 255;
+    --color-text-highlighted: 251, 203, 7;
+    --color-button-accent: 33, 37, 41;
+    --color-button-accent-hover: 52, 58, 64;
+    --color-button-muted: 206, 212, 218;
+    --color-proposal-success: 22, 163, 74;
+    --color-proposal-danger: 220, 38, 38;
+    --color-proposal-muted: 115, 115, 115;
+    --color-proposal-highlighted: 37, 99, 235;
+    --filter-header-drip: none;
+    --filter-surface-drip: none;
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] {
+    --color-accent: 251, 203, 7;
+    --color-accent-hover: 255, 227, 106;
+    --color-accent-soft: 61, 48, 0;
+    --color-action: 110, 149, 255;
+    --color-action-hover: 149, 181, 255;
+    --color-action-shadow: 11, 47, 142;
+    --color-disabled: 51, 56, 61;
+    --color-fill: 23, 23, 23;
+    --color-muted: 34, 34, 34;
+    --color-surface: 23, 23, 23;
+    --color-surface-muted: 34, 34, 34;
+    --color-stroke: 74, 79, 82;
+    --color-stroke-strong: 95, 99, 104;
+    --color-backdrop: 34, 34, 34;
+    --color-header-bg: 251, 203, 7;
+    --color-header-text: 33, 37, 41;
+    --color-shadow-neutral: 0, 0, 0;
+    --color-shadow-neutral-hover: 0, 0, 0;
+    --color-shadow-accent: 138, 95, 10;
+    --color-focus-ring: 251, 203, 7;
+    --color-focus-offset: 16, 16, 16;
+    --color-text-base: 247, 247, 247;
+    --color-text-muted: 191, 199, 204;
+    --color-text-inverted: 17, 17, 17;
+    --color-text-highlighted: 251, 203, 7;
+    --color-button-accent: 247, 247, 247;
+    --color-button-accent-hover: 229, 229, 229;
+    --color-button-muted: 163, 163, 163;
+    --color-proposal-muted: 115, 115, 115;
+    --color-proposal-highlighted: 110, 149, 255;
+    color-scheme: dark;
   }
 
   * {
@@ -20,6 +89,8 @@
   html,
   body {
     @apply w-full overflow-x-hidden text-primary;
+    background-color: rgb(var(--color-backdrop));
+    color: rgb(var(--color-text-base));
     min-height: 100dvh;
   }
 
@@ -64,6 +135,61 @@
   .clickable-active {
     @apply brightness-[85%] scale-[98%] ease-in-out;
   }
+
+  :where(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      summary,
+      [role="button"],
+      [role="menuitem"],
+      [role="option"],
+      [role="tab"],
+      [role="listbox"],
+      [tabindex]
+    ):focus,
+  :where(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      summary,
+      [role="button"],
+      [role="menuitem"],
+      [role="option"],
+      [role="tab"],
+      [role="listbox"],
+      [tabindex]
+    ):focus-visible {
+    --tw-ring-color: rgb(var(--color-focus-ring)) !important;
+    border-color: rgb(var(--color-focus-ring)) !important;
+    outline: 3px solid rgb(var(--color-focus-ring));
+    outline-offset: 3px;
+  }
+
+  [data-theme="dark"]
+    :where(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      summary,
+      [role="button"],
+      [role="menuitem"],
+      [role="option"],
+      [role="tab"],
+      [role="listbox"],
+      [tabindex]
+    ):focus {
+    --tw-ring-color: rgb(var(--color-focus-ring)) !important;
+    border-color: rgb(var(--color-focus-ring)) !important;
+    outline: 3px solid rgb(var(--color-focus-ring)) !important;
+    outline-offset: 3px;
+  }
 }
 
 @layer site {
@@ -78,4 +204,222 @@
   input[type="number"] {
     -moz-appearance: textfield;
   }
+
+  .theme-header-drip-mask {
+    background-color: rgb(var(--color-header-bg));
+    mask: url("/black-drip.png") center / 100% 100% no-repeat;
+    -webkit-mask: url("/black-drip.png") center / 100% 100% no-repeat;
+  }
+
+  .theme-surface-drip-mask {
+    background-color: rgb(var(--color-surface));
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+  }
+
+  .theme-surface-drip-mask-top {
+    mask-image: url("/white-drip.png");
+    -webkit-mask-image: url("/white-drip.png");
+  }
+
+  .theme-surface-drip-mask-bottom {
+    mask-image: url("/white-drip-2.png");
+    -webkit-mask-image: url("/white-drip-2.png");
+  }
+
+  .yc-treasury-pill {
+    background-color: transparent !important;
+    border-color: rgba(24, 24, 24, 0.1) !important;
+    color: rgb(var(--color-text-base)) !important;
+  }
+
+  .yc-treasury-pill:hover {
+    background-color: rgba(24, 24, 24, 0.1) !important;
+  }
+
+  .yc-treasury-pill:focus-visible {
+    outline-color: currentColor;
+  }
+
+  [data-theme="dark"] .yc-treasury-pill {
+    background-color: rgb(var(--color-accent)) !important;
+    border-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-treasury-pill:hover {
+    background-color: rgb(var(--color-accent)) !important;
+  }
+
+  .header-dropdown-item:hover {
+    background-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-surface {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-surface .bg-white {
+    background-color: rgb(var(--color-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-surface .bg-skin-muted,
+  [data-theme="dark"] .yc-dark-yellow-surface input,
+  [data-theme="dark"] .yc-dark-yellow-surface select,
+  [data-theme="dark"] .yc-dark-yellow-surface textarea {
+    --color-text-base: 247, 247, 247;
+    --color-text-muted: 191, 199, 204;
+    background-color: rgb(34, 34, 34) !important;
+    color: rgb(247, 247, 247) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-surface input::placeholder,
+  [data-theme="dark"] .yc-dark-yellow-surface textarea::placeholder {
+    color: rgb(191, 199, 204) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-surface [class~="bg-[#f1f1f1]"] {
+    background-color: rgb(241, 241, 241) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-surface [class~="bg-[#fff2a3]"],
+  [data-theme="dark"] .yc-dark-yellow-surface [class~="bg-[#fff7bf]"] {
+    background-color: rgb(var(--color-accent-hover)) !important;
+  }
+
+  .yc-force-white,
+  [data-theme="dark"] .yc-force-white {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-members-count-button {
+    background-color: rgb(34, 34, 34) !important;
+    color: rgb(247, 247, 247) !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(0, 0, 0) !important;
+  }
+
+  .proposal-tab-button,
+  .proposal-tab-button * {
+    color: #212529 !important;
+  }
+
+  .proposal-hover-row:hover {
+    background-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+  }
+
+  .proposal-hover-row:hover .text-skin-base,
+  .proposal-hover-row:hover .text-secondary,
+  .proposal-hover-row:hover h2,
+  .proposal-hover-row:hover div,
+  .proposal-hover-row:hover span {
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .header-nav-trigger:focus,
+  [data-theme="dark"] .header-nav-trigger:focus-visible {
+    outline: 3px solid rgb(var(--color-accent)) !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="dark"] .theme-logo-noggles {
+    filter: brightness(0) saturate(100%) invert(78%) sepia(94%) saturate(1124%) hue-rotate(358deg) brightness(101%) contrast(98%);
+  }
+
+  [data-theme="dark"] .theme-tonal-icon {
+    filter: invert(1);
+  }
+
+  [data-theme="dark"] .bg-white {
+    background-color: rgb(var(--color-surface));
+  }
+
+  [data-theme="dark"] .text-black {
+    color: rgb(var(--color-text-base));
+  }
+
+  [data-theme="dark"] .hover\:bg-white:hover,
+  [data-theme="dark"] [class~="hover:bg-[#fff7bf]"]:hover,
+  [data-theme="dark"] [class~="hover:bg-[#fffbe0]"]:hover,
+  [data-theme="dark"] [class~="hover:bg-[#fffdf0]"]:hover {
+    background-color: rgb(var(--color-accent-soft));
+  }
+
+  [data-theme="dark"] [class~="bg-[#fff7bf]"],
+  [data-theme="dark"] [class~="bg-[#fffbe0]"],
+  [data-theme="dark"] [class~="bg-[#fffdf0]"],
+  [data-theme="dark"] [class~="bg-[#fff2a3]"] {
+    background-color: rgb(var(--color-accent-soft));
+  }
+
+  [data-theme="dark"] [class~="bg-[#f7f7f7]"],
+  [data-theme="dark"] [class~="bg-[#f1f1f1]"] {
+    background-color: rgb(var(--color-surface-muted));
+  }
+
+  [data-theme="dark"] [class~="hover:bg-[#181818]/10"]:hover {
+    background-color: rgba(var(--color-accent), 0.16);
+  }
+}
+
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [role="menuitem"],
+    [role="option"],
+    [role="tab"],
+    [role="listbox"],
+    [tabindex]
+  ):focus {
+  --tw-ring-color: rgb(var(--color-focus-ring)) !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  border-color: rgb(var(--color-focus-ring)) !important;
+  outline: none !important;
+}
+
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [role="menuitem"],
+    [role="option"],
+    [role="tab"],
+    [role="listbox"],
+    [tabindex]
+  ):focus-visible {
+  --tw-ring-color: rgb(var(--color-focus-ring)) !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  border-color: rgb(var(--color-focus-ring)) !important;
+  outline: 3px solid rgb(var(--color-focus-ring)) !important;
+  outline-offset: 3px;
+}
+
+.proposal-tab-button:focus,
+.proposal-tab-button:focus-visible {
+  background-color: rgb(var(--color-accent)) !important;
+  border-color: rgb(var(--color-accent)) !important;
+  color: #212529 !important;
+  outline-color: rgb(var(--color-accent)) !important;
 }

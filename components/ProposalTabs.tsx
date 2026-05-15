@@ -21,7 +21,7 @@ export default function ProposalTabs({ items }: { items: ProposalTabItem[] }) {
               key={item.id}
               type="button"
               onClick={() => setActiveTab(item.id)}
-              className={`min-w-0 flex-1 whitespace-nowrap rounded-t-xl border border-b-0 border-skin-stroke px-2 py-3 text-center font-heading text-sm font-bold leading-none shadow-[4px_0px_0px_0px_#BBB] transition-colors active:translate-x-1 active:shadow-none sm:flex-none sm:px-5 sm:text-base ${
+              className={`min-w-0 flex-1 whitespace-nowrap rounded-t-xl border border-b-0 border-skin-stroke px-2 py-3 text-center font-heading text-sm font-bold leading-none shadow-[4px_0px_0px_0px_rgb(var(--color-shadow-neutral))] transition-colors active:translate-x-1 active:shadow-none sm:flex-none sm:px-5 sm:text-base ${
                 isActive
                   ? "bg-white text-skin-base"
                   : "bg-[#fff7bf] text-secondary hover:bg-white"

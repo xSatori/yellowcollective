@@ -100,7 +100,7 @@ export default function MembersPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="text-center md:text-left">
               <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
@@ -130,7 +130,7 @@ export default function MembersPage({
               </label>
               <button
                 type="button"
-                className="h-12 w-fit whitespace-nowrap rounded-[18px] bg-accent px-5 font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition active:translate-y-1 active:shadow-none"
+                className="yc-members-count-button h-12 w-fit whitespace-nowrap rounded-[18px] bg-accent px-5 font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition active:translate-y-1 active:shadow-none"
               >
                 {members.length} {members.length === 1 ? "member" : "members"}
               </button>
@@ -145,7 +145,7 @@ export default function MembersPage({
             ))}
           </section>
         ) : (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-8 text-center text-base text-secondary shadow-sm md:text-lg">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-8 text-center text-base text-secondary shadow-sm md:text-lg">
             Member data is not available right now.
           </section>
         )}
@@ -163,7 +163,7 @@ const MemberCard = ({ member }: { member: DaoMember }) => {
         address: member.address,
         ensName: member.ensName,
       })}
-      className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+      className="yc-dark-yellow-surface group flex min-h-full flex-col overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
     >
       <div className="aspect-square w-full overflow-hidden bg-[#ffcc00]">
         {imageUrl ? (

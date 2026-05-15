@@ -292,7 +292,7 @@ export default function NoundrySubmitPage() {
           <button
             type="button"
             onClick={() => router.push("/noundry")}
-            className="rounded-[18px] border border-[#d6d6d6] bg-white px-4 py-4 font-heading text-xl text-[#5e586f] shadow-[0px_4px_0px_0px_#c9c9c9] transition hover:bg-[#f7f7f7] active:translate-y-1 active:shadow-none"
+            className="rounded-[18px] border border-[#d6d6d6] bg-white px-4 py-4 font-heading text-xl text-[#5e586f] shadow-[0px_4px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:bg-[#f7f7f7] active:translate-y-1 active:shadow-none"
           >
             Go back
           </button>

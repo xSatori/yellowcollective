@@ -217,7 +217,7 @@ export default function PlaygroundPage() {
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-7 pb-12">
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[56px]">
             Playground
           </h1>
@@ -227,20 +227,20 @@ export default function PlaygroundPage() {
         </section>
 
         {isLoading && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm md:p-8">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm md:p-8">
             Loading artwork...
           </section>
         )}
 
         {error && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm md:p-8">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm md:p-8">
             {error.message}
           </section>
         )}
 
         {data && (
           <section className="grid gap-6 lg:grid-cols-[360px_1fr]">
-            <div className="h-fit rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+            <div className="yc-dark-yellow-surface h-fit rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
               <div className="font-heading text-2xl text-skin-base">Traits</div>
               <div className="mt-5 flex flex-col gap-4">
                 {controlLayers.map((layer) => (
@@ -274,7 +274,7 @@ export default function PlaygroundPage() {
               </button>
             </div>
 
-            <div className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-8">
+            <div className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-8">
               <div className="mb-5 flex items-center justify-between gap-4">
                 <div className="font-heading text-2xl text-skin-base">
                   Gallery
@@ -314,7 +314,7 @@ export default function PlaygroundPage() {
           role="presentation"
         >
           <div
-            className="w-full max-w-xl rounded-2xl border border-skin-stroke bg-white p-5 shadow-xl"
+            className="yc-dark-yellow-surface w-full max-w-xl rounded-2xl border border-skin-stroke bg-white p-5 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <LayerStack layers={selectedGeneration.layers} />
@@ -329,7 +329,7 @@ export default function PlaygroundPage() {
               <button
                 type="button"
                 onClick={() => downloadSvg(selectedGeneration)}
-                className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+                className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
               >
                 Download SVG
               </button>

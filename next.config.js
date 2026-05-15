@@ -1,6 +1,15 @@
+const fs = require("fs");
+const path = require("path");
+
 const IPFS_GATEWAY =
   process.env.NEXT_PUBLIC_IPFS_GATEWAY || "https://gateway.pinata.cloud";
 const isDevelopment = process.env.NODE_ENV !== "production";
+const farcasterMiniAppSdkPath = path.join(
+  __dirname,
+  "node_modules",
+  "@farcaster",
+  "miniapp-sdk"
+);
 
 // CSP external domains:
 // api.goldsky.com: Builder/Nouns subgraph reads.
@@ -225,6 +234,16 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  webpack(config) {
+    if (!fs.existsSync(farcasterMiniAppSdkPath)) {
+      config.resolve.alias["@farcaster/miniapp-sdk"] = path.resolve(
+        __dirname,
+        "utils/farcasterMiniAppSdkShim.ts"
+      );
+    }
+
+    return config;
   },
 };
 

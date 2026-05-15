@@ -83,7 +83,7 @@ const labelClass = "block text-sm font-semibold text-secondary";
 const primaryButtonClass =
   "whitespace-nowrap rounded-[18px] bg-accent px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const secondaryButtonClass =
-  "whitespace-nowrap rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+  "whitespace-nowrap rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const dangerButtonClass =
   "whitespace-nowrap rounded-[18px] bg-[#c93d2f] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#7f2219] transition hover:-translate-y-0.5 hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const blueButtonClass =
@@ -433,7 +433,7 @@ export default function AdminDashboardPage() {
                     key={section.id}
                     type="button"
                     onClick={() => setSection(section.id)}
-                    className={`rounded-t-xl border border-b-0 border-skin-stroke px-5 py-3 font-heading text-base font-bold shadow-[4px_0px_0px_0px_#BBB] transition-colors active:translate-x-1 active:shadow-none ${
+                    className={`rounded-t-xl border border-b-0 border-skin-stroke px-5 py-3 font-heading text-base font-bold shadow-[4px_0px_0px_0px_rgb(var(--color-shadow-neutral))] transition-colors active:translate-x-1 active:shadow-none ${
                       isActive
                         ? "bg-white text-skin-base"
                         : "bg-[#fff7bf] text-secondary hover:bg-white"
@@ -605,7 +605,7 @@ const CommunityAdminPanel = ({
         error={error}
         isLoading={isLoading}
         header={
-          <div className="mt-4 flex gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6]">
+          <div className="mt-4 flex gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
             {communityListModes.map((mode) => {
               const isActive = activeMode === mode.id;
               const count = projectCounts[mode.id];
@@ -1222,7 +1222,7 @@ const AdminModeTabs = ({
   activeMode: string;
   onChange: (mode: string) => void;
 }) => (
-  <div className="flex gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6]">
+  <div className="flex gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
     {modes.map(([mode, label]) => {
       const isActive = activeMode === mode;
 
@@ -2152,7 +2152,7 @@ const ProjectEditor = ({
       showStatusInTitle={false}
       headingAddon={
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <div className="flex w-fit gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6]">
+          <div className="flex w-fit gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
             {projectEditorModes.map((mode) => {
               const isActive = editorMode === mode.id;
 

@@ -226,7 +226,7 @@ export default function RoundDetailPage({
           href="/rounds"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
           Back to rounds
@@ -433,7 +433,7 @@ export default function RoundDetailPage({
         </section>
 
         {state === "voting_open" && votingPower > 0 && (
-          <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_#BBB]">
+          <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))]">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="text-base text-secondary">
                 Allocating{" "}
@@ -584,7 +584,7 @@ const SubmissionCard = ({
               type="button"
               onClick={() => onChange(allocation - 1)}
               disabled={allocation <= 0}
-              className="h-9 w-9 rounded-lg bg-white font-heading text-xl shadow-[0px_2px_0px_0px_#BBB] disabled:opacity-40"
+              className="h-9 w-9 rounded-lg bg-white font-heading text-xl shadow-[0px_2px_0px_0px_rgb(var(--color-shadow-neutral))] disabled:opacity-40"
               aria-label={`Remove vote from ${submission.title}`}
             >
               -
@@ -682,7 +682,7 @@ const SubmissionModal = ({
         onClick={onClose}
       >
         <div
-          className="max-h-[90vh] w-full max-w-[820px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_#BBB]"
+          className="max-h-[90vh] w-full max-w-[820px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex flex-col p-6 md:p-8">
@@ -774,7 +774,7 @@ const SubmissionModal = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+                className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
               >
                 Close
               </button>
@@ -797,7 +797,7 @@ const SubmissionModal = ({
           onClick={() => setIsVotesOpen(false)}
         >
           <div
-            className="w-full max-w-[540px] rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_#BBB]"
+            className="w-full max-w-[540px] rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -852,7 +852,7 @@ const SubmissionModal = ({
             <button
               type="button"
               onClick={() => setIsVotesOpen(false)}
-              className="mt-5 flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="mt-5 flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Close
             </button>

@@ -5,6 +5,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import Button from "./Button";
 import CustomConnectButton from "./CustomConnectButton";
+import ThemeToggle from "./ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
 import { BASED_AND_YELLOW_MULTISIG, TOKEN_CONTRACT } from "constants/addresses";
@@ -127,10 +128,20 @@ export default function Header() {
       <div className="flex h-[80px] w-full items-center justify-between gap-2 px-4 py-2 md:px-10">
         <div className="flex flex-row items-center justify-start gap-4 md:gap-8">
           <Link href="/" aria-label="Yellow Collective home">
-            <Image src="/noggles.svg" width={80} height={30} alt="Yellow" />
+            <Image
+              src="/noggles.svg"
+              width={80}
+              height={30}
+              alt="Yellow"
+              className="theme-logo-noggles"
+            />
           </Link>
           <div className="hidden lg:block">
-            <Button variant="outline" size="tight">
+            <Button
+              variant="outline"
+              size="tight"
+              className="yc-treasury-pill"
+            >
               <Link
                 href={treasuryHref}
                 rel="noreferer noopener noreferrer"
@@ -158,8 +169,9 @@ export default function Header() {
           <NavDropdown label="DAO" items={daoItems} />
         </div>
 
-        <div className="hidden lg:block">
-          <CustomConnectButton className="h-10 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out hover:scale-110" />
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <CustomConnectButton className="h-10 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral-hover))]" />
+          <ThemeToggle className="h-10 w-10" />
         </div>
 
         <button
@@ -167,7 +179,7 @@ export default function Header() {
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={isMobileMenuOpen}
           onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-skin-stroke bg-white text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition active:translate-y-1 active:shadow-none lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-skin-stroke bg-primary text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition active:translate-y-1 active:shadow-none lg:hidden"
         >
           {isMobileMenuOpen ? (
             <XMarkIcon className="h-5 w-5" />
@@ -179,7 +191,7 @@ export default function Header() {
 
       {isMobileMenuOpen && (
         <div
-          className="absolute left-4 right-4 top-[72px] z-50 flex flex-col gap-2 overflow-y-auto rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4.02px_0px_0px_#BBB] lg:hidden"
+          className="absolute left-4 right-4 top-[72px] z-50 flex flex-col gap-2 overflow-y-auto rounded-2xl border border-skin-stroke bg-primary p-3 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] lg:hidden"
           style={{
             maxHeight:
               "calc(100dvh - 88px - env(safe-area-inset-bottom) - var(--miniapp-safe-area-bottom))",
@@ -195,7 +207,7 @@ export default function Header() {
             <Link
               href="/"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+              className="header-dropdown-item rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
             >
               Home
             </Link>
@@ -214,14 +226,17 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+                className="header-dropdown-item block rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
               >
                 {item.label}
               </Link>
             ))}
           </div>
-          <div className="border-t border-skin-stroke pt-3">
-            <CustomConnectButton className="h-11 w-full rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out" />
+          <div className="flex items-center gap-2 border-t border-skin-stroke pt-3">
+            <div className="min-w-0 flex-1">
+              <CustomConnectButton className="h-11 w-full overflow-hidden rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out" />
+            </div>
+            <ThemeToggle className="h-11 w-11" />
           </div>
         </div>
       )}
@@ -233,7 +248,7 @@ const NavDropdown = ({ label, items }: { label: string; items: NavItem[] }) => (
   <div className="group relative">
     <button
       type="button"
-      className="flex items-center gap-1 rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
+      className="header-nav-trigger flex items-center gap-1 rounded-[18px] px-4 py-[13px] font-bold text-primary transition ease-in-out hover:bg-[#181818]/10"
     >
       <h6>{label}</h6>
       <ChevronDownIcon className="h-4 w-4 stroke-[3]" />
@@ -244,7 +259,7 @@ const NavDropdown = ({ label, items }: { label: string; items: NavItem[] }) => (
         <Link
           key={item.href}
           href={item.href}
-          className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+          className="header-dropdown-item rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
         >
           <h6>{item.label}</h6>
         </Link>
@@ -269,7 +284,7 @@ const MobileNavGroup = ({
         key={item.href}
         href={item.href}
         onClick={onClick}
-        className="block rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+        className="header-dropdown-item block rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
       >
         {item.label}
       </Link>

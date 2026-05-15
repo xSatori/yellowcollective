@@ -1010,7 +1010,7 @@ export default function NoundryPage() {
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 pb-12">
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="text-center lg:text-left">
               <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
@@ -1021,7 +1021,7 @@ export default function NoundryPage() {
                 submissions, and assemble them against the live collection.
               </p>
             </div>
-            <div className="flex w-full gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6] lg:w-fit">
+            <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] lg:w-fit">
               {(["studio", "gallery"] as const).map((tab) => (
                 <button
                   key={tab}
@@ -1041,13 +1041,13 @@ export default function NoundryPage() {
         </section>
 
         {isLoading && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-secondary shadow-sm">
             Loading artwork...
           </section>
         )}
 
         {artworkError && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
             {artworkError.message}
           </section>
         )}
@@ -1070,7 +1070,7 @@ export default function NoundryPage() {
               />
             </div>
 
-            <div className="relative order-1 h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 xl:order-2">
+            <div className="yc-dark-yellow-surface relative order-1 h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 xl:order-2">
               <div
                 ref={editorSurfaceRef}
                 className="max-h-[72vh] overflow-auto rounded-xl"
@@ -1158,7 +1158,7 @@ export default function NoundryPage() {
                 <button
                   type="button"
                   onClick={() => setEditorViewport(DEFAULT_EDITOR_VIEWPORT)}
-                  className="mt-3 rounded-full border border-skin-stroke bg-white px-3 py-1 font-heading text-xs text-skin-base shadow-[0px_2px_0px_0px_#c9c9c9]"
+                  className="mt-3 rounded-full border border-skin-stroke bg-white px-3 py-1 font-heading text-xs text-skin-base shadow-[0px_2px_0px_0px_rgb(var(--color-shadow-neutral))]"
                 >
                   Reset zoom
                 </button>
@@ -1182,7 +1182,7 @@ export default function NoundryPage() {
               )}
             </div>
 
-            <div className="order-3 flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+            <div className="yc-dark-yellow-surface order-3 flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
               <div className="flex items-center justify-center gap-3 xl:justify-between">
                 <h2 className="text-center font-heading text-2xl leading-none text-skin-base xl:text-left">
                   Preview
@@ -1535,7 +1535,7 @@ const ToolRail = ({
   onUndo: () => void;
   onRedo: () => void;
 }) => (
-  <div className="h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4px_0px_0px_#c9c9c9]">
+  <div className="yc-dark-yellow-surface h-full rounded-2xl border border-skin-stroke bg-white p-3 shadow-[0px_4px_0px_0px_rgb(var(--color-shadow-neutral))]">
     <div className="grid grid-cols-6 items-end justify-items-center gap-1.5 xl:grid-cols-3 xl:gap-2">
       {brushSizes.map((size) => (
         <button
@@ -1618,7 +1618,7 @@ const ToolRail = ({
               type="button"
               aria-label={`Use color ${color}`}
               onClick={() => onColorChange(color)}
-              className="aspect-square border border-[#d1d5db] shadow-[0px_1px_0px_0px_#c9c9c9]"
+              className="aspect-square border border-[#d1d5db] shadow-[0px_1px_0px_0px_rgb(var(--color-shadow-neutral))]"
               style={{ backgroundColor: color }}
             />
           )
@@ -1735,7 +1735,7 @@ const PreviewActionBar = ({
   ] as const;
 
   return (
-    <div className="mt-3 flex justify-center gap-3 rounded-xl bg-accent px-3 py-2 shadow-[0px_4px_0px_0px_#b89400]">
+    <div className="yc-force-white mt-3 flex justify-center gap-3 rounded-xl px-3 py-2 shadow-[0px_4px_0px_0px_rgb(var(--color-shadow-neutral))]">
       {actions.map(([kind, label, onClick]) => (
         <button
           key={kind}
@@ -1743,7 +1743,7 @@ const PreviewActionBar = ({
           title={label}
           aria-label={label}
           onClick={onClick}
-          className={`flex h-8 w-8 items-center justify-center rounded-sm text-skin-base transition hover:bg-[#ffd84d] ${
+          className={`flex h-8 w-8 items-center justify-center rounded-sm text-[#212529] transition hover:bg-[#fff7bf] ${
             kind === "crop" && isCircleCropEnabled ? "bg-[#fff2a3]" : ""
           }`}
         >
@@ -2317,7 +2317,7 @@ const GalleryView = ({
 
   if (error) {
     return (
-      <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
+      <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
         {error}
       </section>
     );
@@ -2331,7 +2331,7 @@ const GalleryView = ({
   if (submissions.length === 0) {
     return (
       <section className="flex flex-col gap-4">
-        <div className="flex w-full gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6] sm:w-fit">
+        <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
           {galleryTabs.map(([tab, label]) => (
             <button
               key={tab}
@@ -2347,7 +2347,7 @@ const GalleryView = ({
             </button>
           ))}
         </div>
-        <div className="rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
+        <div className="yc-dark-yellow-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
           <h2 className="font-heading text-3xl leading-none text-skin-base">
             No submissions yet
           </h2>
@@ -2362,7 +2362,7 @@ const GalleryView = ({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex w-full gap-1.5 rounded-xl border border-[#b6b6b6] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_#b6b6b6] sm:w-fit">
+      <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
         {galleryTabs.map(([tab, label]) => (
           <button
             key={tab}
@@ -2419,7 +2419,7 @@ const GalleryView = ({
               <Link
                 key={artist.address}
                 href={getProfilePath({ address: artist.address })}
-                className="grid gap-4 rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:grid-cols-[108px_1fr]"
+                className="yc-dark-yellow-surface grid gap-4 rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:grid-cols-[108px_1fr]"
               >
                 <div className="aspect-square rounded-xl bg-[#ffcc00] p-3">
                   {latestSubmission && (

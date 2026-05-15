@@ -228,7 +228,7 @@ export const SubmissionGalleryCard = ({
   compact?: boolean;
 }) => (
   <div
-    className={`overflow-hidden border border-skin-stroke bg-white shadow-sm ${
+    className={`yc-dark-yellow-surface overflow-hidden border border-skin-stroke bg-white shadow-sm ${
       compact ? "rounded-xl" : "rounded-2xl"
     }`}
   >

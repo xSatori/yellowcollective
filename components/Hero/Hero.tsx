@@ -87,7 +87,13 @@ export default function Hero() {
             onClick={pageBack}
             disabled={tokenId == "0x00"}
           >
-            <Image src="/arrow-left.svg" width={24} height={24} alt="back" />
+            <Image
+              src="/arrow-left.svg"
+              width={24}
+              height={24}
+              alt="back"
+              className="theme-tonal-icon"
+            />
           </Button>
           <Button
             variant="secondary"
@@ -95,7 +101,13 @@ export default function Hero() {
             onClick={pageForward}
             disabled={tokenId == currentTokenId}
           >
-            <Image src="/arrow-right.svg" width={24} height={24} alt="back" />
+            <Image
+              src="/arrow-right.svg"
+              width={24}
+              height={24}
+              alt="back"
+              className="theme-tonal-icon"
+            />
           </Button>
         </div>
 

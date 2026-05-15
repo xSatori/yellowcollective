@@ -1,10 +1,27 @@
 import { RGBType } from "./RBGType";
 
 export type ThemeColors = {
+  accent?: RGBType;
+  "accent-hover"?: RGBType;
+  "accent-soft"?: RGBType;
+  action?: RGBType;
+  "action-hover"?: RGBType;
+  "action-shadow"?: RGBType;
+  disabled?: RGBType;
   fill?: RGBType;
   muted?: RGBType;
+  surface?: RGBType;
+  "surface-muted"?: RGBType;
   stroke?: RGBType;
+  "stroke-strong"?: RGBType;
   backdrop?: RGBType;
+  "header-bg"?: RGBType;
+  "header-text"?: RGBType;
+  "shadow-neutral"?: RGBType;
+  "shadow-neutral-hover"?: RGBType;
+  "shadow-accent"?: RGBType;
+  "focus-ring"?: RGBType;
+  "focus-offset"?: RGBType;
   "text-base"?: RGBType;
   "text-muted"?: RGBType;
   "text-inverted"?: RGBType;

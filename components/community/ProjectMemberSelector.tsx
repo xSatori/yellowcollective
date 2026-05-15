@@ -110,7 +110,7 @@ export default function ProjectMemberSelector({
             {selectedMembers.map((member) => (
               <span
                 key={member.address}
-                className="inline-flex max-w-full items-center gap-2 rounded-xl border border-skin-stroke bg-white px-2.5 py-2 shadow-[0px_2px_0px_0px_#BBB]"
+                className="inline-flex max-w-full items-center gap-2 rounded-xl border border-skin-stroke bg-white px-2.5 py-2 shadow-[0px_2px_0px_0px_rgb(var(--color-shadow-neutral))]"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#ffcc00] font-heading text-xs text-skin-base">
                   {member.imageUrl ? (

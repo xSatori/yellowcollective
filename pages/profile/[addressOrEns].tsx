@@ -331,7 +331,7 @@ export default function ProfilePage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7 pb-12">
-        <section className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_#BBB]">
+        <section className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]">
           <div className="grid gap-0">
             <div className="flex flex-col gap-6 p-5 sm:p-6 md:p-8">
               <div className="flex flex-row items-start gap-4 sm:gap-5">
