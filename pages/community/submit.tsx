@@ -321,7 +321,7 @@ export default function SubmitCommunityProjectPage() {
               label="Source link"
               value={values.href}
               onChange={(value) => updateValue("href", value)}
-              placeholder="https://example.com"
+              placeholder="example.com"
             />
           </div>
 
@@ -345,7 +345,7 @@ export default function SubmitCommunityProjectPage() {
                     onChange={(event) =>
                       updateLink(index, "href", event.target.value)
                     }
-                    placeholder="https://example.com/context"
+                    placeholder="example.com/context"
                     className="w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
                   />
                 </div>
@@ -386,7 +386,7 @@ export default function SubmitCommunityProjectPage() {
             label="Banner image URL"
             value={values.image}
             onChange={(value) => updateValue("image", value)}
-            placeholder="https://example.com/banner.png"
+            placeholder="example.com/banner.png"
             className="mt-5"
           />
 
@@ -428,7 +428,7 @@ export default function SubmitCommunityProjectPage() {
                   onChange={(event) =>
                     updateGalleryImage(index, event.target.value)
                   }
-                  placeholder="https://example.com/gallery-image.png"
+                  placeholder="example.com/gallery-image.png"
                   className="w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
                 />
               ))}

@@ -173,7 +173,7 @@ export default function NoundrySubmitPage() {
               value={submissionTitle}
               onChange={(event) => setSubmissionTitle(event.target.value)}
               placeholder={draft?.title || "Name goes here"}
-              className="min-w-0 flex-1 bg-transparent font-heading text-3xl leading-none text-skin-base underline outline-none placeholder:text-skin-base"
+              className="yc-dark-noundry-submit-text min-w-0 flex-1 bg-transparent font-heading text-3xl leading-none text-skin-base underline outline-none placeholder:text-skin-base"
             />
             <div className="text-right">
               <div className="ml-auto flex h-12 w-12 items-center justify-center bg-[#d8d8df] text-white">
@@ -182,13 +182,13 @@ export default function NoundrySubmitPage() {
                   className="h-8 w-8"
                 />
               </div>
-              <div className="mt-2 font-heading text-xl uppercase tracking-wide text-skin-base">
+              <div className="yc-dark-noundry-submit-text mt-2 font-heading text-xl uppercase tracking-wide text-skin-base">
                 {draft ? getLayerLabel(draft.traitType) : "Trait"}
               </div>
             </div>
           </div>
 
-          <div className="mt-8 aspect-square bg-[#fff3bf]">
+          <div className="yc-dark-noundry-submit-preview mt-8 aspect-square bg-[#fff3bf]">
             {draft && (
               <NounPreview
                 layers={previewLayers}

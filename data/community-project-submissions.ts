@@ -198,7 +198,7 @@ export const validateCommunityProjectInput = (
   }
 
   if (!normalizeSafeProjectUrl(input.href, { allowInternal: true })) {
-    return "Project source URL must be a valid HTTPS or internal URL.";
+    return "Project source URL must be a valid external or internal URL.";
   }
 
   if (
@@ -207,7 +207,7 @@ export const validateCommunityProjectInput = (
       allowDataImages: true,
     })
   ) {
-    return "Project image must be a valid HTTPS, internal, or uploaded image URL.";
+    return "Project image must be a valid external, internal, or uploaded image URL.";
   }
 
   if (
@@ -221,7 +221,7 @@ export const validateCommunityProjectInput = (
         })
     )
   ) {
-    return "Gallery images must use valid HTTPS, internal, or uploaded image URLs.";
+    return "Gallery images must use valid external, internal, or uploaded image URLs.";
   }
 
   if (
@@ -232,7 +232,7 @@ export const validateCommunityProjectInput = (
         !normalizeSafeProjectUrl(link.href, { allowInternal: true })
     )
   ) {
-    return "Project links must use valid HTTPS or internal URLs.";
+    return "Project links must use valid external or internal URLs.";
   }
 
   return undefined;

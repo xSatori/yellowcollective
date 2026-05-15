@@ -72,7 +72,6 @@ export default function SubmitRoundPage({
       values.title.trim() &&
         values.description.trim() &&
         values.image.trim() &&
-        values.url.trim() &&
         address
     );
 
@@ -175,17 +174,17 @@ export default function SubmitRoundPage({
               placeholder="Yellow public goods poster"
             />
             <FormField
-              label="Project URL"
+              label="Project URL (optional)"
               value={values.url}
               onChange={(value) => updateValue("url", value)}
-              placeholder="https://example.com"
+              placeholder="example.com"
             />
           </div>
           <FormField
             label="Image URL"
             value={values.image}
             onChange={(value) => updateValue("image", value)}
-            placeholder="https://example.com/image.png"
+            placeholder="example.com/image.png"
             className="mt-5"
           />
           <label

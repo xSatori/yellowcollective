@@ -261,14 +261,14 @@ export default function RequestRoundPage() {
               label="Image URL"
               value={values.image}
               onChange={(value) => updateValue("image", value)}
-              placeholder="https://..."
+              placeholder="example.com/image.png"
               required
             />
             <FormField
               label="Reference URL"
               value={values.url}
               onChange={(value) => updateValue("url", value)}
-              placeholder="https://example.com"
+              placeholder="example.com"
             />
           </div>
 
@@ -399,7 +399,7 @@ export default function RequestRoundPage() {
             <button
               type="button"
               onClick={() => setValues(createInitialValues())}
-              className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="yc-dark-reset-red yc-dark-reset-white-hover flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>
@@ -410,7 +410,7 @@ export default function RequestRoundPage() {
               className={`mt-4 rounded-xl border p-3 text-sm ${
                 message.type === "error"
                   ? "border-skin-proposal-danger bg-skin-proposal-danger bg-opacity-10 text-skin-proposal-danger"
-                  : "border-skin-proposal-success bg-skin-proposal-success bg-opacity-10 text-skin-proposal-success"
+                  : "border-skin-proposal-success bg-white text-skin-proposal-success"
               }`}
             >
               {message.text}

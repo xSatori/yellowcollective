@@ -422,6 +422,7 @@ export default function RoundDetailPage({
                   onOpen={() => setSelectedSubmission(submission)}
                   artwork={artwork}
                   showRank={state === "voting_open" || state === "ended"}
+                  showVoteCount={state === "voting_open" || state === "ended"}
                 />
               ))}
             </div>
@@ -446,7 +447,7 @@ export default function RoundDetailPage({
                 type="button"
                 onClick={submitVotes}
                 disabled={allocatedVotes <= 0 || allocatedVotes > votingPower || isVoting || isSigning}
-                className="yc-dark-yellow-button rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="yc-dark-submit-blue rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isVoting || isSigning ? "Submitting..." : "Submit votes"}
               </button>
@@ -478,6 +479,7 @@ const SubmissionCard = ({
   onOpen,
   artwork,
   showRank,
+  showVoteCount,
 }: {
   submission: RoundSubmission;
   rank: number;
@@ -489,6 +491,7 @@ const SubmissionCard = ({
   onOpen: () => void;
   artwork?: PlaygroundArtwork;
   showRank: boolean;
+  showVoteCount: boolean;
 }) => {
   const winnerStyle = isWinner ? getWinnerCardStyle(rank) : null;
   const noundrySubmission = getRoundNoundrySubmission(submission);
@@ -559,9 +562,11 @@ const SubmissionCard = ({
             {submission.title}
           </button>
         </div>
-        <div className="rounded-full bg-[#c93d2f] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#7f2219]">
-          {submission.voteCount} votes
-        </div>
+        {showVoteCount && (
+          <div className="rounded-full bg-[#1d9bf0] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99]">
+            {submission.voteCount} votes
+          </div>
+        )}
       </div>
       <p
         className={`text-base leading-snug ${
@@ -584,7 +589,7 @@ const SubmissionCard = ({
               type="button"
               onClick={() => onChange(allocation - 1)}
               disabled={allocation <= 0}
-              className="h-9 w-9 rounded-lg bg-white font-heading text-xl shadow-[0px_2px_0px_0px_rgb(var(--color-shadow-neutral))] disabled:opacity-40"
+              className="yc-round-vote-remove h-9 w-9 rounded-lg font-heading text-xl disabled:opacity-40"
               aria-label={`Remove vote from ${submission.title}`}
             >
               -
@@ -596,7 +601,7 @@ const SubmissionCard = ({
               type="button"
               onClick={() => onChange(allocation + 1)}
               disabled={remainingVotes <= 0}
-              className="h-9 w-9 rounded-lg bg-accent font-heading text-xl shadow-[0px_2px_0px_0px_#b89400] disabled:opacity-40"
+              className="yc-round-vote-add h-9 w-9 rounded-lg font-heading text-xl disabled:opacity-40"
               aria-label={`Add vote to ${submission.title}`}
             >
               +
@@ -1127,53 +1132,76 @@ const RoundActivityItem = ({ item }: { item: RoundActivityItemData }) => (
 
 const getRoundActivityItems = (
   round: RoundWithSubmissions
-): RoundActivityItemData[] => [
-  {
-    id: "submissions-open",
-    type: "milestone" as const,
-    timestamp: round.submissionsOpenAt,
-    title: "Submissions opened",
-  },
-  ...round.submissions.map((submission) => ({
-    id: `submission-${submission.id}`,
-    type:
-      submission.submissionType === "trait"
-        ? ("trait" as const)
-        : ("submission" as const),
-    timestamp: submission.createdAt,
-    title:
-      submission.submissionType === "trait"
-        ? "Trait submitted"
-        : "Project submitted",
-    description: submission.title,
-    walletAddress: submission.walletAddress,
-  })),
-  {
-    id: "voting-started",
-    type: "milestone" as const,
-    timestamp: round.votingStartsAt,
-    title: "Voting began",
-  },
-  ...round.voteActivity.map((activity) => ({
-    id: `vote-${activity.id}`,
-    type: "vote" as const,
-    timestamp: activity.updatedAt || activity.createdAt,
-    title: "Votes placed",
-    description: activity.submissionTitle,
-    walletAddress: activity.walletAddress,
-    voteCount: activity.voteCount,
-  })),
-  {
-    id: "voting-ended",
-    type: "milestone" as const,
-    timestamp: round.votingEndsAt,
-    title: "Voting ended",
-  },
-].sort((a, b) => {
+): RoundActivityItemData[] => {
+  const now = Date.now();
+  const hasHappened = (timestamp: string) => {
+    const time = new Date(timestamp).getTime();
+    return Number.isFinite(time) && time <= now;
+  };
+  const items: RoundActivityItemData[] = [];
+
+  if (hasHappened(round.submissionsOpenAt)) {
+    items.push({
+      id: "submissions-open",
+      type: "milestone" as const,
+      timestamp: round.submissionsOpenAt,
+      title: "Submissions opened",
+    });
+  }
+
+  items.push(
+    ...round.submissions.map((submission) => ({
+      id: `submission-${submission.id}`,
+      type:
+        submission.submissionType === "trait"
+          ? ("trait" as const)
+          : ("submission" as const),
+      timestamp: submission.createdAt,
+      title:
+        submission.submissionType === "trait"
+          ? "Trait submitted"
+          : "Project submitted",
+      description: submission.title,
+      walletAddress: submission.walletAddress,
+    }))
+  );
+
+  if (hasHappened(round.votingStartsAt)) {
+    items.push({
+      id: "voting-started",
+      type: "milestone" as const,
+      timestamp: round.votingStartsAt,
+      title: "Voting began",
+    });
+  }
+
+  items.push(
+    ...round.voteActivity.map((activity) => ({
+      id: `vote-${activity.id}`,
+      type: "vote" as const,
+      timestamp: activity.updatedAt || activity.createdAt,
+      title: "Votes placed",
+      description: activity.submissionTitle,
+      walletAddress: activity.walletAddress,
+      voteCount: activity.voteCount,
+    }))
+  );
+
+  if (hasHappened(round.votingEndsAt)) {
+    items.push({
+      id: "voting-ended",
+      type: "milestone" as const,
+      timestamp: round.votingEndsAt,
+      title: "Voting ended",
+    });
+  }
+
+  return items.sort((a, b) => {
   const aTime = new Date(a.timestamp).getTime();
   const bTime = new Date(b.timestamp).getTime();
-  return aTime - bTime;
-});
+    return bTime - aTime;
+  });
+};
 
 const getVotingStrategyLabel = (round: RoundWithSubmissions | null) => {
   if (!round) return "the configured voting rules";

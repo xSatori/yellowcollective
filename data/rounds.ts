@@ -11,6 +11,10 @@ import {
   validateRoundVoteAllocation,
   type RoundVoteAllocationInput,
 } from "@/utils/rounds/validateRoundVote";
+import {
+  normalizeSafeImageUrl,
+  normalizeSafeProjectUrl,
+} from "@/utils/url-safety";
 
 export type RoundStatus = "draft" | "published" | "archived";
 export type RoundSubmissionStatus =
@@ -802,20 +806,14 @@ const normalizeDate = (value: unknown, fallback: Date) => {
 
 const isSafeUrl = (value: string, { allowDataImage = false } = {}) => {
   if (!value) return true;
-  if (value.startsWith("/") && !value.startsWith("//")) return true;
-  if (
-    allowDataImage &&
-    /^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/i.test(value)
-  ) {
-    return true;
-  }
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
+  return Boolean(
+    allowDataImage
+      ? normalizeSafeImageUrl(value, {
+          allowInternal: true,
+          allowDataImages: true,
+        })
+      : normalizeSafeProjectUrl(value, { allowInternal: true })
+  );
 };
 
 export const normalizeRoundInput = (
@@ -843,7 +841,10 @@ export const normalizeRoundInput = (
     title: String(input.title ?? current?.title ?? "New round").trim(),
     description: String(input.description ?? current?.description ?? "").trim(),
     content: String(input.content ?? current?.content ?? "").trim(),
-    image: String(input.image ?? current?.image ?? "").trim(),
+    image: normalizeSafeImageUrl(input.image ?? current?.image ?? "", {
+      allowInternal: true,
+      allowDataImages: true,
+    }),
     startsAt: normalizeDate(input.startsAt ?? current?.startsAt, startsAtFallback),
     submissionsOpenAt: normalizeDate(
       input.submissionsOpenAt ?? current?.submissionsOpenAt,
@@ -1106,6 +1107,11 @@ export const validateRoundSubmissionInput = (
   const description = String(input.description || "").trim();
   const image = String(input.image || "").trim();
   const url = String(input.url || "").trim();
+  const normalizedImage = normalizeSafeImageUrl(image, {
+    allowInternal: true,
+    allowDataImages: true,
+  });
+  const normalizedUrl = normalizeSafeProjectUrl(url, { allowInternal: true });
   const submissionType = input.submissionType || "project";
 
   if (!input.walletAddress || !isAddress(input.walletAddress)) {
@@ -1130,11 +1136,11 @@ export const validateRoundSubmissionInput = (
     return `Description must be ${round.minDescriptionLength}-${round.maxDescriptionLength} characters.`;
   }
 
-  if (!url || !isSafeUrl(url)) {
+  if (url && !normalizedUrl) {
     return "Project URL must be a valid URL.";
   }
 
-  if (!image || !isSafeUrl(image, { allowDataImage: true })) {
+  if (!normalizedImage) {
     return "Image must be a valid URL.";
   }
 
@@ -1160,8 +1166,11 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
     description: String(input.description || "").trim(),
     content: String(input.content || "").trim(),
     goals: String(input.goals || "").trim(),
-    image: String(input.image || "").trim(),
-    url: String(input.url || "").trim(),
+    image: normalizeSafeImageUrl(input.image, {
+      allowInternal: true,
+      allowDataImages: true,
+    }),
+    url: normalizeSafeProjectUrl(input.url, { allowInternal: true }),
     timeline: String(input.timeline || "").trim(),
     startsAt: submissionsOpenAt,
     submissionsOpenAt,
@@ -2268,8 +2277,11 @@ export const createRoundSubmission = async (
         walletAddress,
         String(input.title || "").trim(),
         String(input.description || "").trim(),
-        String(input.image || "").trim(),
-        String(input.url || "").trim(),
+        normalizeSafeImageUrl(input.image, {
+          allowInternal: true,
+          allowDataImages: true,
+        }),
+        normalizeSafeProjectUrl(input.url, { allowInternal: true }),
         input.submissionType || "project",
         input.traitId || null,
         input.traitType || null,
@@ -2562,8 +2574,11 @@ export const updateRoundSubmission = async (
       getAddress(merged.walletAddress as string),
       String(merged.title || "").trim(),
       String(merged.description || "").trim(),
-      String(merged.image || "").trim(),
-      String(merged.url || "").trim(),
+      normalizeSafeImageUrl(merged.image, {
+        allowInternal: true,
+        allowDataImages: true,
+      }),
+      normalizeSafeProjectUrl(merged.url, { allowInternal: true }),
       merged.submissionType || "project",
       merged.traitId || null,
       merged.traitType || null,

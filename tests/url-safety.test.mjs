@@ -40,6 +40,10 @@ test("accepts safe HTTPS URLs and intentional internal paths", () => {
     "https://example.com/path"
   );
   assert.equal(
+    urlSafety.normalizeSafeProjectUrl("example.com/path"),
+    "https://example.com/path"
+  );
+  assert.equal(
     urlSafety.normalizeSafeProjectUrl("/projects/yellow", {
       allowInternal: true,
     }),

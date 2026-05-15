@@ -7,6 +7,9 @@ const HTTPS_UPGRADE_HOSTS = new Set([
 ]);
 const SAFE_DATA_IMAGE_PATTERN =
   /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[a-zA-Z0-9+/=]+$/;
+const URL_SCHEME_PATTERN = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
+const URL_PROTOCOL_PATTERN = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
+const HOST_WITH_PORT_PATTERN = /^[a-zA-Z0-9.-]+:\d+(?:[/?#]|$)/;
 
 type NormalizeSafeUrlOptions = {
   allowInternal?: boolean;
@@ -57,7 +60,14 @@ export const normalizeSafeProjectUrl = (
   if (cleaned.startsWith("//")) return "";
 
   try {
-    const url = new URL(cleaned);
+    const hasProtocol = URL_PROTOCOL_PATTERN.test(cleaned);
+    const hasUnsupportedScheme =
+      URL_SCHEME_PATTERN.test(cleaned) &&
+      !hasProtocol &&
+      !HOST_WITH_PORT_PATTERN.test(cleaned);
+    if (hasUnsupportedScheme) return "";
+
+    const url = new URL(hasProtocol ? cleaned : `https://${cleaned}`);
     if (url.protocol === "https:") return url.toString();
     if (url.protocol === "http:") return normalizeHttpUrl(url, options);
     return "";
