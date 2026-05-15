@@ -250,13 +250,13 @@ export default function SubmitCommunityProjectPage() {
           href="/projects"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
+          <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
           Projects
         </Link>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <h1 className="font-heading text-[34px] leading-none md:text-[42px]">
             Submit a project
           </h1>
@@ -266,7 +266,7 @@ export default function SubmitCommunityProjectPage() {
           </p>
         </section>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="grid gap-5 md:grid-cols-2">
             <FormField
               label="Project title"
@@ -447,7 +447,7 @@ export default function SubmitCommunityProjectPage() {
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}
-              className={`flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
+              className={`yc-dark-submit-blue flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
                 canSubmit && !isSubmitting
                   ? "bg-accent text-skin-base hover:bg-[#ffd84d]"
                   : "bg-skin-button-muted text-skin-inverted opacity-70"
@@ -462,7 +462,7 @@ export default function SubmitCommunityProjectPage() {
             <button
               type="button"
               onClick={resetForm}
-              className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+              className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>

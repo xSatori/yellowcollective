@@ -340,7 +340,7 @@ export default function CreateProposalPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/proposals"
-            className="flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
+            className="yc-dark-yellow-button flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
             aria-label="Back to proposals"
           >
             <ArrowLeftIcon className="h-5" />
@@ -364,7 +364,7 @@ export default function CreateProposalPage() {
         >
           {({ values, setFieldValue }) => (
             <Form className="flex flex-col gap-6">
-              <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+              <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-5">
                   <h2 className="font-heading text-2xl leading-none text-skin-base">
                     Proposal details
@@ -390,7 +390,7 @@ export default function CreateProposalPage() {
                 <HTMLTextEditor />
               </section>
 
-              <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+              <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-5">
                   <h2 className="font-heading text-2xl leading-none text-skin-base">
                     Proposal actions
@@ -459,7 +459,7 @@ export default function CreateProposalPage() {
                 </FieldArray>
               </section>
 
-              <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+              <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-5">
                   <h2 className="font-heading text-2xl leading-none text-skin-base">
                     Review and submit
@@ -883,7 +883,7 @@ const SubmitButton = () => {
     disabled
       ? "bg-skin-button-muted"
       : "bg-skin-button-accent hover:bg-skin-button-accent-hover"
-  } flex min-h-12 w-full items-center justify-center rounded-[18px] px-4 py-3 text-center font-heading text-base leading-tight text-skin-inverted shadow-[0px_4.02px_0px_0px_#0464BC] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#0464BC] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none`;
+  } yc-dark-submit-blue flex min-h-12 w-full items-center justify-center rounded-[18px] px-4 py-3 text-center font-heading text-base leading-tight text-skin-inverted shadow-[0px_4.02px_0px_0px_#0464BC] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#0464BC] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none`;
 
   const getButtonLabel = () => {
     if (!hasBalance) return "You don't have enough votes to submit a proposal";
