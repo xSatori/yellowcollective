@@ -57,7 +57,7 @@ export const RoundCard = ({ round }: { round: Round }) => {
   return (
     <Link
       href={`/rounds/${round.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+      className="yc-dark-yellow-form-surface group flex h-full flex-col overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
     >
       <div className="aspect-[4/3] overflow-hidden bg-[#fff7bf]">
         {round.image ? (

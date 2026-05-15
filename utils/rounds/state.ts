@@ -17,7 +17,6 @@ export const getRoundState = (
     | "submissionsOpenAt"
     | "votingStartsAt"
     | "votingEndsAt"
-    | "endsAt"
   >,
   now = new Date()
 ): RoundState => {
@@ -29,7 +28,6 @@ export const getRoundState = (
   const submissionsOpenAt = new Date(round.submissionsOpenAt).getTime();
   const votingStartsAt = new Date(round.votingStartsAt).getTime();
   const votingEndsAt = new Date(round.votingEndsAt).getTime();
-  const endsAt = new Date(round.endsAt).getTime();
 
   if (currentTime < startsAt || currentTime < submissionsOpenAt) {
     return "upcoming";
@@ -43,7 +41,7 @@ export const getRoundState = (
     return "voting_open";
   }
 
-  if (currentTime >= votingEndsAt || currentTime >= endsAt) {
+  if (currentTime >= votingEndsAt) {
     return "ended";
   }
 

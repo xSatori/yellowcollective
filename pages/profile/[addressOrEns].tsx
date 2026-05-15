@@ -406,7 +406,7 @@ export default function ProfilePage({
                           setSaveState({ status: "idle", message: "" });
                           setIsEditing(true);
                         }}
-                        className={`${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_YELLOW}`}
+                        className={`yc-dark-yellow-button ${PROFILE_BUTTON_BASE} ${PROFILE_BUTTON_YELLOW}`}
                       >
                         Edit Profile
                       </button>

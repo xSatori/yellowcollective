@@ -82,9 +82,9 @@ const primaryButtonClass =
 const secondaryButtonClass =
   "whitespace-nowrap rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const dangerButtonClass =
-  "whitespace-nowrap rounded-[18px] bg-[#c93d2f] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#7f2219] transition hover:-translate-y-0.5 hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+  "yc-dark-reset-red whitespace-nowrap rounded-[18px] bg-[#c93d2f] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#7f2219] transition hover:-translate-y-0.5 hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const blueButtonClass =
-  "whitespace-nowrap rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+  "yc-dark-submit-blue whitespace-nowrap rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 
 const ADMIN_CHAIN_ID = Number(TOKEN_NETWORK);
 
@@ -903,7 +903,6 @@ const RoundsAdminPanel = ({
   const requestCounts = useMemo(
     () => ({
       pending: requests.filter((request) => request.status === "pending").length,
-      reviewed: requests.filter((request) => request.status === "reviewed").length,
       closed: requests.filter(
         (request) =>
           request.status === "approved" || request.status === "rejected"
@@ -1052,6 +1051,7 @@ const RoundsAdminPanel = ({
     <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
       <AdminList
         title="Rounds"
+        surfaceClassName="yc-dark-yellow-form-surface"
         titleAction={
           <RoundsVisibilitySwitch
             enabled={roundsPublicEnabled}
@@ -1185,8 +1185,7 @@ const RoundsAdminPanel = ({
             Round requests
           </h3>
           <div className="mt-2 text-sm text-secondary">
-            {requestCounts.pending} pending / {requestCounts.reviewed} reviewed /{" "}
-            {requestCounts.closed} closed
+            {requestCounts.pending} pending / {requestCounts.closed} closed
           </div>
           <div className="mt-3 flex flex-col gap-3">
             {requests.slice(0, 20).map((request) => (
@@ -1246,7 +1245,10 @@ const RoundsAdminPanel = ({
           mutate={mutate}
         />
       ) : (
-        <EmptyEditor title="No rounds yet" />
+        <EmptyEditor
+          title="No rounds yet"
+          surfaceClassName="yc-dark-yellow-form-surface"
+        />
       )}
     </section>
   );
@@ -1334,7 +1336,6 @@ const getRoundPayloadFromForm = ({
   submissionsOpenAt,
   votingStartsAt,
   votingEndsAt,
-  endsAt,
   active,
   featured,
   isTraitContest,
@@ -1359,7 +1360,6 @@ const getRoundPayloadFromForm = ({
   submissionsOpenAt: string;
   votingStartsAt: string;
   votingEndsAt: string;
-  endsAt: string;
   active: boolean;
   featured: boolean;
   isTraitContest: boolean;
@@ -1384,7 +1384,6 @@ const getRoundPayloadFromForm = ({
   submissionsOpenAt: fromDateInput(submissionsOpenAt),
   votingStartsAt: fromDateInput(votingStartsAt),
   votingEndsAt: fromDateInput(votingEndsAt),
-  endsAt: fromDateInput(endsAt),
   active,
   featured,
   isTraitContest,
@@ -1411,7 +1410,7 @@ const validateRoundPublishForm = (round: RoundInput) => {
     round.submissionsOpenAt,
     round.votingStartsAt,
     round.votingEndsAt,
-    round.endsAt,
+    round.votingEndsAt,
   ].map((value) => new Date(String(value)).getTime());
 
   if (
@@ -1419,7 +1418,7 @@ const validateRoundPublishForm = (round: RoundInput) => {
     dates[0] > dates[1] ||
     dates[1] > dates[2] ||
     dates[2] >= dates[3] ||
-    dates[3] > dates[4]
+    dates[3] !== dates[4]
   ) {
     return "Dates must be valid and ordered from start through voting end.";
   }
@@ -1451,7 +1450,6 @@ const RoundEditor = ({
   const [votingEndsAt, setVotingEndsAt] = useState(
     toDateInput(round.votingEndsAt)
   );
-  const [endsAt, setEndsAt] = useState(toDateInput(round.endsAt));
   const [active, setActive] = useState(round.active);
   const [featured, setFeatured] = useState(round.featured);
   const [isTraitContest, setIsTraitContest] = useState(round.isTraitContest);
@@ -1498,7 +1496,6 @@ const RoundEditor = ({
       submissionsOpenAt,
       votingStartsAt,
       votingEndsAt,
-      endsAt,
       active,
       featured,
       isTraitContest,
@@ -1555,6 +1552,7 @@ const RoundEditor = ({
       title={round.title}
       status={round.status}
       message={message}
+      surfaceClassName="yc-dark-yellow-form-surface"
       actions={
         <>
           <button
@@ -1620,7 +1618,6 @@ const RoundEditor = ({
           value={votingEndsAt}
           onChange={setVotingEndsAt}
         />
-        <DateField label="Round ends" value={endsAt} onChange={setEndsAt} />
         <label className={labelClass}>
           Status
           <select
@@ -1769,6 +1766,7 @@ const RoundSubmissionEditor = ({
       title={submission.title}
       status={submission.status}
       message={message}
+      surfaceClassName="yc-dark-yellow-form-surface"
       actions={
         <>
           <button
@@ -1898,7 +1896,7 @@ const RoundRequestEditor = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const submit = async (
-    action: "reviewed" | "approved" | "rejected" | "remove"
+    action: "approved" | "rejected" | "remove"
   ) => {
     if (
       (action === "rejected" || action === "remove") &&
@@ -1941,21 +1939,14 @@ const RoundRequestEditor = ({
       title={request.title}
       status={request.status}
       message={message}
+      surfaceClassName="yc-dark-yellow-form-surface"
       actions={
         <>
           <button
             type="button"
-            onClick={() => submit("reviewed")}
-            disabled={isSaving}
-            className={primaryButtonClass}
-          >
-            Mark reviewed
-          </button>
-          <button
-            type="button"
             onClick={() => submit("approved")}
             disabled={isSaving}
-            className={secondaryButtonClass}
+            className={primaryButtonClass}
           >
             Approve request
           </button>
@@ -2040,7 +2031,6 @@ const RoundRequestEditor = ({
                 request.votingStartsAt
               ).toLocaleString()}`,
               `Voting ends: ${new Date(request.votingEndsAt).toLocaleString()}`,
-              `Ends: ${new Date(request.endsAt).toLocaleString()}`,
             ].join("\n")}
             multiline
           />
@@ -2065,6 +2055,7 @@ const RoundRequestEditor = ({
 
 const AdminList = ({
   title,
+  surfaceClassName = "",
   titleAction,
   error,
   isLoading,
@@ -2072,13 +2063,16 @@ const AdminList = ({
   children,
 }: {
   title: string;
+  surfaceClassName?: string;
   titleAction?: ReactNode;
   error?: string;
   isLoading: boolean;
   header?: ReactNode;
   children: ReactNode;
 }) => (
-  <div className="h-fit rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm">
+  <div
+    className={`${surfaceClassName} h-fit rounded-2xl border border-skin-stroke bg-white p-4 shadow-sm`}
+  >
     <div className="flex items-center justify-between gap-3">
       <h2 className="font-heading text-2xl leading-none text-skin-base">
         {title}
@@ -2573,6 +2567,7 @@ const EditorCard = ({
   message,
   headingAddon,
   showStatusInTitle = true,
+  surfaceClassName = "",
   actions,
   children,
 }: {
@@ -2581,10 +2576,13 @@ const EditorCard = ({
   message: string | null;
   headingAddon?: ReactNode;
   showStatusInTitle?: boolean;
+  surfaceClassName?: string;
   actions: ReactNode;
   children: ReactNode;
 }) => (
-  <div className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+  <div
+    className={`${surfaceClassName} rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm`}
+  >
     <div className="flex flex-col gap-4 border-b border-skin-stroke pb-5 md:flex-row md:items-center md:justify-between">
       <div className="min-w-0">
         <div className="flex items-center gap-3">
@@ -2602,8 +2600,16 @@ const EditorCard = ({
   </div>
 );
 
-const EmptyEditor = ({ title }: { title: string }) => (
-  <div className="rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center shadow-sm">
+const EmptyEditor = ({
+  title,
+  surfaceClassName = "",
+}: {
+  title: string;
+  surfaceClassName?: string;
+}) => (
+  <div
+    className={`${surfaceClassName} rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center shadow-sm`}
+  >
     <h2 className="font-heading text-3xl leading-none text-skin-base">
       {title}
     </h2>

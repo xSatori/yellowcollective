@@ -9,6 +9,16 @@ const formatDate = (value: string) =>
     year: "numeric",
   }).format(new Date(value));
 
+const formatDateTime = (value: string) =>
+  new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(value));
+
 export const RoundTimeline = ({ round }: { round: Round }) => {
   const state = getRoundState(round);
   const steps = [
@@ -20,17 +30,19 @@ export const RoundTimeline = ({ round }: { round: Round }) => {
     {
       label: "Voting Started",
       date: round.votingStartsAt,
+      includeTime: true,
       complete: state === "ended" || state === "archived",
     },
     {
       label: "Round Ended",
       date: round.votingEndsAt,
+      includeTime: true,
       complete: state === "ended" || state === "archived",
     },
   ];
 
   return (
-    <section className="rounded-2xl border border-skin-stroke bg-white p-4 text-skin-base shadow-sm md:px-5 md:py-4">
+    <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-4 text-skin-base shadow-sm md:px-5 md:py-4">
       <div className="relative grid gap-5 md:grid-cols-3 md:gap-0">
         <div className="absolute left-5 right-5 top-[46px] hidden h-1 bg-[#d7d7d7] md:block" />
         <div
@@ -70,7 +82,7 @@ export const RoundTimeline = ({ round }: { round: Round }) => {
               <CheckIcon className="h-5 w-5 text-white" />
             </div>
             <div className="text-sm text-secondary">
-              {formatDate(step.date)}
+              {step.includeTime ? formatDateTime(step.date) : formatDate(step.date)}
             </div>
           </div>
         ))}

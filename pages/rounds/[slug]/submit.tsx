@@ -58,7 +58,7 @@ export default function SubmitRoundPage({
   if (!round) {
     return (
       <Layout>
-        <div className="mx-auto max-w-[980px] rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm">
+        <div className="yc-dark-yellow-form-surface mx-auto max-w-[980px] rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm">
           {error || "Round not found."}
         </div>
       </Layout>
@@ -136,13 +136,13 @@ export default function SubmitRoundPage({
           href={`/rounds/${round.slug}`}
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+          <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
           {round.title}
         </Link>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <h1 className="font-heading text-[34px] leading-none md:text-[42px]">
             Submit to this round
           </h1>
@@ -153,12 +153,12 @@ export default function SubmitRoundPage({
         </section>
 
         {state !== "submissions_open" && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-5 text-secondary shadow-sm">
+          <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 text-secondary shadow-sm">
             This round is not accepting submissions right now.
           </section>
         )}
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           {!isConnected && (
             <div className="mb-5 rounded-xl border border-skin-stroke bg-[#fff7bf] p-4">
               <p className="mb-3 text-base text-secondary">
@@ -208,14 +208,14 @@ export default function SubmitRoundPage({
               type="button"
               onClick={submit}
               disabled={!canSubmit || isSubmitting || isSigning}
-              className="flex items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting || isSigning ? "Submitting..." : "Submit for review"}
             </button>
             <button
               type="button"
               onClick={() => setValues(initialValues)}
-              className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>

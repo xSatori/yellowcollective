@@ -64,7 +64,7 @@ export default function RoundsPage({
 
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7 pb-12">
         {!roundsPublicEnabled && !isAdmin ? (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+          <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
             <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
               Rounds
             </h1>
@@ -74,7 +74,7 @@ export default function RoundsPage({
           </section>
         ) : (
           <>
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div>
               <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
@@ -87,7 +87,7 @@ export default function RoundsPage({
             </div>
             <Link
               href="/rounds/request"
-              className="flex w-fit shrink-0 items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none"
+              className="yc-dark-submit-blue flex w-fit shrink-0 items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none"
             >
               Request a round
             </Link>
@@ -95,7 +95,7 @@ export default function RoundsPage({
         </section>
 
         {error && (
-          <section className="rounded-2xl border border-skin-proposal-danger bg-white p-5 text-skin-proposal-danger shadow-sm">
+          <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-proposal-danger bg-white p-5 text-skin-proposal-danger shadow-sm">
             {error}
           </section>
         )}
@@ -128,7 +128,7 @@ const RoundSection = ({ title, rounds }: { title: string; rounds: Round[] }) => 
         ))}
       </div>
     ) : (
-      <div className="rounded-2xl border border-dashed border-skin-stroke bg-white p-6 text-base text-secondary shadow-sm">
+      <div className="yc-dark-yellow-form-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-6 text-base text-secondary shadow-sm">
         No {title.toLowerCase()} rounds yet.
       </div>
     )}

@@ -21,7 +21,6 @@ const initialValues = {
   submissionsOpenAt: "",
   votingStartsAt: "",
   votingEndsAt: "",
-  endsAt: "",
   votingStrategy: "one_per_nft",
   votesPerWallet: "1",
   winnerCount: "1",
@@ -71,7 +70,6 @@ export default function RequestRoundPage() {
           values.submissionsOpenAt &&
           values.votingStartsAt &&
           values.votingEndsAt &&
-          values.endsAt &&
           Number(values.winnerCount) > 0 &&
           Number(values.maxSubmissionsPerWallet) > 0 &&
           Number(values.votesPerWallet) > 0 &&
@@ -113,7 +111,6 @@ export default function RequestRoundPage() {
             submissionsOpenAt: dateInputToIso(values.submissionsOpenAt),
             votingStartsAt: dateInputToIso(values.votingStartsAt),
             votingEndsAt: dateInputToIso(values.votingEndsAt),
-            endsAt: dateInputToIso(values.endsAt),
             votesPerWallet: Number(values.votesPerWallet),
             winnerCount: Number(values.winnerCount),
             maxSubmissionsPerWallet: Number(values.maxSubmissionsPerWallet),
@@ -153,13 +150,13 @@ export default function RequestRoundPage() {
           href="/rounds"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+          <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
           Rounds
         </Link>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <h1 className="font-heading text-[34px] leading-none md:text-[42px]">
             Request a round
           </h1>
@@ -169,7 +166,7 @@ export default function RequestRoundPage() {
           </p>
         </section>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           {!isConnected && (
             <div className="mb-5 rounded-xl border border-skin-stroke bg-[#fff7bf] p-4">
               <p className="mb-3 text-base text-secondary">
@@ -252,7 +249,7 @@ export default function RequestRoundPage() {
             placeholder="Any scheduling notes for admins."
           />
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <DateField
               label="Start date"
               value={values.startsAt}
@@ -275,12 +272,6 @@ export default function RequestRoundPage() {
               label="Voting ends"
               value={values.votingEndsAt}
               onChange={(value) => updateValue("votingEndsAt", value)}
-              required
-            />
-            <DateField
-              label="Round ends"
-              value={values.endsAt}
-              onChange={(value) => updateValue("endsAt", value)}
               required
             />
           </div>
@@ -338,14 +329,14 @@ export default function RequestRoundPage() {
               type="button"
               onClick={submit}
               disabled={!canSubmit || isSubmitting}
-              className="flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? "Submitting..." : "Submit request"}
             </button>
             <button
               type="button"
               onClick={() => setValues(initialValues)}
-              className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>

@@ -3,25 +3,16 @@ import {
   approveRoundRequest,
   removeRoundRequest,
   setRoundRequestStatus,
-  type RoundRequestStatus,
 } from "data/rounds";
 import { requireAdminRequest } from "@/utils/admin-api";
 
 type AdminRoundRequestBody = {
-  action?: "reviewed" | "approved" | "rejected" | "remove";
+  action?: "approved" | "rejected" | "remove";
 };
 
 const getId = (req: NextApiRequest) => {
   const id = req.query.id;
   return typeof id === "string" ? id : id?.[0];
-};
-
-const actionToStatus: Record<
-  Exclude<AdminRoundRequestBody["action"], undefined | "remove" | "approved">,
-  RoundRequestStatus
-> = {
-  reviewed: "reviewed",
-  rejected: "rejected",
 };
 
 export default async function handler(
@@ -44,7 +35,6 @@ export default async function handler(
 
     if (
       action &&
-      action !== "reviewed" &&
       action !== "approved" &&
       action !== "rejected" &&
       action !== "remove"
@@ -57,10 +47,10 @@ export default async function handler(
         ? await removeRoundRequest(id)
         : action === "approved"
           ? await approveRoundRequest(id)
-        : action
+        : action === "rejected"
           ? await setRoundRequestStatus({
               id,
-              status: actionToStatus[action],
+              status: "rejected",
             })
           : null;
 

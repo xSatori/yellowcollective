@@ -226,13 +226,13 @@ export default function RoundDetailPage({
           href="/rounds"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+          <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
           Back to rounds
         </Link>
 
-        <section className="grid gap-6 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm lg:grid-cols-[1fr_360px]">
+        <section className="yc-dark-yellow-form-surface grid gap-6 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm lg:grid-cols-[1fr_360px]">
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <RoundStatusPill status={getRoundStateLabel(state)} />
@@ -271,7 +271,7 @@ export default function RoundDetailPage({
                       ? "/noundry?tab=gallery"
                       : `/rounds/${round.slug}/submit`
                   }
-                  className="rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+                  className="yc-dark-yellow-button rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
                 >
                   {round.isTraitContest && round.traitSubmissionsEnabled
                     ? "Submit Noundry trait"
@@ -368,7 +368,7 @@ export default function RoundDetailPage({
         )}
 
         {state === "voting_open" && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
+          <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="font-heading text-3xl leading-none text-skin-base">
@@ -426,14 +426,14 @@ export default function RoundDetailPage({
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center text-secondary shadow-sm">
+            <div className="yc-dark-yellow-form-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center text-secondary shadow-sm">
               No approved submissions yet.
             </div>
           )}
         </section>
 
         {state === "voting_open" && votingPower > 0 && (
-          <div className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))]">
+          <div className="yc-dark-yellow-form-surface sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))]">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="text-base text-secondary">
                 Allocating{" "}
@@ -446,7 +446,7 @@ export default function RoundDetailPage({
                 type="button"
                 onClick={submitVotes}
                 disabled={allocatedVotes <= 0 || allocatedVotes > votingPower || isVoting || isSigning}
-                className="rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="yc-dark-yellow-button rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isVoting || isSigning ? "Submitting..." : "Submit votes"}
               </button>
@@ -496,7 +496,7 @@ const SubmissionCard = ({
   return (
   <article
     className={`relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
-      winnerStyle?.cardClass || "border-skin-stroke"
+      winnerStyle?.cardClass || "yc-dark-yellow-form-surface border-skin-stroke"
     }`}
   >
     {isWinner && <WinnerGlimmer />}
@@ -682,7 +682,7 @@ const SubmissionModal = ({
         onClick={onClose}
       >
         <div
-          className="max-h-[90vh] w-full max-w-[820px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
+          className="yc-dark-yellow-form-surface max-h-[90vh] w-full max-w-[820px] overflow-y-auto rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex flex-col p-6 md:p-8">
@@ -767,14 +767,14 @@ const SubmissionModal = ({
               <button
                 type="button"
                 onClick={() => setIsVotesOpen(true)}
-                className="flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
+                className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
               >
                 Votes
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+                className="yc-dark-yellow-button flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
               >
                 Close
               </button>
@@ -797,7 +797,7 @@ const SubmissionModal = ({
           onClick={() => setIsVotesOpen(false)}
         >
           <div
-            className="w-full max-w-[540px] rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
+            className="yc-dark-yellow-form-surface w-full max-w-[540px] rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -852,7 +852,7 @@ const SubmissionModal = ({
             <button
               type="button"
               onClick={() => setIsVotesOpen(false)}
-              className="mt-5 flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              className="yc-dark-yellow-button mt-5 flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Close
             </button>
@@ -944,7 +944,7 @@ const RoundDetailsPanel = ({
   stateLabel: string;
   votingStrategyLabel: string;
 }) => (
-  <section className="grid gap-3 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:grid-cols-4">
+  <section className="yc-dark-yellow-form-surface grid gap-3 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:grid-cols-4">
     <RoundStat label="Status" value={stateLabel} />
     <RoundStat
       label="Winners"
@@ -978,7 +978,7 @@ const RoundAwardsPanel = ({
 }: {
   round: RoundWithSubmissions;
 }) => (
-  <article className="flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
+  <article className="yc-dark-yellow-form-surface flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
     <h2 className="font-heading text-3xl leading-none text-skin-base">
       AWARDS
     </h2>
@@ -1038,7 +1038,7 @@ const RoundActivityPanel = ({ round }: { round: RoundWithSubmissions }) => {
           : "Round scheduled";
 
   return (
-    <article className="flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
+    <article className="yc-dark-yellow-form-surface flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <h2 className="font-heading text-3xl leading-none text-skin-base">
           ACTIVITY

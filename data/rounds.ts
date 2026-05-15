@@ -20,7 +20,6 @@ export type RoundSubmissionStatus =
   | "hidden";
 export type RoundRequestStatus =
   | "pending"
-  | "reviewed"
   | "approved"
   | "rejected";
 export type RoundVotingStrategy =
@@ -320,7 +319,7 @@ const ensureTables = async () => {
               starts_at <= submissions_open_at
               AND submissions_open_at <= voting_starts_at
               AND voting_starts_at < voting_ends_at
-              AND voting_ends_at <= ends_at
+              AND voting_ends_at = ends_at
             )
           );
 
@@ -413,7 +412,7 @@ const ensureTables = async () => {
             updated_at timestamptz NOT NULL DEFAULT now(),
             reviewed_at timestamptz,
             deleted_at timestamptz,
-            CONSTRAINT round_requests_status_check CHECK (status IN ('pending', 'reviewed', 'approved', 'rejected')),
+            CONSTRAINT round_requests_status_check CHECK (status IN ('pending', 'approved', 'rejected')),
             CONSTRAINT round_requests_voting_strategy_check CHECK (voting_strategy IN ('one_per_wallet', 'one_per_nft', 'fixed_per_wallet')),
             CONSTRAINT round_requests_votes_per_wallet_check CHECK (votes_per_wallet > 0),
             CONSTRAINT round_requests_winner_count_check CHECK (winner_count > 0),
@@ -483,6 +482,47 @@ const ensureTables = async () => {
             ADD COLUMN IF NOT EXISTS winner_count integer NOT NULL DEFAULT 1,
             ADD COLUMN IF NOT EXISTS max_submissions_per_wallet integer NOT NULL DEFAULT 1,
             ADD COLUMN IF NOT EXISTS awards jsonb NOT NULL DEFAULT '[]'::jsonb
+        `)
+      )
+      .then(() =>
+        getPool().query(`
+          UPDATE rounds
+          SET ends_at = voting_ends_at
+          WHERE ends_at IS DISTINCT FROM voting_ends_at
+        `)
+      )
+      .then(() =>
+        getPool().query(`
+          UPDATE round_requests
+          SET ends_at = voting_ends_at
+          WHERE voting_ends_at IS NOT NULL
+            AND ends_at IS DISTINCT FROM voting_ends_at
+        `)
+      )
+      .then(() =>
+        getPool().query(`
+          UPDATE round_requests
+          SET status = 'pending'
+          WHERE status = 'reviewed'
+        `)
+      )
+      .then(() =>
+        getPool().query(`
+          ALTER TABLE rounds
+            DROP CONSTRAINT IF EXISTS rounds_date_order_check,
+            ADD CONSTRAINT rounds_date_order_check CHECK (
+              starts_at <= submissions_open_at
+              AND submissions_open_at <= voting_starts_at
+              AND voting_starts_at < voting_ends_at
+              AND voting_ends_at = ends_at
+            )
+        `)
+      )
+      .then(() =>
+        getPool().query(`
+          ALTER TABLE round_requests
+            DROP CONSTRAINT IF EXISTS round_requests_status_check,
+            ADD CONSTRAINT round_requests_status_check CHECK (status IN ('pending', 'approved', 'rejected'))
         `)
       )
       .then(() =>
@@ -793,9 +833,10 @@ export const normalizeRoundInput = (
   const votingEndFallback = current?.votingEndsAt
     ? new Date(current.votingEndsAt)
     : new Date(votingStartFallback.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const endsAtFallback = current?.endsAt
-    ? new Date(current.endsAt)
-    : votingEndFallback;
+  const votingEndsAt = normalizeDate(
+    input.votingEndsAt ?? current?.votingEndsAt,
+    votingEndFallback
+  );
 
   return {
     slug: normalizeSlug(input.slug ?? current?.slug ?? `round-${Date.now()}`),
@@ -812,11 +853,8 @@ export const normalizeRoundInput = (
       input.votingStartsAt ?? current?.votingStartsAt,
       votingStartFallback
     ),
-    votingEndsAt: normalizeDate(
-      input.votingEndsAt ?? current?.votingEndsAt,
-      votingEndFallback
-    ),
-    endsAt: normalizeDate(input.endsAt ?? current?.endsAt, endsAtFallback),
+    votingEndsAt,
+    endsAt: votingEndsAt,
     active: Boolean(input.active ?? current?.active ?? false),
     featured: Boolean(input.featured ?? current?.featured ?? false),
     isTraitContest: Boolean(
@@ -931,9 +969,9 @@ export const validateRoundInput = (input: NormalizedRoundInput) => {
     dates[0] > dates[1] ||
     dates[1] > dates[2] ||
     dates[2] >= dates[3] ||
-    dates[3] > dates[4]
+    dates[3] !== dates[4]
   ) {
-    return "Round dates must be ordered from start to submissions, voting, and end.";
+    return "Round dates must be ordered from start through voting end.";
   }
 
   if (!isSafeUrl(input.image, { allowDataImage: true })) {
@@ -1107,6 +1145,10 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
   const walletAddress = input.walletAddress
     ? String(input.walletAddress).trim()
     : "";
+  const votingEndsAt = normalizeDate(
+    input.votingEndsAt,
+    new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+  );
 
   return {
     walletAddress: walletAddress && isAddress(walletAddress) ? getAddress(walletAddress) : null,
@@ -1126,14 +1168,8 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
       input.votingStartsAt,
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     ),
-    votingEndsAt: normalizeDate(
-      input.votingEndsAt,
-      new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-    ),
-    endsAt: normalizeDate(
-      input.endsAt,
-      new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-    ),
+    votingEndsAt,
+    endsAt: votingEndsAt,
     votingStrategy: (input.votingStrategy || "one_per_nft") as RoundVotingStrategy,
     votesPerWallet: Number(input.votesPerWallet || 1),
     winnerCount: Number(input.winnerCount || 1),
@@ -1303,8 +1339,7 @@ export const listAdminRoundRequests = async () => {
       ORDER BY
         CASE status
           WHEN 'pending' THEN 0
-          WHEN 'reviewed' THEN 1
-          WHEN 'approved' THEN 2
+          WHEN 'approved' THEN 1
           ELSE 3
         END,
         created_at DESC

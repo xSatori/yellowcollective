@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS rounds (
     starts_at <= submissions_open_at
     AND submissions_open_at <= voting_starts_at
     AND voting_starts_at < voting_ends_at
-    AND voting_ends_at <= ends_at
+    AND voting_ends_at = ends_at
   )
 );
 
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS round_requests (
   updated_at timestamptz NOT NULL DEFAULT now(),
   reviewed_at timestamptz,
   deleted_at timestamptz,
-  CONSTRAINT round_requests_status_check CHECK (status IN ('pending', 'reviewed', 'approved', 'rejected')),
+  CONSTRAINT round_requests_status_check CHECK (status IN ('pending', 'approved', 'rejected')),
   CONSTRAINT round_requests_voting_strategy_check CHECK (voting_strategy IN ('one_per_wallet', 'one_per_nft', 'fixed_per_wallet')),
   CONSTRAINT round_requests_votes_per_wallet_check CHECK (votes_per_wallet > 0),
   CONSTRAINT round_requests_winner_count_check CHECK (winner_count > 0),
