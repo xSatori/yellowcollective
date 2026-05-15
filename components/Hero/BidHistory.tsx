@@ -66,7 +66,7 @@ export default function BidHistory({
   shouldShowPreviewComment?: (bid: Bid) => boolean;
 }) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="yc-auction-focus-area flex flex-col items-center">
       {bids?.slice(0, numToShow).map((bid, i) => {
         return (
           <BidRow

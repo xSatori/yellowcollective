@@ -309,6 +309,16 @@
     color: #212529 !important;
   }
 
+  [data-theme="dark"] .yc-dark-surface .yc-project-detail-admin-edit {
+    --color-text-base: 251, 203, 7;
+    --color-text-muted: 251, 203, 7;
+    color: rgb(var(--color-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-surface .yc-project-detail-admin-edit:hover {
+    color: rgb(var(--color-accent-hover)) !important;
+  }
+
   .yc-force-white-yellow-hover,
   [data-theme="dark"] .yc-force-white-yellow-hover {
     --color-text-base: 33, 37, 41;
@@ -413,6 +423,13 @@
   .yc-connect-wallet-button *,
   [data-theme="dark"] .yc-connect-wallet-button * {
     color: #212529 !important;
+  }
+
+  [data-theme="dark"]
+    .yc-auction-focus-area
+    :where(a, input, textarea):focus-visible {
+    outline-color: rgb(var(--color-accent)) !important;
+    outline-offset: -6px !important;
   }
 
   [data-theme="dark"] .yc-dark-surface {

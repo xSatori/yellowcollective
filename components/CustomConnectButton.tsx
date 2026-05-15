@@ -96,7 +96,7 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
                     <Link
                       href={`/profile/${account.address}`}
                       onClick={() => setIsMenuOpen(false)}
-                      className="rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+                      className="header-dropdown-item rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
                     >
                       <h6>View profile</h6>
                     </Link>

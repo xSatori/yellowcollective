@@ -134,7 +134,12 @@ export const PlaceBid = ({
     isConnected && baseBalance?.value && baseBalance.value.isZero();
 
   return (
-    <div className={clsx("flex flex-col gap-6", hidden && "hidden")}>
+    <div
+      className={clsx(
+        "yc-auction-focus-area flex flex-col gap-6",
+        hidden && "hidden"
+      )}
+    >
       <div
         className={clsx(
           "flex w-full flex-col items-start gap-4 min-[390px]:flex-row min-[390px]:flex-wrap"
@@ -146,7 +151,7 @@ export const PlaceBid = ({
             type="number"
             onChange={(e) => setBid(e.target.value)}
             className={clsx(
-              "h-[59px] w-full min-w-0 rounded-[18px] border-2 bg-primary px-6 py-4 outline-none focus:border-accent min-[390px]:w-[265px]",
+              "h-[59px] w-full min-w-0 rounded-[18px] border-2 border-accent bg-primary px-6 py-4 outline-none focus:border-accent min-[390px]:w-[265px]",
               getError() != undefined && getError() != "" && "border-negative"
             )}
             placeholder={
@@ -159,6 +164,7 @@ export const PlaceBid = ({
         </div>
         <div className="flex flex-col items-center justify-center gap-1">
           <Button
+            className="yc-dark-yellow-button"
             disabled={((!write || isLoading) && isConnected) || !!commentError}
             onClick={(e) => {
               e.preventDefault();
@@ -204,7 +210,7 @@ export const PlaceBid = ({
               setBidComment(truncateBidCommentToByteLimit(e.target.value))
             }
             className={clsx(
-              "min-h-[92px] w-full resize-none rounded-[18px] border-2 bg-primary px-5 py-4 outline-none focus:border-accent",
+              "min-h-[92px] w-full resize-none rounded-[18px] border-2 border-accent bg-primary px-5 py-4 outline-none focus:border-accent",
               commentError && "border-negative"
             )}
             maxLength={MAX_BID_COMMENT_LENGTH}

@@ -7,3 +7,5 @@ export type AdminAuthPayload = {
 export const getAdminSignedRequestAction = (
   method: SignedRequestMethod | string
 ) => `admin:${method.toLowerCase()}`;
+
+export const getAdminSessionSignedRequestAction = () => "admin:session";

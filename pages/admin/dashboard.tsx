@@ -1,9 +1,8 @@
 import Layout from "@/components/Layout";
 import ProjectMemberSelector from "@/components/community/ProjectMemberSelector";
 import { isAdminAddress } from "@/utils/admin";
-import { getAdminSignedRequestAction } from "@/utils/admin-auth";
+import { getAdminSessionSignedRequestAction } from "@/utils/admin-auth";
 import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
-import type { SignedRequestMethod } from "@/utils/signature-auth";
 import {
   getSafeLinkProps,
   normalizeSafeImageUrl,
@@ -34,9 +33,7 @@ type RoundSubmissionMode = "pending" | "approved" | "closed";
 
 type AdminAuth = Required<
   Pick<{ adminAddress?: string }, "adminAddress">
-> & {
-  signMessageAsync: (args: { message: string }) => Promise<string>;
-};
+>;
 
 type AdminRequestBody = Record<string, unknown>;
 type AdminSWRKey = readonly [string, AdminAuth];
@@ -91,30 +88,41 @@ const blueButtonClass =
 
 const ADMIN_CHAIN_ID = Number(TOKEN_NETWORK);
 
-const signAdminRequest = async (
-  auth: AdminAuth,
-  path: string,
-  method: SignedRequestMethod,
-  body: AdminRequestBody = {}
-) =>
-  createSignedRequestAuthHeader({
-    walletAddress: auth.adminAddress,
+const createAdminSession = async (
+  adminAddress: string,
+  signMessageAsync: (args: { message: string }) => Promise<string>
+) => {
+  const authorization = await createSignedRequestAuthHeader({
+    walletAddress: adminAddress,
     chainId: ADMIN_CHAIN_ID,
-    action: getAdminSignedRequestAction(method),
-    method,
-    path,
-    payload: method === "GET" ? {} : body,
-    signMessageAsync: auth.signMessageAsync,
+    action: getAdminSessionSignedRequestAction(),
+    method: "POST",
+    path: "/api/admin/session",
+    payload: {},
+    signMessageAsync,
   });
+  const response = await fetch("/api/admin/session", {
+    method: "POST",
+    headers: { Authorization: authorization },
+    cache: "no-store",
+    credentials: "same-origin",
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to authorize admin session.");
+  }
+
+  return data as { adminAddress: string };
+};
 
 const createAdminFetcher =
   <T,>(): Fetcher<T, AdminSWRKey> =>
   async (key) => {
-    const [url, auth] = key;
-    const authorization = await signAdminRequest(auth, url, "GET");
+    const [url] = key;
     const response = await fetch(url, {
-      headers: { Authorization: authorization },
       cache: "no-store",
+      credentials: "same-origin",
     });
     const data = await response.json();
 
@@ -166,14 +174,14 @@ const sendAdminRequest = async (
   method: "PATCH" | "DELETE" | "POST",
   body: AdminRequestBody = {}
 ) => {
-  const authorization = await signAdminRequest(auth, path, method, body);
+  void auth;
   const response = await fetch(path, {
     method,
     headers: {
-      Authorization: authorization,
       "Content-Type": "application/json",
     },
     cache: "no-store",
+    credentials: "same-origin",
     body: JSON.stringify(body),
   });
   const responseText = await response.text();
@@ -272,6 +280,7 @@ export default function AdminDashboardPage() {
   const { signMessageAsync, isLoading: isSigning } = useSignMessage();
   const [adminAuth, setAdminAuth] = useState<AdminAuth | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(false);
   const isAdmin = isAdminAddress(address);
   const activeSection: AdminSection =
     router.query.section === "noundry"
@@ -343,15 +352,45 @@ export default function AdminDashboardPage() {
     if (!isAdmin) setAdminAuth(null);
   }, [isAdmin, address]);
 
+  useEffect(() => {
+    if (!isAdmin || !address || adminAuth) return;
+
+    let isMounted = true;
+    setIsCheckingSession(true);
+    void fetch("/api/admin/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as { adminAddress?: string };
+      })
+      .then((data) => {
+        if (
+          isMounted &&
+          data?.adminAddress &&
+          data.adminAddress.toLowerCase() === address.toLowerCase()
+        ) {
+          setAdminAuth({ adminAddress: data.adminAddress });
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (isMounted) setIsCheckingSession(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdmin, address, adminAuth]);
+
   const authorize = async () => {
     if (!address) return;
 
     try {
       setAuthError(null);
-      setAdminAuth({
-        adminAddress: address,
-        signMessageAsync,
-      });
+      const session = await createAdminSession(address, signMessageAsync);
+      setAdminAuth({ adminAddress: session.adminAddress || address });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unable to authorize admin.";
@@ -374,7 +413,7 @@ export default function AdminDashboardPage() {
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-7 pb-12">
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
               <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
@@ -393,7 +432,7 @@ export default function AdminDashboardPage() {
                 className={dangerButtonClass}
               >
                 {adminAuth
-                  ? "Refresh admin access"
+                  ? "Admin access active"
                   : isSigning
                     ? "Signing..."
                     : "Unlock admin requests"}
@@ -415,16 +454,16 @@ export default function AdminDashboardPage() {
         {isAdmin && authError && (
           <AdminNotice title="Signature failed">{authError}</AdminNotice>
         )}
-        {isAdmin && !adminAuth && (
+        {isAdmin && !adminAuth && !isCheckingSession && (
           <AdminNotice title="Signature required">
-            Unlock admin requests. Protected reads and writes will ask your
-            wallet for request-bound signatures.
+            Unlock admin requests once to manage community projects, Noundry,
+            and rounds.
           </AdminNotice>
         )}
 
         {isAdmin && (
           <section className="flex flex-col gap-6">
-            <div className="flex flex-wrap justify-center gap-3 border-b border-skin-stroke">
+            <div className="flex flex-nowrap justify-center gap-1 overflow-x-auto border-b border-skin-stroke sm:gap-3">
               {adminSections.map((section) => {
                 const isActive = activeSection === section.id;
 
@@ -433,10 +472,10 @@ export default function AdminDashboardPage() {
                     key={section.id}
                     type="button"
                     onClick={() => setSection(section.id)}
-                    className={`rounded-t-xl border border-b-0 border-skin-stroke px-5 py-3 font-heading text-base font-bold shadow-[4px_0px_0px_0px_rgb(var(--color-shadow-neutral))] transition-colors active:translate-x-1 active:shadow-none ${
+                    className={`proposal-detail-tab min-w-0 flex-1 whitespace-nowrap rounded-t-xl border border-b-0 border-skin-stroke px-2 py-3 text-center font-heading text-sm font-bold leading-none shadow-[4px_0px_0px_0px_rgb(var(--color-shadow-neutral))] transition-colors active:translate-x-1 active:shadow-none sm:flex-none sm:px-5 sm:text-base ${
                       isActive
-                        ? "bg-white text-skin-base"
-                        : "bg-[#fff7bf] text-secondary hover:bg-white"
+                        ? "proposal-detail-tab-active bg-white text-skin-base"
+                        : "proposal-detail-tab-inactive bg-[#fff7bf] text-secondary hover:bg-white"
                     }`}
                   >
                     {section.label}
@@ -501,7 +540,7 @@ const AdminNotice = ({
   title: string;
   children: ReactNode;
 }) => (
-  <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm">
+  <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm">
     <h2 className="font-heading text-2xl leading-none text-skin-base">
       {title}
     </h2>
