@@ -23,8 +23,14 @@ const resolveTsPath = (specifier, parentFile) => {
   return null;
 };
 
-const loadTsModule = (filePath) => {
-  if (moduleCache.has(filePath)) return moduleCache.get(filePath).exports;
+const loadTsModule = (
+  filePath,
+  { cacheKey = "default", globals = {} } = {}
+) => {
+  const moduleCacheKey = `${cacheKey}:${filePath}`;
+  if (moduleCache.has(moduleCacheKey)) {
+    return moduleCache.get(moduleCacheKey).exports;
+  }
 
   const source = readFileSync(filePath, "utf8");
   const transpiled = ts.transpileModule(source, {
@@ -35,7 +41,7 @@ const loadTsModule = (filePath) => {
     },
   });
   const module = { exports: {} };
-  moduleCache.set(filePath, module);
+  moduleCache.set(moduleCacheKey, module);
 
   const localRequire = (specifier) => {
     const tsPath = resolveTsPath(specifier, filePath);
@@ -55,6 +61,7 @@ const loadTsModule = (filePath) => {
     TextDecoder,
     setTimeout,
     clearTimeout,
+    ...globals,
   });
 
   return module.exports;
@@ -161,6 +168,47 @@ test("valid signed request verifies and replay with same nonce fails", async () 
     undefined
   );
   assert.equal(replayRes.statusCode, 403);
+});
+
+test("authorization header encoding works with browser Buffer polyfills", () => {
+  const browserBuffer = {
+    from(value, encoding) {
+      if (encoding === "base64url") {
+        throw new Error("Unknown encoding: base64url");
+      }
+
+      const nodeBuffer = Buffer.from(value, encoding);
+      return {
+        toString(outputEncoding) {
+          if (outputEncoding === "base64url") {
+            throw new Error("Unknown encoding: base64url");
+          }
+
+          return nodeBuffer.toString(outputEncoding);
+        },
+      };
+    },
+  };
+  const browserShared = loadTsModule(
+    resolve(process.cwd(), "utils/signature-auth.ts"),
+    {
+      cacheKey: "browser-buffer-polyfill",
+      globals: { Buffer: browserBuffer },
+    }
+  );
+  const authorization = {
+    nonce: "nonce-1",
+    walletAddress: account.address,
+    signature: `0x${"a".repeat(130)}`,
+  };
+
+  const header =
+    browserShared.createSignedRequestAuthorizationHeader(authorization);
+  const parsed = browserShared.parseSignedRequestAuthorizationHeader(header);
+
+  assert.equal(parsed.nonce, authorization.nonce);
+  assert.equal(parsed.walletAddress, authorization.walletAddress);
+  assert.equal(parsed.signature, authorization.signature);
 });
 
 test("modified body, endpoint, method, wallet, chain, and expiry fail", async () => {

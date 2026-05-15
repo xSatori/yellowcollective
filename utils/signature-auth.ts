@@ -92,7 +92,11 @@ export const buildSignedRequestMessage = (challenge: SignedRequestChallenge) =>
 
 const encodeBase64Url = (value: string) => {
   if (typeof Buffer !== "undefined") {
-    return Buffer.from(value, "utf8").toString("base64url");
+    return Buffer.from(value, "utf8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/u, "");
   }
 
   const bytes = new TextEncoder().encode(value);
@@ -105,14 +109,15 @@ const encodeBase64Url = (value: string) => {
 };
 
 const decodeBase64Url = (value: string) => {
-  if (typeof Buffer !== "undefined") {
-    return Buffer.from(value, "base64url").toString("utf8");
-  }
-
   const padded = value
     .replace(/-/g, "+")
     .replace(/_/g, "/")
     .padEnd(Math.ceil(value.length / 4) * 4, "=");
+
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(padded, "base64").toString("utf8");
+  }
+
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 
