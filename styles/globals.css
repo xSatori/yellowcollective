@@ -286,6 +286,13 @@
     color: rgb(191, 199, 204) !important;
   }
 
+  .yc-admin-dashboard,
+  [data-theme="dark"] .yc-admin-dashboard {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    color: #212529;
+  }
+
   [data-theme="dark"] .yc-dark-yellow-surface [class~="bg-[#f1f1f1]"] {
     background-color: rgb(241, 241, 241) !important;
   }
@@ -629,6 +636,42 @@
   border-color: rgb(var(--color-accent)) !important;
   color: #212529 !important;
   outline-color: rgb(var(--color-accent)) !important;
+}
+
+[data-theme="dark"]
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [role="menuitem"],
+    [role="option"],
+    [role="tab"],
+    [role="listbox"],
+    [tabindex]
+  ):focus,
+[data-theme="dark"]
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [role="menuitem"],
+    [role="option"],
+    [role="tab"],
+    [role="listbox"],
+    [tabindex]
+  ):focus-visible {
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  border-color: rgb(var(--color-stroke)) !important;
+  outline: none !important;
 }
 
 [data-theme="dark"] .yc-mobile-dark-page {

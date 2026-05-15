@@ -412,7 +412,7 @@ export default function AdminDashboardPage() {
         <title>Admin Dashboard | Yellow Collective</title>
       </Head>
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-7 pb-12">
+      <div className="yc-admin-dashboard mx-auto flex w-full max-w-[1440px] flex-col gap-7 pb-12">
         <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
