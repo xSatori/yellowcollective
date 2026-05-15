@@ -2,13 +2,6 @@ import type { Round } from "data/rounds";
 import { getRoundState } from "@/utils/rounds/state";
 import { CheckIcon } from "@heroicons/react/20/solid";
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("en", {
     month: "long",
@@ -30,13 +23,12 @@ export const RoundTimeline = ({ round }: { round: Round }) => {
     {
       label: "Voting Started",
       date: round.votingStartsAt,
-      includeTime: true,
-      complete: state === "ended" || state === "archived",
+      complete:
+        state === "voting_open" || state === "ended" || state === "archived",
     },
     {
       label: "Round Ended",
       date: round.votingEndsAt,
-      includeTime: true,
       complete: state === "ended" || state === "archived",
     },
   ];
@@ -82,7 +74,7 @@ export const RoundTimeline = ({ round }: { round: Round }) => {
               <CheckIcon className="h-5 w-5 text-white" />
             </div>
             <div className="text-sm text-secondary">
-              {step.includeTime ? formatDateTime(step.date) : formatDate(step.date)}
+              {formatDateTime(step.date)}
             </div>
           </div>
         ))}

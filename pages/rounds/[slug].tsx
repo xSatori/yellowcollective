@@ -271,7 +271,7 @@ export default function RoundDetailPage({
                       ? "/noundry?tab=gallery"
                       : `/rounds/${round.slug}/submit`
                   }
-                  className="yc-dark-yellow-button rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+                  className="yc-dark-submit-blue rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
                 >
                   {round.isTraitContest && round.traitSubmissionsEnabled
                     ? "Submit Noundry trait"
@@ -1027,15 +1027,7 @@ const RoundAwardsPanel = ({
 );
 
 const RoundActivityPanel = ({ round }: { round: RoundWithSubmissions }) => {
-  const state = getRoundState(round);
-  const stateActivity =
-    state === "ended"
-      ? "Round ended"
-      : state === "voting_open"
-        ? "Voting started"
-        : state === "submissions_open"
-          ? "Submissions opened"
-          : "Round scheduled";
+  const activityItems = getRoundActivityItems(round);
 
   return (
     <article className="yc-dark-yellow-form-surface flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
@@ -1048,55 +1040,140 @@ const RoundActivityPanel = ({ round }: { round: RoundWithSubmissions }) => {
           {round.totalVotes || 0}
         </div>
       </div>
-      <div className="mt-7 flex max-h-[280px] flex-col gap-5 overflow-y-auto pr-2">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ff3b3b] font-heading text-sm text-white">
-            !
+      <div className="mt-7 max-h-[320px] overflow-y-auto pr-2">
+        {activityItems.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            {activityItems.map((item) => (
+              <RoundActivityItem key={item.id} item={item} />
+            ))}
           </div>
-          <div className="min-w-0 flex-1 font-heading text-xl leading-none text-[#ff3b3b]">
-            {stateActivity}
-          </div>
-          <div className="text-lg text-secondary">
-            {formatRelativeTime(
-              state === "ended" ? round.votingEndsAt : round.votingStartsAt
-            )}
-          </div>
-        </div>
-        {round.voteActivity.length > 0 ? (
-          round.voteActivity.map((activity, index) => (
-            <div key={activity.id} className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff7bf] font-heading text-xs text-skin-base">
-                {index + 1}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <WalletIdentityLink
-                    address={activity.walletAddress}
-                    ensName={demoAuthorNames[activity.walletAddress.toLowerCase()]}
-                    className="break-words font-heading text-xl leading-none text-skin-base"
-                  />
-                  <span className="font-heading text-xl leading-none text-[#6e95ff]">
-                    +{activity.voteCount}
-                  </span>
-                </div>
-                <div className="mt-1 truncate text-sm text-secondary">
-                  {activity.submissionTitle}
-                </div>
-              </div>
-              <div className="text-lg text-secondary">
-                {formatRelativeTime(activity.updatedAt || activity.createdAt)}
-              </div>
-            </div>
-          ))
         ) : (
           <p className="rounded-xl border border-dashed border-skin-stroke bg-[#fff7bf] p-4 text-secondary">
-            No votes have been cast yet.
+            No activity yet.
           </p>
         )}
       </div>
     </article>
   );
 };
+
+type RoundActivityItemType =
+  | "milestone"
+  | "submission"
+  | "trait"
+  | "vote";
+
+type RoundActivityItemData = {
+  id: string;
+  type: RoundActivityItemType;
+  timestamp: string;
+  title: string;
+  description?: string;
+  walletAddress?: string;
+  voteCount?: number;
+};
+
+const RoundActivityItem = ({ item }: { item: RoundActivityItemData }) => (
+  <div className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-3">
+    <div
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-heading text-sm ${
+        item.type === "vote"
+          ? "bg-[#dff3ff] text-[#0f5f99]"
+          : item.type === "submission" || item.type === "trait"
+            ? "bg-[#fff7bf] text-skin-base"
+            : "bg-[#4bd27c] text-white"
+      }`}
+    >
+      {item.type === "vote"
+        ? "+"
+        : item.type === "submission"
+          ? "S"
+          : item.type === "trait"
+            ? "T"
+            : "✓"}
+    </div>
+    <div className="min-w-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span className="font-heading text-xl leading-none text-skin-base">
+          {item.title}
+        </span>
+        {item.voteCount ? (
+          <span className="font-heading text-xl leading-none text-[#6e95ff]">
+            +{item.voteCount}
+          </span>
+        ) : null}
+      </div>
+      {item.walletAddress ? (
+        <div className="mt-1 text-sm text-secondary">
+          by{" "}
+          <WalletIdentityLink
+            address={item.walletAddress}
+            ensName={demoAuthorNames[item.walletAddress.toLowerCase()]}
+            className="break-words font-semibold text-skin-base"
+          />
+        </div>
+      ) : null}
+      {item.description ? (
+        <div className="mt-1 truncate text-sm text-secondary">
+          {item.description}
+        </div>
+      ) : null}
+    </div>
+    <div className="whitespace-nowrap text-lg text-secondary">
+      {formatRelativeTime(item.timestamp)}
+    </div>
+  </div>
+);
+
+const getRoundActivityItems = (
+  round: RoundWithSubmissions
+): RoundActivityItemData[] => [
+  {
+    id: "submissions-open",
+    type: "milestone" as const,
+    timestamp: round.submissionsOpenAt,
+    title: "Submissions opened",
+  },
+  ...round.submissions.map((submission) => ({
+    id: `submission-${submission.id}`,
+    type:
+      submission.submissionType === "trait"
+        ? ("trait" as const)
+        : ("submission" as const),
+    timestamp: submission.createdAt,
+    title:
+      submission.submissionType === "trait"
+        ? "Trait submitted"
+        : "Project submitted",
+    description: submission.title,
+    walletAddress: submission.walletAddress,
+  })),
+  {
+    id: "voting-started",
+    type: "milestone" as const,
+    timestamp: round.votingStartsAt,
+    title: "Voting began",
+  },
+  ...round.voteActivity.map((activity) => ({
+    id: `vote-${activity.id}`,
+    type: "vote" as const,
+    timestamp: activity.updatedAt || activity.createdAt,
+    title: "Votes placed",
+    description: activity.submissionTitle,
+    walletAddress: activity.walletAddress,
+    voteCount: activity.voteCount,
+  })),
+  {
+    id: "voting-ended",
+    type: "milestone" as const,
+    timestamp: round.votingEndsAt,
+    title: "Voting ended",
+  },
+].sort((a, b) => {
+  const aTime = new Date(a.timestamp).getTime();
+  const bTime = new Date(b.timestamp).getTime();
+  return aTime - bTime;
+});
 
 const getVotingStrategyLabel = (round: RoundWithSubmissions | null) => {
   if (!round) return "the configured voting rules";

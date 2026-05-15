@@ -335,7 +335,7 @@ const SubmitTraitToRoundModal = ({
         throw new Error(result.error || "Submission failed.");
       }
 
-      setMessage("Trait submitted successfully. It is pending admin review.");
+      setMessage("Trait submitted successfully. It is now visible on the round page.");
       onSubmitted();
     } catch (error) {
       setMessage(

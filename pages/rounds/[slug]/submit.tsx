@@ -114,7 +114,7 @@ export default function SubmitRoundPage({
         throw new Error(result.error || "Submission failed.");
       }
 
-      setMessage("Submission received. An admin will review it before voting.");
+      setMessage("Submission received. It is now visible on the round page.");
       setValues(initialValues);
     } catch (submitError) {
       setMessage(
@@ -147,8 +147,8 @@ export default function SubmitRoundPage({
             Submit to this round
           </h1>
           <p className="mt-4 text-base leading-snug text-secondary md:text-lg">
-            Submissions are stored for admin review. Approved submissions appear
-            on the round page for Collective Noun voting.
+            Submissions appear on the round page right away for Collective Noun
+            voting. Admins can edit or hide submissions later if needed.
           </p>
         </section>
 
@@ -210,7 +210,7 @@ export default function SubmitRoundPage({
               disabled={!canSubmit || isSubmitting || isSigning}
               className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting || isSigning ? "Submitting..." : "Submit for review"}
+              {isSubmitting || isSigning ? "Submitting..." : "Submit project"}
             </button>
             <button
               type="button"

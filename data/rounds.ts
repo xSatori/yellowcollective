@@ -1149,6 +1149,7 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
     input.votingEndsAt,
     new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
   );
+  const submissionsOpenAt = normalizeDate(input.submissionsOpenAt, new Date());
 
   return {
     walletAddress: walletAddress && isAddress(walletAddress) ? getAddress(walletAddress) : null,
@@ -1162,8 +1163,8 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
     image: String(input.image || "").trim(),
     url: String(input.url || "").trim(),
     timeline: String(input.timeline || "").trim(),
-    startsAt: normalizeDate(input.startsAt, new Date()),
-    submissionsOpenAt: normalizeDate(input.submissionsOpenAt, new Date()),
+    startsAt: submissionsOpenAt,
+    submissionsOpenAt,
     votingStartsAt: normalizeDate(
       input.votingStartsAt,
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -1853,7 +1854,6 @@ export const listRoundVoteActivity = async (roundId: string) => {
       WHERE v.round_id = $1
         AND s.deleted_at IS NULL
       ORDER BY v.updated_at DESC, v.created_at DESC
-      LIMIT 30
     `,
     [roundId]
   );
@@ -2255,9 +2255,11 @@ export const createRoundSubmission = async (
           trait_id,
           trait_type,
           source,
-          source_payload
+          source_payload,
+          status,
+          approved_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, 'approved', now())
         RETURNING id
       `,
       [
@@ -2464,9 +2466,11 @@ export const createRoundTraitSubmission = async ({
           trait_id,
           trait_type,
           source,
-          source_payload
+          source_payload,
+          status,
+          approved_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'trait', $8, $9, 'noundry', $10::jsonb)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'trait', $8, $9, 'noundry', $10::jsonb, 'approved', now())
         RETURNING id
       `,
       [

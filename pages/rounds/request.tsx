@@ -6,7 +6,39 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 
-const initialValues = {
+type AwardFormValue = {
+  value: string;
+};
+
+type FormValues = {
+  requesterName: string;
+  requesterEmail: string;
+  requestedSlug: string;
+  title: string;
+  description: string;
+  content: string;
+  goals: string;
+  image: string;
+  url: string;
+  timeline: string;
+  submissionsOpenAt: string;
+  votingStartsAt: string;
+  votingEndsAt: string;
+  votingStrategy: string;
+  votesPerWallet: string;
+  winnerCount: string;
+  maxSubmissionsPerWallet: string;
+  awards: AwardFormValue[];
+};
+
+const prizeCountOptions = Array.from({ length: 10 }, (_, index) => index + 1);
+
+const createAwardValues = (count: number, currentAwards: AwardFormValue[] = []) =>
+  Array.from({ length: count }, (_, index) => ({
+    value: currentAwards[index]?.value || "",
+  }));
+
+const createInitialValues = (): FormValues => ({
   requesterName: "",
   requesterEmail: "",
   requestedSlug: "",
@@ -17,7 +49,6 @@ const initialValues = {
   image: "",
   url: "",
   timeline: "",
-  startsAt: "",
   submissionsOpenAt: "",
   votingStartsAt: "",
   votingEndsAt: "",
@@ -25,10 +56,10 @@ const initialValues = {
   votesPerWallet: "1",
   winnerCount: "1",
   maxSubmissionsPerWallet: "1",
-  awards: "",
-};
+  awards: createAwardValues(1),
+});
 
-type FormValues = typeof initialValues;
+type StringFormField = Exclude<keyof FormValues, "awards">;
 
 type MessageState = {
   type: "success" | "error";
@@ -52,9 +83,10 @@ const votingStrategyOptions = [
 
 export default function RequestRoundPage() {
   const { address, isConnected } = useAccount();
-  const [values, setValues] = useState<FormValues>(initialValues);
+  const [values, setValues] = useState<FormValues>(() => createInitialValues());
   const [message, setMessage] = useState<MessageState>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const prizeCount = Number(values.winnerCount) || 1;
 
   const canSubmit = useMemo(
     () =>
@@ -66,19 +98,19 @@ export default function RequestRoundPage() {
           values.description.trim().length >= 20 &&
           values.content.trim().length >= 20 &&
           values.image.trim() &&
-          values.startsAt &&
           values.submissionsOpenAt &&
           values.votingStartsAt &&
           values.votingEndsAt &&
           Number(values.winnerCount) > 0 &&
           Number(values.maxSubmissionsPerWallet) > 0 &&
           Number(values.votesPerWallet) > 0 &&
-          values.awards.trim()
+          values.awards.length === Number(values.winnerCount) &&
+          values.awards.every((award) => award.value.trim())
       ),
     [values]
   );
 
-  const updateValue = (field: keyof FormValues, value: string) => {
+  const updateValue = (field: StringFormField, value: string) => {
     setMessage(null);
     setValues((currentValues) => {
       if (field === "title" && !currentValues.requestedSlug.trim()) {
@@ -91,6 +123,25 @@ export default function RequestRoundPage() {
 
       return { ...currentValues, [field]: value };
     });
+  };
+
+  const updatePrizeCount = (count: number) => {
+    setMessage(null);
+    setValues((currentValues) => ({
+      ...currentValues,
+      winnerCount: String(count),
+      awards: createAwardValues(count, currentValues.awards),
+    }));
+  };
+
+  const updateAwardValue = (index: number, value: string) => {
+    setMessage(null);
+    setValues((currentValues) => ({
+      ...currentValues,
+      awards: currentValues.awards.map((award, awardIndex) =>
+        awardIndex === index ? { value } : award
+      ),
+    }));
   };
 
   const submit = async () => {
@@ -107,14 +158,13 @@ export default function RequestRoundPage() {
           request: {
             ...values,
             walletAddress: address || undefined,
-            startsAt: dateInputToIso(values.startsAt),
             submissionsOpenAt: dateInputToIso(values.submissionsOpenAt),
             votingStartsAt: dateInputToIso(values.votingStartsAt),
             votingEndsAt: dateInputToIso(values.votingEndsAt),
             votesPerWallet: Number(values.votesPerWallet),
             winnerCount: Number(values.winnerCount),
             maxSubmissionsPerWallet: Number(values.maxSubmissionsPerWallet),
-            awards: parseAwards(values.awards),
+            awards: buildAwards(values.awards),
           },
         }),
       });
@@ -124,7 +174,7 @@ export default function RequestRoundPage() {
         throw new Error(result.error || "Round request failed.");
       }
 
-      setValues(initialValues);
+      setValues(createInitialValues());
       setMessage({
         type: "success",
         text: "Round request submitted. An admin will review it and get back to you.",
@@ -249,13 +299,7 @@ export default function RequestRoundPage() {
             placeholder="Any scheduling notes for admins."
           />
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <DateField
-              label="Start date"
-              value={values.startsAt}
-              onChange={(value) => updateValue("startsAt", value)}
-              required
-            />
+          <div className="mt-6 grid gap-5 md:grid-cols-3">
             <DateField
               label="Submissions open"
               value={values.submissionsOpenAt}
@@ -301,12 +345,6 @@ export default function RequestRoundPage() {
               required
             />
             <NumberField
-              label="Number of winners"
-              value={values.winnerCount}
-              onChange={(value) => updateValue("winnerCount", value)}
-              required
-            />
-            <NumberField
               label="Max submissions / wallet"
               value={values.maxSubmissionsPerWallet}
               onChange={(value) =>
@@ -316,13 +354,38 @@ export default function RequestRoundPage() {
             />
           </div>
 
-          <TextAreaField
-            label="Prizes"
-            value={values.awards}
-            onChange={(value) => updateValue("awards", value)}
-            placeholder="1 | First place | 1 ETH | Paid after the round ends"
-            required
-          />
+          <div className="mt-6">
+            <label
+              htmlFor="round-request-prize-count"
+              className="font-heading text-base text-skin-base"
+            >
+              Number of prizes *
+            </label>
+            <select
+              id="round-request-prize-count"
+              value={prizeCount}
+              onChange={(event) => updatePrizeCount(Number(event.target.value))}
+              className="mt-2 w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted md:max-w-xs"
+            >
+              {prizeCountOptions.map((count) => (
+                <option key={count} value={count}>
+                  {count}
+                </option>
+              ))}
+            </select>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {values.awards.map((award, index) => (
+                <FormField
+                  key={index}
+                  label={`${formatRankLabel(index + 1)} prize`}
+                  value={award.value}
+                  onChange={(value) => updateAwardValue(index, value)}
+                  placeholder="1 ETH, 0.25 ETH, merch pack, feature spot..."
+                  required
+                />
+              ))}
+            </div>
+          </div>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row">
             <button
@@ -335,7 +398,7 @@ export default function RequestRoundPage() {
             </button>
             <button
               type="button"
-              onClick={() => setValues(initialValues)}
+              onClick={() => setValues(createInitialValues())}
               className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
             >
               Reset
@@ -369,21 +432,22 @@ const slugify = (value: string) =>
 const dateInputToIso = (value: string) =>
   value ? new Date(value).toISOString() : "";
 
-const parseAwards = (value: string) =>
-  value
-    .split("\n")
-    .map((line, index) => {
-      const [position, title, awardValue, ...descriptionParts] =
-        line.split("|");
+const buildAwards = (awards: AwardFormValue[]) =>
+  awards
+    .map((award, index) => {
+      const position = index + 1;
 
       return {
-        position: Number(position?.trim()) || index + 1,
-        title: title?.trim() || "",
-        value: awardValue?.trim() || "",
-        description: descriptionParts.join("|").trim(),
+        position,
+        title: `${formatRankLabel(position)} prize`,
+        value: award.value.trim(),
+        description: "",
       };
     })
-    .filter((award) => award.title || award.value || award.description);
+    .filter((award) => award.value);
+
+const formatRankLabel = (rank: number) =>
+  `Rank ${rank}`;
 
 const fieldId = (label: string) =>
   `round-request-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;

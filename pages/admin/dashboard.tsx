@@ -827,7 +827,7 @@ const RoundsAdminPanel = ({
   const activeRoundMode = (getQueryValue(router.query.roundMode) ||
     "draft") as RoundListMode;
   const activeSubmissionMode = (getQueryValue(router.query.submissionMode) ||
-    "pending") as RoundSubmissionMode;
+    "approved") as RoundSubmissionMode;
   const visibleRounds = useMemo(
     () => rounds.filter((round) => round.status === activeRoundMode),
     [activeRoundMode, rounds]
@@ -1120,14 +1120,14 @@ const RoundsAdminPanel = ({
         {selectedRound && (
           <div className="mt-3 border-t border-skin-stroke pt-4">
             <h3 className="font-heading text-xl leading-none text-skin-base">
-              Submission queue
+              Submissions
             </h3>
             <div className="mt-3">
               <AdminModeTabs
                 modes={[
-                  ["pending", `Pending (${submissionCounts.pending})`],
-                  ["approved", `Approved (${submissionCounts.approved})`],
+                  ["approved", `Visible (${submissionCounts.approved})`],
                   ["closed", `Rejected/hidden (${submissionCounts.closed})`],
+                  ["pending", `Pending (${submissionCounts.pending})`],
                 ]}
                 activeMode={activeSubmissionMode}
                 onChange={(mode) =>
@@ -1946,7 +1946,7 @@ const RoundRequestEditor = ({
             type="button"
             onClick={() => submit("approved")}
             disabled={isSaving}
-            className={primaryButtonClass}
+            className={blueButtonClass}
           >
             Approve request
           </button>
@@ -2023,8 +2023,7 @@ const RoundRequestEditor = ({
           <ReadonlyField
             label="Round dates"
             value={[
-              `Start: ${new Date(request.startsAt).toLocaleString()}`,
-              `Submissions: ${new Date(
+              `Submissions open: ${new Date(
                 request.submissionsOpenAt
               ).toLocaleString()}`,
               `Voting starts: ${new Date(
