@@ -141,7 +141,7 @@ export default function NounsProposalDetailPage({
           <div className="flex min-w-0 items-start">
             <Link
               href="/proposals/nouns"
-              className="mr-3 flex h-11 min-h-[2.75rem] w-11 min-w-[2.75rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none sm:mr-4"
+              className="yc-force-white mr-3 flex h-11 min-h-[2.75rem] w-11 min-w-[2.75rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none sm:mr-4"
               aria-label="Back to Nouns DAO proposals"
             >
               <ArrowLeftIcon className="h-4 text-skin-base" />
@@ -218,7 +218,7 @@ export default function NounsProposalDetailPage({
               label: "Description",
               content: (
                 <>
-                  <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
+                  <section className="yc-dark-surface rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                     <div className="text-2xl font-heading text-skin-base font-bold">
                       Description
                     </div>
@@ -254,7 +254,7 @@ export default function NounsProposalDetailPage({
               id: "votes",
               label: "Votes",
               content: (
-                <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
+                <section className="yc-dark-surface rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                   <div className="text-2xl font-heading text-skin-base font-bold">
                     Votes
                   </div>

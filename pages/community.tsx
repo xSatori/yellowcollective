@@ -34,12 +34,12 @@ export default function CommunityPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-7 pb-12">
-        <section className="yc-dark-yellow-surface flex flex-col items-center justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 text-center text-[#212529] shadow-sm md:flex-row md:items-start md:p-8 md:text-left">
+        <section className="yc-project-surface flex flex-col items-center justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 text-center text-[#212529] shadow-sm md:flex-row md:items-start md:p-8 md:text-left">
           <div className="flex flex-col items-center gap-3 md:items-start">
             <h1 className="font-heading text-[36px] leading-none md:text-[44px]">
               Projects
             </h1>
-            <p className="max-w-[720px] text-base leading-snug text-[#212529] md:text-lg">
+            <p className="max-w-[720px] text-base leading-snug text-[#212529] max-lg:!text-secondary md:text-lg">
               A gallery of projects, events, art, and community work from the
               Yellow Collective.
             </p>
@@ -63,7 +63,7 @@ export default function CommunityPage({
               return (
                 <div
                   key={project.slug}
-                  className="yc-dark-yellow-surface group overflow-hidden rounded-2xl border border-skin-stroke bg-white text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+                  className="yc-project-surface group overflow-hidden rounded-2xl border border-skin-stroke bg-white text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
                 >
                   <Link
                     href={`/projects/${project.slug}`}
@@ -99,7 +99,7 @@ export default function CommunityPage({
             })}
           </div>
         ) : (
-          <div className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-base text-[#212529] md:text-lg">
+          <div className="yc-project-surface rounded-2xl border border-skin-stroke bg-white p-6 text-base text-[#212529] md:text-lg">
             No projects have been submitted yet.
           </div>
         )}

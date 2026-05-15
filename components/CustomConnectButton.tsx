@@ -14,6 +14,7 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
   const { disconnect } = useDisconnect();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const connectButtonClassName = clsx("yc-connect-wallet-button", className);
 
   useEffect(() => {
     const closeMenu = (event: MouseEvent) => {
@@ -49,7 +50,7 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
                   <Button
                     variant="secondary"
                     onClick={openConnectModal}
-                    className={className}
+                    className={connectButtonClassName}
                   >
                     Connect
                   </Button>
@@ -71,7 +72,10 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
                 <div className="group relative" ref={menuRef}>
                   <Button
                     variant="secondary"
-                    className={clsx("flex flex-row gap-2", className)}
+                    className={clsx(
+                      "flex flex-row gap-2",
+                      connectButtonClassName
+                    )}
                     aria-haspopup="menu"
                     aria-expanded={isMenuOpen}
                     onClick={() => setIsMenuOpen((isOpen) => !isOpen)}

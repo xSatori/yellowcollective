@@ -134,7 +134,7 @@ export default function NounsProposalsPage({
         <title>Nouns DAO Proposals | Yellow Collective</title>
       </Head>
 
-      <div className="-m-6 min-h-screen bg-white p-6 sm:m-0 sm:min-h-0 sm:bg-transparent sm:p-0">
+      <div className="yc-mobile-dark-page -m-6 min-h-screen bg-white p-6 sm:m-0 sm:min-h-0 sm:bg-transparent sm:p-0">
         <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-8 pb-12">
           <div className="flex flex-col items-center gap-5 text-center lg:flex-row lg:items-center lg:justify-between lg:text-left">
             <div className="flex w-full flex-col items-center gap-3 lg:w-auto lg:flex-row lg:items-center lg:gap-5">

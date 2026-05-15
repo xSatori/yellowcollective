@@ -131,7 +131,7 @@ export default function NoundryTraitPage() {
             href="/noundry?tab=gallery"
             className="flex w-fit items-center gap-2 font-heading text-sm uppercase text-skin-base transition hover:opacity-80"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
+            <span className="yc-force-white flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
               <ArrowLeftIcon className="h-4 text-skin-base" />
             </span>
             Back to gallery
@@ -139,7 +139,7 @@ export default function NoundryTraitPage() {
           {submission && (
             <Link
               href={getProfilePath({ address: submission.artist })}
-              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+              className="yc-force-white rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
             >
               Artist profile
             </Link>
@@ -147,13 +147,13 @@ export default function NoundryTraitPage() {
         </div>
 
         {loadError && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-skin-stroke bg-white p-6 text-skin-proposal-danger shadow-sm">
             {loadError}
           </section>
         )}
 
         {!loadError && !submission && (
-          <section className="rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
+          <section className="yc-dark-yellow-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-10 text-center shadow-sm">
             <h1 className="font-heading text-3xl leading-none text-skin-base">
               Trait not found
             </h1>
@@ -165,7 +165,7 @@ export default function NoundryTraitPage() {
 
         {submission && (
           <section className="grid gap-6 lg:grid-cols-[minmax(320px,440px)_1fr]">
-            <aside className="overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm">
+            <aside className="yc-dark-yellow-surface overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm">
               <div className="p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -223,7 +223,7 @@ export default function NoundryTraitPage() {
                 )}
                 <Link
                   href={`/noundry?tab=gallery`}
-                  className="flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-accent px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#a98700] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+                  className="yc-force-white flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
                 >
                   Remix in studio
                 </Link>
@@ -468,7 +468,7 @@ const NounGridSection = ({
   traits: Record<string, string>[];
   editedIndexes: number[];
 }) => (
-  <section className="rounded-none border-y-4 border-[#e5e7eb] bg-white px-5 py-6 shadow-sm">
+  <section className="yc-dark-yellow-surface rounded-none border-y-4 border-skin-stroke bg-white px-5 py-6 shadow-sm">
     <div className="mb-4 flex items-center justify-between gap-4">
       <h2 className="font-heading text-2xl leading-none text-skin-base">
         {title}

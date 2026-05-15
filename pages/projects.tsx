@@ -1,1 +1,4 @@
-export { default, getStaticProps } from "./community";
+import CommunityPage, { getStaticProps } from "./community";
+
+export { getStaticProps };
+export default CommunityPage;

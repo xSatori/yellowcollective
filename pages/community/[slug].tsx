@@ -132,7 +132,7 @@ export default function CommunityDetailPage({
           href="/projects"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
+          <span className="yc-force-white flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
           Projects
@@ -148,7 +148,7 @@ export default function CommunityDetailPage({
         )}
 
         <div className="grid gap-8 md:grid-cols-[1fr_280px]">
-          <section className="flex flex-col gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-7">
+          <section className="yc-dark-surface flex flex-col gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-7">
             <div className="caption font-semibold text-secondary">
               {project.category} / {project.date}
             </div>
@@ -184,7 +184,7 @@ export default function CommunityDetailPage({
             )}
           </section>
 
-          <aside className="h-fit rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm">
+          <aside className="yc-dark-surface h-fit rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm">
             <dl className="flex flex-col gap-4 text-base">
               <div>
                 <dt className="font-heading text-xl">Category</dt>
@@ -211,7 +211,7 @@ export default function CommunityDetailPage({
                         <WalletIdentityLink
                           key={member.address}
                           address={member.address}
-                          className="flex min-w-0 items-center gap-2 rounded-xl border border-skin-stroke bg-white p-2 text-skin-base transition hover:bg-[#fff7bf]"
+                          className="yc-dark-surface flex min-w-0 items-center gap-2 rounded-xl border border-skin-stroke bg-white p-2 text-skin-base transition hover:bg-[#fff7bf]"
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#ffcc00] font-heading text-xs text-skin-base">
                             {imageUrl ? (
@@ -247,7 +247,7 @@ export default function CommunityDetailPage({
             {isAdmin && (
               <Link
                 href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
-                className="mt-3 flex w-full items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+                className="yc-force-white mt-3 flex w-full items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
               >
                 Admin edit
               </Link>

@@ -26,7 +26,7 @@ export default function ProposalVoteSummary({
         {votes.map((vote) => (
           <div
             key={vote.label}
-            className="w-full rounded-xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 md:p-6"
+            className="yc-dark-surface w-full rounded-xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 md:p-6"
           >
             <ProgressBar {...vote} />
           </div>
@@ -37,7 +37,7 @@ export default function ProposalVoteSummary({
         {metrics.map((metric) => (
           <div
             key={metric.label}
-            className="flex w-full items-center justify-between rounded-xl border border-skin-stroke bg-white p-4 shadow-sm sm:items-baseline md:p-6"
+            className="yc-dark-surface flex w-full items-center justify-between rounded-xl border border-skin-stroke bg-white p-4 shadow-sm sm:items-baseline md:p-6"
           >
             <div className="font-heading text-lg text-skin-muted md:text-xl">
               {metric.label}
