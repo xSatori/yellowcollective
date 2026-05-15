@@ -33,13 +33,13 @@ export default function CommunityPage({
         <title>Projects | Yellow Collective</title>
       </Head>
 
-      <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-7 pb-12">
+      <div className="yc-project-page -m-6 flex w-[calc(100%+3rem)] flex-col gap-7 p-6 pb-12 md:mx-auto md:w-full md:max-w-[1120px] md:p-0 md:pb-12">
         <section className="yc-project-surface flex flex-col items-center justify-between gap-5 rounded-2xl border border-skin-stroke bg-white p-6 text-center text-[#212529] shadow-sm md:flex-row md:items-start md:p-8 md:text-left">
           <div className="flex flex-col items-center gap-3 md:items-start">
             <h1 className="font-heading text-[36px] leading-none md:text-[44px]">
               Projects
             </h1>
-            <p className="max-w-[720px] text-base leading-snug text-[#212529] max-lg:!text-secondary md:text-lg">
+            <p className="max-w-[720px] text-base leading-snug text-[#212529] md:text-lg">
               A gallery of projects, events, art, and community work from the
               Yellow Collective.
             </p>

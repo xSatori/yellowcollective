@@ -96,7 +96,7 @@ export default function ProposalComponent() {
         <div className="flex min-w-0 items-start">
           <Link
             href="/proposals"
-            className="yc-force-white mr-3 flex h-11 min-h-[2.75rem] w-11 min-w-[2.75rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none sm:mr-4"
+            className="yc-dark-yellow-button mr-3 flex h-11 min-h-[2.75rem] w-11 min-w-[2.75rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none sm:mr-4"
           >
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </Link>
@@ -273,7 +273,7 @@ const VoteButton = ({
         />
       </ModalWrapper>
       <button
-        className={`w-full rounded-[18px] bg-skin-button-accent px-4 py-3 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:bg-skin-button-accent-hover hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none sm:w-auto ${className}`}
+        className={`w-full rounded-[18px] bg-accent px-4 py-3 font-heading text-base text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] active:translate-y-1 active:shadow-none sm:w-auto ${className}`}
         onClick={() => setModalOpen(true)}
       >
         Submit vote

@@ -14,10 +14,8 @@ import {
 } from "data/nouns-builder/token";
 import { getEnsName } from "data/ens";
 import { TOKEN_CONTRACT, TOKEN_NETWORK } from "constants/addresses";
-import { ETHERSCAN_BASEURL } from "constants/urls";
 import { YELLOW_COLLECTIVE_CONTRACTS } from "data/contracts";
 import { BigNumber } from "ethers";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Image from "next/image";
@@ -300,16 +298,14 @@ export default function AboutPage({
   }, [treasuryBalance]);
   const stats = [
     { label: "Treasury", value: formattedTreasuryBalance },
-    { label: "Owners", value: delegates.length || "--" },
-    { label: "Total supply", value: totalSupply || "--" },
     { label: "Chain", value: "Base", isChain: true },
+    { label: "Total supply", value: totalSupply || "--" },
+    { label: "Owners", value: delegates.length || "--" },
   ];
 
   const description =
     contract.description ||
     "No DAO description was found in the token metadata.";
-  const externalUrl =
-    contract.external_url || `${ETHERSCAN_BASEURL}/address/${TOKEN_CONTRACT}`;
 
   const exportDelegates = () => {
     const rows = [
@@ -361,25 +357,16 @@ export default function AboutPage({
             </h1>
           </div>
 
-          <a
-            href={externalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-accent font-heading text-2xl text-[#212529] shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400]"
-            aria-label="Open DAO website"
-          >
-            <ArrowTopRightOnSquareIcon className="h-7 w-7" />
-          </a>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm"
+              className="rounded-2xl border border-skin-stroke bg-skin-muted p-4 shadow-sm sm:p-5"
             >
               <div className="text-base text-secondary">{stat.label}</div>
-              <div className="mt-3 flex items-center gap-3 font-heading text-3xl leading-none text-skin-base">
+              <div className="mt-3 flex items-center gap-2 font-heading text-2xl leading-none text-skin-base sm:gap-3 sm:text-3xl">
                 {stat.isChain && (
                   <Image
                     src="/chains/base.svg"
@@ -433,7 +420,7 @@ export default function AboutPage({
                     address: founder.wallet,
                     ensName: founder.displayName,
                   })}
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
+                  className="yc-dark-yellow-hover-black flex items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     <span
@@ -467,7 +454,7 @@ export default function AboutPage({
               type="button"
               onClick={exportDelegates}
               disabled={delegates.length === 0}
-              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+              className="yc-dark-yellow-button rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
               Export CSV
             </button>
@@ -490,7 +477,7 @@ export default function AboutPage({
                       address: delegate.address,
                       ensName: delegate.displayName,
                     })}
-                    className="grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-6 p-5 text-base transition hover:bg-[#fff7bf] md:text-lg"
+                    className="yc-dark-yellow-hover-black grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-6 p-5 text-base transition hover:bg-[#fff7bf] md:text-lg"
                   >
                     <div className="flex min-w-0 items-center gap-4">
                       <span

@@ -22,11 +22,11 @@ export default function ProposalVoteSummary({
 }) {
   return (
     <div className="mt-5 flex flex-col gap-4 md:mt-8">
-      <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 md:gap-4">
+      <div className="grid w-full grid-cols-3 gap-2 md:gap-4">
         {votes.map((vote) => (
           <div
             key={vote.label}
-            className="yc-dark-surface w-full rounded-xl border border-skin-stroke bg-white p-3 shadow-sm sm:p-5 md:p-6"
+            className="yc-dark-surface w-full rounded-xl border border-skin-stroke bg-white p-3 shadow-sm md:p-6"
           >
             <ProgressBar {...vote} />
           </div>
@@ -80,7 +80,7 @@ const ProgressBar = ({ label, type, value, percentage }: VoteSummaryItem) => {
 
   return (
     <div className="w-full">
-      <div className="mb-2 flex flex-col items-start justify-between gap-1 sm:flex-row sm:items-start">
+      <div className="mb-2 flex flex-col items-start justify-between gap-1">
         <div className={`${textColor} font-heading text-base leading-none md:text-xl`}>
           {label}
         </div>

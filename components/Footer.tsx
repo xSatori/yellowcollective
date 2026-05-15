@@ -63,7 +63,12 @@ export default function Footer() {
     <div className="flex flex-col items-center justify-center gap-16 pb-16 pt-4">
       <div className="flex flex-wrap items-center gap-4">
         {navItems.map((item, i) => (
-          <Button variant="secondary" size="rounded" key={i}>
+          <Button
+            variant="secondary"
+            size="rounded"
+            key={i}
+            className="yc-footer-icon-button"
+          >
             <Link
               href={item.href}
               target="_blank"
@@ -86,11 +91,12 @@ export default function Footer() {
         <Button
           variant="secondary"
           size="rounded"
+          className="yc-footer-icon-button"
           type="button"
           aria-label="Open site information"
           onClick={() => setIsInfoOpen(true)}
         >
-          <InformationCircleIcon className="h-[25px] w-[25px] text-skin-base" />
+          <InformationCircleIcon className="h-[25px] w-[25px] text-[#212529]" />
         </Button>
       </div>
 

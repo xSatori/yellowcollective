@@ -1,5 +1,6 @@
 import { formatNumber } from "@/utils/formatNumber";
 import { useNounsBalance } from "@/hooks/fetch/useNounsBalance";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import { isAdminAddress } from "@/utils/admin";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
@@ -56,6 +57,7 @@ const fetcher = async (url: string) => {
 
 export default function Header() {
   const { address } = useAccount();
+  const { isDarkMode } = useThemeMode();
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: roundsSettings } = useSWR<{
@@ -129,11 +131,11 @@ export default function Header() {
         <div className="flex flex-row items-center justify-start gap-4 md:gap-8">
           <Link href="/" aria-label="Yellow Collective home">
             <Image
-              src="/noggles.svg"
+              src={isDarkMode ? "/noggles-darkmode.png" : "/noggles.svg"}
               width={80}
               height={30}
               alt="Yellow"
-              className="theme-logo-noggles"
+              className="h-[30px] w-[80px]"
             />
           </Link>
           <div className="hidden lg:block">
@@ -170,8 +172,8 @@ export default function Header() {
         </div>
 
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
-          <CustomConnectButton className="h-10 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral-hover))]" />
-          <ThemeToggle className="h-10 w-10" />
+          <CustomConnectButton className="!h-10 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base transition ease-in-out hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral-hover))]" />
+          <ThemeToggle className="!h-10 !w-10" />
         </div>
 
         <button
@@ -179,7 +181,7 @@ export default function Header() {
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={isMobileMenuOpen}
           onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-skin-stroke bg-primary text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition active:translate-y-1 active:shadow-none lg:hidden"
+          className="yc-dark-yellow-button flex h-11 w-11 items-center justify-center rounded-full border border-skin-stroke bg-white text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition active:translate-y-1 active:shadow-none lg:hidden"
         >
           {isMobileMenuOpen ? (
             <XMarkIcon className="h-5 w-5" />

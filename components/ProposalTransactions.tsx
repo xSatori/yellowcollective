@@ -26,9 +26,9 @@ export default function ProposalTransactions({
 }) {
   return (
     <section
-      className={`${className} rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8`}
+      className={`${className} rounded-2xl border border-skin-stroke bg-accent p-6 text-[#212529] shadow-sm md:p-8`}
     >
-      <div className="text-2xl font-heading text-skin-base font-bold">
+      <div className="font-heading text-2xl font-bold text-[#212529]">
         Proposed Transactions
       </div>
       {transactions.length > 0 ? (
@@ -39,7 +39,7 @@ export default function ProposalTransactions({
           />
         ))
       ) : (
-        <p className="mt-4 text-base text-secondary">
+        <p className="mt-4 text-base text-[#212529]">
           No transactions are attached to this proposal.
         </p>
       )}
@@ -67,7 +67,7 @@ const ProposalTransaction = ({
         <AddressLink
           address={value}
           fallback="full"
-          className="text-skin-highlighted underline"
+          className="text-[#212529] underline"
         />
       );
     }
@@ -76,7 +76,7 @@ const ProposalTransaction = ({
   };
 
   return (
-    <div className="mt-4 w-full rounded-xl border border-skin-stroke bg-white p-4">
+    <div className="mt-4 w-full rounded-xl border border-skin-stroke bg-[#fff7bf] p-4 text-[#212529]">
       <div className="break-words">
         {linkIfAddress(target)}
         <span>{`.${functionName}(`}</span>

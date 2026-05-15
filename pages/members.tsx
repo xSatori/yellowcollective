@@ -111,7 +111,7 @@ export default function MembersPage({
                 .eth names are listed first, followed by wallet addresses.
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-end">
               <label className="block min-w-[220px]">
                 <span className="font-heading text-sm text-secondary">
                   Sort by
@@ -190,7 +190,7 @@ const MemberCard = ({ member }: { member: DaoMember }) => {
             </p>
           )}
         </div>
-        <div className="mt-auto grid grid-cols-3 gap-1 text-center sm:gap-2">
+        <div className="-mx-2 -mb-2 mt-auto grid w-[calc(100%+1rem)] grid-cols-3 gap-0 border-t border-skin-stroke text-center sm:-mx-4 sm:-mb-4 sm:w-[calc(100%+2rem)]">
           <MemberStat label="Tokens" value={member.tokenCount} />
           <MemberStat label="Traits" value={member.noundrySubmissionCount} />
           <MemberStat label="Votes" value={member.proposalVoteCount} />
@@ -201,7 +201,7 @@ const MemberCard = ({ member }: { member: DaoMember }) => {
 };
 
 const MemberStat = ({ label, value }: { label: string; value: number }) => (
-  <span className="rounded-lg bg-[#fff7bf] px-1 py-1.5 sm:rounded-xl sm:px-2 sm:py-2">
+  <span className="border-r border-skin-stroke bg-[#fff7bf] px-1 py-2 last:border-r-0 sm:px-2 sm:py-3">
     <span className="block font-heading text-xs leading-none text-skin-base sm:text-lg">
       {value}
     </span>

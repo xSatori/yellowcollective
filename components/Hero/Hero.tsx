@@ -84,7 +84,7 @@ export default function Hero() {
           <Button
             variant="secondary"
             size="icon"
-            className="!bg-accent !text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] hover:!bg-[rgb(var(--color-accent-hover))] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] disabled:!border disabled:!border-skin-stroke disabled:!bg-accent disabled:!text-[#212529] disabled:!opacity-60"
+            className="yc-dark-yellow-button !bg-white !text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] hover:!bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] disabled:!border disabled:!border-skin-stroke disabled:!bg-white disabled:!text-[#212529] disabled:!opacity-60"
             onClick={pageBack}
             disabled={tokenId == "0x00"}
           >
@@ -99,7 +99,7 @@ export default function Hero() {
           <Button
             variant="secondary"
             size="icon"
-            className="!bg-accent !text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] hover:!bg-[rgb(var(--color-accent-hover))] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] disabled:!border disabled:!border-skin-stroke disabled:!bg-accent disabled:!text-[#212529] disabled:!opacity-60"
+            className="yc-dark-yellow-button !bg-white !text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] hover:!bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] disabled:!border disabled:!border-skin-stroke disabled:!bg-white disabled:!text-[#212529] disabled:!opacity-60"
             onClick={pageForward}
             disabled={tokenId == currentTokenId}
           >

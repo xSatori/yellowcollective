@@ -118,7 +118,7 @@ export default function ProposalPropdates({
   };
 
   return (
-    <section className="rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
+    <section className="yc-dark-yellow-surface rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-2xl font-heading text-skin-base font-bold">
           Propdates
@@ -130,7 +130,7 @@ export default function ProposalPropdates({
             setShowForm((current) => !current);
             setReplyingTo(undefined);
           }}
-          className="flex w-full items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition enabled:hover:-translate-y-0.5 enabled:hover:bg-[#ffd84d] enabled:hover:shadow-[0px_6px_0px_0px_#b89400] enabled:active:translate-y-1 enabled:active:shadow-none disabled:bg-skin-button-muted disabled:text-skin-inverted disabled:shadow-none sm:w-auto"
+          className="yc-dark-force-white flex w-full items-center justify-center rounded-[18px] bg-accent px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition enabled:hover:-translate-y-0.5 enabled:hover:bg-[#ffd84d] enabled:hover:shadow-[0px_6px_0px_0px_#b89400] enabled:active:translate-y-1 enabled:active:shadow-none disabled:bg-skin-button-muted disabled:text-skin-inverted disabled:shadow-none sm:w-auto"
         >
           {showForm && !replyingTo ? "Cancel" : "Create Propdate"}
         </button>

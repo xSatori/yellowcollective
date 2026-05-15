@@ -309,7 +309,38 @@
     color: #212529 !important;
   }
 
-  .yc-connect-wallet-button {
+  .yc-force-white-yellow-hover,
+  [data-theme="dark"] .yc-force-white-yellow-hover {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+  }
+
+  .yc-force-white-yellow-hover:hover,
+  [data-theme="dark"] .yc-force-white-yellow-hover:hover {
+    background-color: rgb(var(--color-accent-hover)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-force-white {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-neutral)) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-force-white:hover {
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-force-white * {
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-button {
     --color-text-base: 33, 37, 41;
     --color-text-muted: 69, 74, 78;
     background-color: rgb(var(--color-accent)) !important;
@@ -318,14 +349,65 @@
     box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-accent)) !important;
   }
 
-  .yc-connect-wallet-button:hover {
+  [data-theme="dark"] .yc-dark-yellow-button:hover {
     background-color: rgb(var(--color-accent-hover)) !important;
     color: #212529 !important;
     box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
   }
 
+  [data-theme="dark"] .yc-dark-yellow-button * {
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-hover-black:hover {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-hover-black:hover * {
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-text-black,
+  [data-theme="dark"] .yc-dark-text-black * {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-dark-text-black {
+    background-color: rgb(241, 241, 241) !important;
+  }
+
+  .yc-connect-wallet-button {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(255, 255, 255) !important;
+    border-color: rgb(var(--color-stroke)) !important;
+    color: #212529 !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-neutral)) !important;
+  }
+
+  .yc-connect-wallet-button:hover {
+    background-color: rgb(var(--color-accent-soft)) !important;
+    color: #212529 !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-neutral-hover)) !important;
+  }
+
   .yc-connect-wallet-button:active {
     box-shadow: none !important;
+  }
+
+  [data-theme="dark"] .yc-connect-wallet-button {
+    background-color: rgb(var(--color-accent)) !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-connect-wallet-button:hover {
+    background-color: rgb(var(--color-accent-hover)) !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
   }
 
   .yc-connect-wallet-button *,
@@ -373,18 +455,9 @@
   }
 
   @media (max-width: 767px) {
-    [data-theme="dark"] .yc-project-surface,
-    [data-theme="dark"] .yc-project-surface [class~="bg-white"] {
-      --color-text-base: 247, 247, 247;
-      --color-text-muted: 191, 199, 204;
-      background-color: rgb(var(--color-surface-muted)) !important;
-      border-color: rgb(var(--color-stroke)) !important;
-      color: rgb(var(--color-text-base)) !important;
-    }
-
-    [data-theme="dark"] .yc-project-surface .text-\[\#212529\],
-    [data-theme="dark"] .yc-project-surface [class~="text-[#212529]"] {
-      color: rgb(var(--color-text-base)) !important;
+    [data-theme="dark"] .yc-project-page {
+      background-color: rgb(var(--color-accent)) !important;
+      color: #212529 !important;
     }
   }
 
@@ -397,6 +470,20 @@
   .proposal-tab-button,
   .proposal-tab-button * {
     color: #212529 !important;
+  }
+
+  [data-theme="dark"] .proposal-detail-tab-active {
+    background-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .proposal-detail-tab-inactive {
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .proposal-detail-tab {
+    border-color: rgb(var(--color-stroke)) !important;
   }
 
   .proposal-hover-row:hover {
@@ -418,12 +505,30 @@
     box-shadow: none !important;
   }
 
-  [data-theme="dark"] .theme-logo-noggles {
-    filter: brightness(0) saturate(100%) invert(78%) sepia(94%) saturate(1124%) hue-rotate(358deg) brightness(101%) contrast(98%);
-  }
-
   [data-theme="dark"] .theme-tonal-icon {
     filter: invert(1);
+  }
+
+  [data-theme="dark"] .yc-footer-icon-button {
+    background-color: rgb(var(--color-accent)) !important;
+    border-color: rgb(var(--color-stroke)) !important;
+    color: #212529 !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-footer-icon-button:hover {
+    background-color: rgb(var(--color-accent-hover)) !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-footer-icon-button .theme-tonal-icon {
+    filter: brightness(0) !important;
+  }
+
+  [data-theme="dark"] .yc-footer-icon-button svg {
+    color: #212529 !important;
+    fill: #212529 !important;
+    stroke: #212529 !important;
   }
 
   [data-theme="dark"] .bg-white {

@@ -84,10 +84,15 @@ type TouchStrokeSnapshot = {
   selectionBounds: SelectionBounds | null;
   selectedColor: string;
 };
+type ExportScaleRequest = {
+  title: string;
+  resolve: (scale: number | null) => void;
+};
 
 const GRID_SIZE = 32;
 const DEFAULT_COLOR = "#f8d21c";
 const EMPTY_PIXEL = "transparent";
+const EXPORT_SCALES = [1, 2, 4, 8] as const;
 const EDITABLE_TRAIT_EXCLUSIONS = new Set(["glasses"]);
 const brushSizes = [1, 2, 3, 4, 6, 8];
 const starterPalette = [
@@ -306,31 +311,87 @@ const collectPreviewColors = async (
 const downloadCanvas = async ({
   fileName,
   collectionLayers = [],
-  pixels,
+  pixels = [],
+  scale = 1,
+  includePreviewBackground = false,
+  showEditedTrait = true,
+  circleCrop = false,
+  checkerboard = false,
 }: {
   fileName: string;
   collectionLayers?: PlaygroundImage[];
-  pixels: string[];
+  pixels?: string[];
+  scale?: number;
+  includePreviewBackground?: boolean;
+  showEditedTrait?: boolean;
+  circleCrop?: boolean;
+  checkerboard?: boolean;
 }) => {
+  const exportScale = Math.max(1, Math.round(scale));
+  const canvasSize = GRID_SIZE * exportScale;
   const canvas = document.createElement("canvas");
-  canvas.width = GRID_SIZE;
-  canvas.height = GRID_SIZE;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
   const context = canvas.getContext("2d");
   if (!context) return;
 
   context.imageSmoothingEnabled = false;
-  context.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
+  context.clearRect(0, 0, canvasSize, canvasSize);
 
-  for (const layer of collectionLayers) {
-    const image = await loadHtmlImage(layer.uri);
-    context.drawImage(image, 0, 0, GRID_SIZE, GRID_SIZE);
+  if (circleCrop) {
+    context.save();
+    context.beginPath();
+    context.arc(canvasSize / 2, canvasSize / 2, canvasSize / 2, 0, Math.PI * 2);
+    context.clip();
   }
 
-  pixels.forEach((color, index) => {
-    if (color === EMPTY_PIXEL) return;
-    context.fillStyle = color;
-    context.fillRect(index % GRID_SIZE, Math.floor(index / GRID_SIZE), 1, 1);
-  });
+  if (includePreviewBackground) {
+    if (checkerboard) {
+      const tileSize = Math.max(1, exportScale * 2);
+      for (let y = 0; y < canvasSize; y += tileSize) {
+        for (let x = 0; x < canvasSize; x += tileSize) {
+          const checkerIndex = (x / tileSize + y / tileSize) % 2;
+          context.fillStyle = checkerColors[checkerIndex];
+          context.fillRect(x, y, tileSize, tileSize);
+        }
+      }
+    } else {
+      context.fillStyle = "#ffcc00";
+      context.fillRect(0, 0, canvasSize, canvasSize);
+    }
+  }
+
+  const glassesLayers = collectionLayers.filter(
+    (image) => image.trait === "glasses"
+  );
+  const baseLayers = collectionLayers.filter(
+    (image) => image.trait !== "glasses"
+  );
+
+  for (const layer of baseLayers) {
+    const image = await loadHtmlImage(layer.uri);
+    context.drawImage(image, 0, 0, canvasSize, canvasSize);
+  }
+
+  if (showEditedTrait) {
+    pixels.forEach((color, index) => {
+      if (color === EMPTY_PIXEL) return;
+      context.fillStyle = color;
+      context.fillRect(
+        (index % GRID_SIZE) * exportScale,
+        Math.floor(index / GRID_SIZE) * exportScale,
+        exportScale,
+        exportScale
+      );
+    });
+  }
+
+  for (const layer of glassesLayers) {
+    const image = await loadHtmlImage(layer.uri);
+    context.drawImage(image, 0, 0, canvasSize, canvasSize);
+  }
+
+  if (circleCrop) context.restore();
 
   const link = document.createElement("a");
   link.download = fileName;
@@ -373,6 +434,8 @@ export default function NoundryPage() {
   const [isCircleCropEnabled, setIsCircleCropEnabled] = useState(false);
   const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
   const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
+  const [exportScaleRequest, setExportScaleRequest] =
+    useState<ExportScaleRequest | null>(null);
   const [editorViewport, setEditorViewport] = useState<EditorViewport>(
     DEFAULT_EDITOR_VIEWPORT
   );
@@ -646,20 +709,56 @@ export default function NoundryPage() {
 
   const clearCanvas = () => commitPixels(createBlankPixels());
 
-  const exportEditedTrait = () => {
+  const requestExportScale = (title: string) =>
+    new Promise<number | null>((resolve) => {
+      setExportScaleRequest({ title, resolve });
+    });
+
+  const resolveExportScale = (scale: number | null) => {
+    exportScaleRequest?.resolve(scale);
+    setExportScaleRequest(null);
+  };
+
+  const exportEditedTrait = async (trait = traitType) => {
+    const scale = await requestExportScale(
+      `Export ${getLayerLabel(trait).toLowerCase()}`
+    );
+    if (!scale) return;
+
+    let exportPixels = pixels;
+    const exportedTraitName = selectedTraits[trait] || "draft";
+
+    if (trait !== traitType && artwork) {
+      const selectedImage = getTraitImage(
+        artwork.images,
+        trait,
+        selectedTraits[trait]
+      );
+      exportPixels = selectedImage
+        ? await imageToPixels(selectedImage.uri)
+        : createBlankPixels();
+    }
+
     downloadCanvas({
-      fileName: `${getLayerLabel(traitType).toLowerCase()}-${
-        selectedTraitName || "draft"
-      }.png`,
-      pixels,
+      fileName: `${getLayerLabel(trait).toLowerCase()}-${exportedTraitName}.png`,
+      pixels: exportPixels,
+      scale,
     }).catch((error) => console.error("Unable to export trait", error));
   };
 
-  const exportFullPreview = () => {
+  const exportFullPreview = async () => {
+    const scale = await requestExportScale("Export preview");
+    if (!scale) return;
+
     downloadCanvas({
       fileName: "yellow-collective-noundry-preview.png",
       collectionLayers: selectedCollectionLayers,
       pixels,
+      scale,
+      includePreviewBackground: true,
+      showEditedTrait: visibleTraits[traitType] !== false,
+      circleCrop: isCircleCropEnabled,
+      checkerboard: visibleTraits.backgrounds === false,
     }).catch((error) => console.error("Unable to export preview", error));
   };
 
@@ -1260,8 +1359,8 @@ export default function NoundryPage() {
                       setOpenLayerMenu(null);
                     }}
                     onExport={() => {
-                      setTraitType(layer.trait);
-                      exportEditedTrait();
+                      setOpenLayerMenu(null);
+                      exportEditedTrait(layer.trait);
                     }}
                   />
                 ))}
@@ -1284,6 +1383,13 @@ export default function NoundryPage() {
             error={submissionsError?.message}
             onRemix={loadSubmission}
             isAdmin={isAdmin}
+          />
+        )}
+
+        {exportScaleRequest && (
+          <ExportScaleDialog
+            title={exportScaleRequest.title}
+            onSelect={resolveExportScale}
           />
         )}
       </div>
@@ -1714,6 +1820,61 @@ const PixelToolIcon = ({
   );
 };
 
+const ExportScaleDialog = ({
+  title,
+  onSelect,
+}: {
+  title: string;
+  onSelect: (scale: number | null) => void;
+}) => (
+  <div
+    className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 px-4 py-8 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="export-scale-title"
+    onClick={() => onSelect(null)}
+  >
+    <div
+      className="w-full max-w-sm rounded-2xl border border-skin-stroke bg-skin-muted p-5 text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))]"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <h3
+        id="export-scale-title"
+        className="font-heading text-2xl leading-none text-skin-base"
+      >
+        {title}
+      </h3>
+      <p className="mt-2 text-base leading-snug text-secondary">
+        Download at the original 32px size or scale it up with crisp pixel
+        edges.
+      </p>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {EXPORT_SCALES.map((scale) => (
+          <button
+            key={scale}
+            type="button"
+            onClick={() => onSelect(scale)}
+            className={`rounded-[18px] border border-skin-stroke px-4 py-3 font-heading text-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none ${
+              scale === 1
+                ? "yc-force-white bg-white text-skin-base"
+                : "bg-accent text-[#212529] hover:bg-[#ffd84d]"
+            }`}
+          >
+            {scale === 1 ? "Exact 32px" : `${GRID_SIZE * scale}px`}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => onSelect(null)}
+        className="yc-force-white mt-4 w-full rounded-[18px] border border-skin-stroke bg-white px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+);
+
 const PreviewActionBar = ({
   isCircleCropEnabled,
   onRandomizeAll,
@@ -1735,7 +1896,7 @@ const PreviewActionBar = ({
   ] as const;
 
   return (
-    <div className="yc-force-white mt-3 flex justify-center gap-3 rounded-xl px-3 py-2 shadow-[0px_4px_0px_0px_rgb(var(--color-shadow-neutral))]">
+    <div className="yc-dark-force-white mt-3 flex justify-center gap-3 rounded-xl bg-accent px-3 py-2 shadow-[0px_4px_0px_0px_rgb(var(--color-shadow-accent))]">
       {actions.map(([kind, label, onClick]) => (
         <button
           key={kind}
@@ -2331,7 +2492,7 @@ const GalleryView = ({
   if (submissions.length === 0) {
     return (
       <section className="flex flex-col gap-4">
-        <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
+        <div className="yc-dark-text-black flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
           {galleryTabs.map(([tab, label]) => (
             <button
               key={tab}
@@ -2362,7 +2523,7 @@ const GalleryView = ({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
+      <div className="yc-dark-text-black flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
         {galleryTabs.map(([tab, label]) => (
           <button
             key={tab}
@@ -2391,7 +2552,7 @@ const GalleryView = ({
                   <button
                     type="button"
                     onClick={() => onRemix(submission)}
-                    className="mt-4 w-full rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base transition hover:bg-[#fff7bf]"
+                    className="yc-dark-force-white mt-4 w-full rounded-xl border border-[#0f5f99] bg-[#1d9bf0] px-3 py-2 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
                   >
                     Remix
                   </button>

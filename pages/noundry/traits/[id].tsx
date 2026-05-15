@@ -131,7 +131,7 @@ export default function NoundryTraitPage() {
             href="/noundry?tab=gallery"
             className="flex w-fit items-center gap-2 font-heading text-sm uppercase text-skin-base transition hover:opacity-80"
           >
-            <span className="yc-force-white flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
+            <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
               <ArrowLeftIcon className="h-4 text-skin-base" />
             </span>
             Back to gallery
@@ -139,7 +139,7 @@ export default function NoundryTraitPage() {
           {submission && (
             <Link
               href={getProfilePath({ address: submission.artist })}
-              className="yc-force-white rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+              className="yc-dark-yellow-button rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
             >
               Artist profile
             </Link>
@@ -223,7 +223,7 @@ export default function NoundryTraitPage() {
                 )}
                 <Link
                   href={`/noundry?tab=gallery`}
-                  className="yc-force-white flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+                  className="yc-dark-force-white flex w-full items-center justify-center rounded-xl border border-[#0f5f99] bg-[#1d9bf0] px-3 py-2 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
                 >
                   Remix in studio
                 </Link>
