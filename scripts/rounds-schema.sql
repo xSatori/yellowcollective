@@ -141,6 +141,8 @@ CREATE TABLE IF NOT EXISTS round_requests (
   votes_per_wallet integer NOT NULL DEFAULT 1,
   winner_count integer NOT NULL DEFAULT 1,
   max_submissions_per_wallet integer NOT NULL DEFAULT 1,
+  is_trait_contest boolean NOT NULL DEFAULT false,
+  trait_submissions_enabled boolean NOT NULL DEFAULT false,
   awards jsonb NOT NULL DEFAULT '[]'::jsonb,
   status text NOT NULL DEFAULT 'pending',
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -168,6 +170,10 @@ CREATE INDEX IF NOT EXISTS round_requests_status_idx ON round_requests(status);
 CREATE INDEX IF NOT EXISTS round_requests_created_at_idx ON round_requests(created_at);
 
 ALTER TABLE rounds
+  ADD COLUMN IF NOT EXISTS is_trait_contest boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS trait_submissions_enabled boolean NOT NULL DEFAULT false;
+
+ALTER TABLE round_requests
   ADD COLUMN IF NOT EXISTS is_trait_contest boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS trait_submissions_enabled boolean NOT NULL DEFAULT false;
 

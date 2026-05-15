@@ -23,6 +23,7 @@ import { getRoundsPublicEnabled } from "data/rounds";
 import {
   getRoundState,
   getRoundStateLabel,
+  type RoundState,
 } from "@/utils/rounds/state";
 import { getRoundSignedRequestAction } from "@/utils/rounds/auth";
 import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
@@ -157,10 +158,28 @@ export default function RoundDetailPage({
 
   const updateAllocation = (submissionId: string, nextValue: number) => {
     setMessage("");
-    setAllocations((current) => ({
-      ...current,
-      [submissionId]: Math.max(0, Math.min(votingPower, nextValue)),
-    }));
+    setAllocations((current) => {
+      const usedByOtherSubmissions = Object.entries(current).reduce(
+        (total, [currentSubmissionId, voteCount]) =>
+          currentSubmissionId === submissionId ? total : total + voteCount,
+        0
+      );
+      const maxForSubmission = Math.max(
+        votingPower - usedByOtherSubmissions,
+        0
+      );
+      const normalizedValue = Number.isFinite(nextValue)
+        ? Math.floor(nextValue)
+        : 0;
+
+      return {
+        ...current,
+        [submissionId]: Math.max(
+          0,
+          Math.min(maxForSubmission, normalizedValue)
+        ),
+      };
+    });
   };
 
   const submitVotes = async () => {
@@ -306,7 +325,7 @@ export default function RoundDetailPage({
 
         <section className="grid gap-5 lg:grid-cols-2">
           <RoundAwardsPanel round={round} />
-          <RoundActivityPanel round={round} />
+          <RoundActivityPanel round={round} state={state} />
         </section>
 
         {winners.length > 0 && (
@@ -495,6 +514,7 @@ const SubmissionCard = ({
 }) => {
   const winnerStyle = isWinner ? getWinnerCardStyle(rank) : null;
   const noundrySubmission = getRoundNoundrySubmission(submission);
+  const maxAllocation = allocation + remainingVotes;
 
   return (
   <article
@@ -594,9 +614,16 @@ const SubmissionCard = ({
             >
               -
             </button>
-            <span className="w-8 text-center font-heading text-lg">
-              {allocation}
-            </span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={maxAllocation}
+              value={allocation}
+              onChange={(event) => onChange(Number(event.target.value))}
+              aria-label={`Votes for ${submission.title}`}
+              className="h-9 w-16 rounded-lg border border-skin-stroke bg-white text-center font-heading text-lg text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+            />
             <button
               type="button"
               onClick={() => onChange(allocation + 1)}
@@ -1031,8 +1058,14 @@ const RoundAwardsPanel = ({
   </article>
 );
 
-const RoundActivityPanel = ({ round }: { round: RoundWithSubmissions }) => {
-  const activityItems = getRoundActivityItems(round);
+const RoundActivityPanel = ({
+  round,
+  state,
+}: {
+  round: RoundWithSubmissions;
+  state: RoundState;
+}) => {
+  const activityItems = getRoundActivityItems(round, state);
 
   return (
     <article className="yc-dark-yellow-form-surface flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
@@ -1131,7 +1164,8 @@ const RoundActivityItem = ({ item }: { item: RoundActivityItemData }) => (
 );
 
 const getRoundActivityItems = (
-  round: RoundWithSubmissions
+  round: RoundWithSubmissions,
+  state: RoundState
 ): RoundActivityItemData[] => {
   const now = Date.now();
   const hasHappened = (timestamp: string) => {
@@ -1166,7 +1200,10 @@ const getRoundActivityItems = (
     }))
   );
 
-  if (hasHappened(round.votingStartsAt)) {
+  if (
+    (state === "voting_open" || state === "ended" || state === "archived") &&
+    hasHappened(round.votingStartsAt)
+  ) {
     items.push({
       id: "voting-started",
       type: "milestone" as const,

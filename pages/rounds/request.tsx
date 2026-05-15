@@ -28,6 +28,7 @@ type FormValues = {
   votesPerWallet: string;
   winnerCount: string;
   maxSubmissionsPerWallet: string;
+  isTraitContest: boolean;
   awards: AwardFormValue[];
 };
 
@@ -56,10 +57,11 @@ const createInitialValues = (): FormValues => ({
   votesPerWallet: "1",
   winnerCount: "1",
   maxSubmissionsPerWallet: "1",
+  isTraitContest: false,
   awards: createAwardValues(1),
 });
 
-type StringFormField = Exclude<keyof FormValues, "awards">;
+type StringFormField = Exclude<keyof FormValues, "awards" | "isTraitContest">;
 
 type MessageState = {
   type: "success" | "error";
@@ -134,6 +136,14 @@ export default function RequestRoundPage() {
     }));
   };
 
+  const updateBooleanValue = (field: "isTraitContest", value: boolean) => {
+    setMessage(null);
+    setValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+  };
+
   const updateAwardValue = (index: number, value: string) => {
     setMessage(null);
     setValues((currentValues) => ({
@@ -164,6 +174,7 @@ export default function RequestRoundPage() {
             votesPerWallet: Number(values.votesPerWallet),
             winnerCount: Number(values.winnerCount),
             maxSubmissionsPerWallet: Number(values.maxSubmissionsPerWallet),
+            traitSubmissionsEnabled: values.isTraitContest,
             awards: buildAwards(values.awards),
           },
         }),
@@ -271,6 +282,26 @@ export default function RequestRoundPage() {
               placeholder="example.com"
             />
           </div>
+
+          <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-skin-stroke bg-[#fff7bf] p-4 transition hover:bg-[#fff3a3]">
+            <input
+              type="checkbox"
+              checked={values.isTraitContest}
+              onChange={(event) =>
+                updateBooleanValue("isTraitContest", event.target.checked)
+              }
+              className="mt-1 h-5 w-5 accent-[#ffcc00]"
+            />
+            <span>
+              <span className="block font-heading text-base text-skin-base">
+                Noundry trait round
+              </span>
+              <span className="mt-1 block text-sm leading-snug text-secondary">
+                Let creators submit approved Noundry traits directly to this
+                round once it is published.
+              </span>
+            </span>
+          </label>
 
           <TextAreaField
             label="Description"

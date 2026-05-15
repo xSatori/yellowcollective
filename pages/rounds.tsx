@@ -128,7 +128,7 @@ const RoundSection = ({ title, rounds }: { title: string; rounds: Round[] }) => 
         ))}
       </div>
     ) : (
-      <div className="yc-dark-yellow-form-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-6 text-base text-secondary shadow-sm">
+      <div className="yc-dark-yellow-form-surface rounded-2xl bg-white p-6 text-base text-secondary shadow-sm">
         No {title.toLowerCase()} rounds yet.
       </div>
     )}

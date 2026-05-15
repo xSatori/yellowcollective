@@ -29,7 +29,6 @@ type AdminSection = "community" | "noundry" | "rounds";
 type CommunityListMode = "queue" | "existing";
 type ProjectEditorMode = "edit" | "preview";
 type RoundListMode = "draft" | "published" | "archived";
-type RoundSubmissionMode = "pending" | "approved" | "closed";
 
 type AdminAuth = Required<
   Pick<{ adminAddress?: string }, "adminAddress">
@@ -821,13 +820,12 @@ const RoundsAdminPanel = ({
 }) => {
   const router = useRouter();
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<RoundSubmission | null>(null);
   const requestedRoundId = getQueryValue(router.query.round);
-  const requestedSubmissionId = getQueryValue(router.query.submission);
   const requestedRequestId = getQueryValue(router.query.request);
   const activeRoundMode = (getQueryValue(router.query.roundMode) ||
     "draft") as RoundListMode;
-  const activeSubmissionMode = (getQueryValue(router.query.submissionMode) ||
-    "approved") as RoundSubmissionMode;
   const visibleRounds = useMemo(
     () => rounds.filter((round) => round.status === activeRoundMode),
     [activeRoundMode, rounds]
@@ -857,23 +855,6 @@ const RoundsAdminPanel = ({
     () => submissionData?.submissions || [],
     [submissionData?.submissions]
   );
-  const visibleSubmissions = useMemo(
-    () =>
-      submissions.filter((submission) => {
-        if (activeSubmissionMode === "closed") {
-          return submission.status === "rejected" || submission.status === "hidden";
-        }
-        return submission.status === activeSubmissionMode;
-      }),
-    [activeSubmissionMode, submissions]
-  );
-  const selectedSubmission = useMemo(
-    () =>
-      visibleSubmissions.find(
-        (submission) => submission.id === requestedSubmissionId
-      ),
-    [requestedSubmissionId, visibleSubmissions]
-  );
   const selectedRequest = useMemo(
     () => requests.find((request) => request.id === requestedRequestId),
     [requestedRequestId, requests]
@@ -886,20 +867,6 @@ const RoundsAdminPanel = ({
     }),
     [rounds]
   );
-  const submissionCounts = useMemo(
-    () => ({
-      pending: submissions.filter((submission) => submission.status === "pending")
-        .length,
-      approved: submissions.filter(
-        (submission) => submission.status === "approved"
-      ).length,
-      closed: submissions.filter(
-        (submission) =>
-          submission.status === "rejected" || submission.status === "hidden"
-      ).length,
-    }),
-    [submissions]
-  );
   const requestCounts = useMemo(
     () => ({
       pending: requests.filter((request) => request.status === "pending").length,
@@ -911,6 +878,10 @@ const RoundsAdminPanel = ({
     [requests]
   );
 
+  useEffect(() => {
+    setSelectedSubmission(null);
+  }, [selectedRound?.id]);
+
   const selectRound = (round: Round) => {
     void router.push(
       {
@@ -918,27 +889,7 @@ const RoundsAdminPanel = ({
         query: {
           section: "rounds",
           roundMode: activeRoundMode,
-          submissionMode: activeSubmissionMode,
           round: round.id,
-        },
-      },
-      undefined,
-      { shallow: true }
-    );
-  };
-
-  const selectSubmission = (submission: RoundSubmission) => {
-    if (!selectedRound) return;
-
-    void router.push(
-      {
-        pathname: "/admin/dashboard",
-        query: {
-          section: "rounds",
-          roundMode: activeRoundMode,
-          submissionMode: activeSubmissionMode,
-          round: selectedRound.id,
-          submission: submission.id,
         },
       },
       undefined,
@@ -953,7 +904,6 @@ const RoundsAdminPanel = ({
         query: {
           section: "rounds",
           roundMode: activeRoundMode,
-          submissionMode: activeSubmissionMode,
           request: request.id,
         },
       },
@@ -969,23 +919,6 @@ const RoundsAdminPanel = ({
         query: {
           section: "rounds",
           roundMode: mode,
-          submissionMode: activeSubmissionMode,
-        },
-      },
-      undefined,
-      { shallow: true }
-    );
-  };
-
-  const setSubmissionMode = (mode: RoundSubmissionMode) => {
-    void router.push(
-      {
-        pathname: "/admin/dashboard",
-        query: {
-          section: "rounds",
-          roundMode: activeRoundMode,
-          submissionMode: mode,
-          round: selectedRound?.id,
         },
       },
       undefined,
@@ -1088,7 +1021,7 @@ const RoundsAdminPanel = ({
             type="button"
             onClick={() => selectRound(round)}
             className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-              selectedRound?.id === round.id && !selectedSubmission
+              selectedRound?.id === round.id
                 ? "border-[#d7aa00] bg-[#fff7bf]"
                 : "border-skin-stroke bg-white hover:bg-[#fffbe0]"
             }`}
@@ -1102,7 +1035,7 @@ const RoundsAdminPanel = ({
                   <span>/rounds/{round.slug}</span>
                   {round.isTraitContest && (
                     <span className="rounded-full bg-[#dff3ff] px-2 py-0.5 font-semibold text-[#0f5f99]">
-                      Trait contest
+                      Noundry trait round
                     </span>
                   )}
                 </div>
@@ -1115,69 +1048,6 @@ const RoundsAdminPanel = ({
           <p className="rounded-xl border border-dashed border-skin-stroke bg-white p-4 text-sm leading-snug text-secondary">
             No {activeRoundMode} rounds yet.
           </p>
-        )}
-
-        {selectedRound && (
-          <div className="mt-3 border-t border-skin-stroke pt-4">
-            <h3 className="font-heading text-xl leading-none text-skin-base">
-              Submissions
-            </h3>
-            <div className="mt-3">
-              <AdminModeTabs
-                modes={[
-                  ["approved", `Visible (${submissionCounts.approved})`],
-                  ["closed", `Rejected/hidden (${submissionCounts.closed})`],
-                  ["pending", `Pending (${submissionCounts.pending})`],
-                ]}
-                activeMode={activeSubmissionMode}
-                onChange={(mode) =>
-                  setSubmissionMode(mode as RoundSubmissionMode)
-                }
-              />
-            </div>
-            <div className="mt-3 flex flex-col gap-3">
-              {visibleSubmissions.map((submission) => (
-                <button
-                  key={submission.id}
-                  type="button"
-                  onClick={() => selectSubmission(submission)}
-                  className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                    selectedSubmission?.id === submission.id
-                      ? "border-[#d7aa00] bg-[#fff7bf]"
-                      : "border-skin-stroke bg-white hover:bg-[#fffbe0]"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-heading text-lg leading-tight text-skin-base">
-                        {submission.title}
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-secondary">
-                        <span
-                          className={`rounded-full px-2 py-0.5 font-semibold ${
-                            submission.submissionType === "trait"
-                              ? "bg-[#dff3ff] text-[#0f5f99]"
-                              : "bg-[#fff7bf] text-skin-base"
-                          }`}
-                        >
-                          {submission.submissionType === "trait"
-                            ? "Trait"
-                            : "Project"}
-                        </span>
-                        {submission.voteCount} votes
-                      </div>
-                    </div>
-                    <StatusPill status={submission.status} />
-                  </div>
-                </button>
-              ))}
-              {!submissionsError && visibleSubmissions.length === 0 && (
-                <p className="rounded-xl border border-dashed border-skin-stroke bg-white p-4 text-sm leading-snug text-secondary">
-                  No {activeSubmissionMode} submissions for this round.
-                </p>
-              )}
-            </div>
-          </div>
         )}
 
         <div className="mt-3 border-t border-skin-stroke pt-4">
@@ -1229,25 +1099,34 @@ const RoundsAdminPanel = ({
           mutateRounds={mutate}
           mutateRequests={mutateRequests}
         />
-      ) : selectedSubmission && selectedRound ? (
-        <RoundSubmissionEditor
-          key={selectedSubmission.id}
-          adminAuth={adminAuth}
-          round={selectedRound}
-          submission={selectedSubmission}
-          mutateSubmissions={mutateSubmissions}
-        />
       ) : selectedRound ? (
-        <RoundEditor
-          key={selectedRound.id}
-          adminAuth={adminAuth}
-          round={selectedRound}
-          mutate={mutate}
-        />
+        <div className="flex flex-col gap-5">
+          <RoundEditor
+            key={selectedRound.id}
+            adminAuth={adminAuth}
+            round={selectedRound}
+            mutate={mutate}
+          />
+          <RoundSubmissionsManager
+            submissions={submissions}
+            isLoading={Boolean(selectedRound && !submissionData && !submissionsError)}
+            error={submissionsError?.message}
+            onSelect={setSelectedSubmission}
+          />
+        </div>
       ) : (
         <EmptyEditor
           title="No rounds yet"
           surfaceClassName="yc-dark-yellow-form-surface"
+        />
+      )}
+      {selectedRound && selectedSubmission && (
+        <RoundSubmissionModal
+          adminAuth={adminAuth}
+          round={selectedRound}
+          submission={selectedSubmission}
+          mutateSubmissions={mutateSubmissions}
+          onClose={() => setSelectedSubmission(null)}
         />
       )}
     </section>
@@ -1339,7 +1218,6 @@ const getRoundPayloadFromForm = ({
   active,
   featured,
   isTraitContest,
-  traitSubmissionsEnabled,
   status,
   votingStrategy,
   votesPerWallet,
@@ -1363,7 +1241,6 @@ const getRoundPayloadFromForm = ({
   active: boolean;
   featured: boolean;
   isTraitContest: boolean;
-  traitSubmissionsEnabled: boolean;
   status: Round["status"];
   votingStrategy: Round["votingStrategy"];
   votesPerWallet: number;
@@ -1387,7 +1264,7 @@ const getRoundPayloadFromForm = ({
   active,
   featured,
   isTraitContest,
-  traitSubmissionsEnabled,
+  traitSubmissionsEnabled: isTraitContest,
   status,
   votingStrategy,
   votesPerWallet,
@@ -1453,9 +1330,6 @@ const RoundEditor = ({
   const [active, setActive] = useState(round.active);
   const [featured, setFeatured] = useState(round.featured);
   const [isTraitContest, setIsTraitContest] = useState(round.isTraitContest);
-  const [traitSubmissionsEnabled, setTraitSubmissionsEnabled] = useState(
-    round.traitSubmissionsEnabled
-  );
   const [status, setStatus] = useState<Round["status"]>(round.status);
   const [votingStrategy, setVotingStrategy] = useState<Round["votingStrategy"]>(
     round.votingStrategy
@@ -1477,11 +1351,6 @@ const RoundEditor = ({
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateTraitContest = (checked: boolean) => {
-    setIsTraitContest(checked);
-    setTraitSubmissionsEnabled((current) => (checked ? true : current));
-  };
-
   const submit = async (action?: "publish" | "archive" | "remove") => {
     if (action === "remove" && !window.confirm("Remove this round?")) return;
     if (action === "archive" && !window.confirm("Archive this round?")) return;
@@ -1499,7 +1368,6 @@ const RoundEditor = ({
       active,
       featured,
       isTraitContest,
-      traitSubmissionsEnabled,
       status,
       votingStrategy,
       votesPerWallet,
@@ -1688,30 +1556,131 @@ const RoundEditor = ({
           onChange={setFeatured}
         />
         <CheckboxField
-          label="Trait contest"
+          label="Noundry trait round"
           checked={isTraitContest}
-          onChange={updateTraitContest}
-        />
-        <CheckboxField
-          label="Enable Noundry trait submissions"
-          checked={traitSubmissionsEnabled}
-          onChange={setTraitSubmissionsEnabled}
+          onChange={setIsTraitContest}
         />
       </div>
     </EditorCard>
   );
 };
 
-const RoundSubmissionEditor = ({
+const RoundSubmissionsManager = ({
+  submissions,
+  isLoading,
+  error,
+  onSelect,
+}: {
+  submissions: RoundSubmission[];
+  isLoading: boolean;
+  error?: string;
+  onSelect: (submission: RoundSubmission) => void;
+}) => (
+  <EditorCard
+    title="Submitted projects"
+    status={`${submissions.length}`}
+    message={error || null}
+    showStatusInTitle={false}
+    surfaceClassName="yc-dark-yellow-form-surface"
+    actions={
+      <div className="rounded-full bg-[#1d9bf0] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99]">
+        {submissions.length} total
+      </div>
+    }
+  >
+    {isLoading ? (
+      <p className="rounded-xl bg-white p-4 text-sm text-secondary">
+        Loading submissions...
+      </p>
+    ) : submissions.length > 0 ? (
+      <div className="grid gap-3">
+        {submissions.map((submission) => (
+          <button
+            key={submission.id}
+            type="button"
+            onClick={() => onSelect(submission)}
+            className="rounded-xl border border-skin-stroke bg-white p-4 text-left transition hover:-translate-y-0.5 hover:bg-[#fffbe0] hover:shadow-sm"
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0">
+                <div className="break-words font-heading text-xl leading-none text-skin-base">
+                  {submission.title}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-secondary">
+                  <span
+                    className={`rounded-full px-2 py-0.5 font-semibold ${
+                      submission.submissionType === "trait"
+                        ? "bg-[#dff3ff] text-[#0f5f99]"
+                        : "bg-[#fff7bf] text-skin-base"
+                    }`}
+                  >
+                    {submission.submissionType === "trait" ? "Trait" : "Project"}
+                  </span>
+                  <span>{submission.voteCount} votes</span>
+                  <span className="break-all">{submission.walletAddress}</span>
+                </div>
+              </div>
+              <StatusPill status={submission.status} />
+            </div>
+          </button>
+        ))}
+      </div>
+    ) : (
+      <p className="rounded-xl bg-white p-4 text-sm leading-snug text-secondary">
+        No projects have been submitted to this round yet.
+      </p>
+    )}
+  </EditorCard>
+);
+
+const RoundSubmissionModal = ({
   adminAuth,
   round,
   submission,
   mutateSubmissions,
+  onClose,
 }: {
   adminAuth: AdminAuth;
   round: Round;
   submission: RoundSubmission;
   mutateSubmissions: KeyedMutator<{ submissions: RoundSubmission[] }>;
+  onClose: () => void;
+}) => (
+  <div
+    className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/70 p-4 py-8"
+    role="dialog"
+    aria-modal="true"
+    aria-label={`Edit ${submission.title}`}
+    onClick={onClose}
+  >
+    <div
+      className="w-full max-w-5xl"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <RoundSubmissionEditor
+        key={submission.id}
+        adminAuth={adminAuth}
+        round={round}
+        submission={submission}
+        mutateSubmissions={mutateSubmissions}
+        onClose={onClose}
+      />
+    </div>
+  </div>
+);
+
+const RoundSubmissionEditor = ({
+  adminAuth,
+  round,
+  submission,
+  mutateSubmissions,
+  onClose,
+}: {
+  adminAuth: AdminAuth;
+  round: Round;
+  submission: RoundSubmission;
+  mutateSubmissions: KeyedMutator<{ submissions: RoundSubmission[] }>;
+  onClose?: () => void;
 }) => {
   const [title, setTitle] = useState(submission.title);
   const [description, setDescription] = useState(submission.description);
@@ -1741,6 +1710,10 @@ const RoundSubmissionEditor = ({
           : { submission: { title, description, image, url, walletAddress } }
       );
       await mutateSubmissions();
+      if (action === "remove") {
+        onClose?.();
+        return;
+      }
       setMessage(
         action === "approve"
           ? "Submission approved."
@@ -1777,6 +1750,16 @@ const RoundSubmissionEditor = ({
           >
             Save changes
           </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSaving}
+              className={secondaryButtonClass}
+            >
+              Close
+            </button>
+          )}
           {submission.status !== "approved" && (
             <button
               type="button"
@@ -1809,7 +1792,7 @@ const RoundSubmissionEditor = ({
             disabled={isSaving}
             className={dangerButtonClass}
           >
-            Remove
+            Delete
           </button>
         </>
       }
@@ -2001,6 +1984,14 @@ const RoundRequestEditor = ({
           <ReadonlyField label="Email" value={request.requesterEmail || "Not provided"} />
           <ReadonlyField label="Wallet" value={request.walletAddress || "Not connected"} />
           <ReadonlyField label="Slug" value={`/rounds/${request.requestedSlug}`} />
+          <ReadonlyField
+            label="Round type"
+            value={
+              request.isTraitContest
+                ? "Noundry trait round"
+                : "Project round"
+            }
+          />
           <ReadonlyField label="Description" value={request.description} multiline />
           <ReadonlyField label="Round details" value={request.content} multiline />
           <ReadonlyField

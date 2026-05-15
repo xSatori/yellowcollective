@@ -230,7 +230,7 @@ export default function ProbePage() {
             <button
               type="button"
               onClick={resetFilters}
-              className="yc-force-white-yellow-hover self-end rounded-[18px] border border-skin-stroke bg-white px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none"
+              className="yc-dark-force-white self-end rounded-[18px] border border-skin-stroke bg-accent px-4 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>

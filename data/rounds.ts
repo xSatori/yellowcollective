@@ -145,6 +145,8 @@ export type RoundRequest = {
   votesPerWallet: number;
   winnerCount: number;
   maxSubmissionsPerWallet: number;
+  isTraitContest: boolean;
+  traitSubmissionsEnabled: boolean;
   awards: RoundAwardInput[];
   status: RoundRequestStatus;
   createdAt: string;
@@ -234,6 +236,8 @@ export type RoundRequestInput = Partial<
     | "votesPerWallet"
     | "winnerCount"
     | "maxSubmissionsPerWallet"
+    | "isTraitContest"
+    | "traitSubmissionsEnabled"
   >
 > & {
   awards?: RoundAwardInput[];
@@ -410,6 +414,8 @@ const ensureTables = async () => {
             votes_per_wallet integer NOT NULL DEFAULT 1,
             winner_count integer NOT NULL DEFAULT 1,
             max_submissions_per_wallet integer NOT NULL DEFAULT 1,
+            is_trait_contest boolean NOT NULL DEFAULT false,
+            trait_submissions_enabled boolean NOT NULL DEFAULT false,
             awards jsonb NOT NULL DEFAULT '[]'::jsonb,
             status text NOT NULL DEFAULT 'pending',
             created_at timestamptz NOT NULL DEFAULT now(),
@@ -485,6 +491,8 @@ const ensureTables = async () => {
             ADD COLUMN IF NOT EXISTS votes_per_wallet integer NOT NULL DEFAULT 1,
             ADD COLUMN IF NOT EXISTS winner_count integer NOT NULL DEFAULT 1,
             ADD COLUMN IF NOT EXISTS max_submissions_per_wallet integer NOT NULL DEFAULT 1,
+            ADD COLUMN IF NOT EXISTS is_trait_contest boolean NOT NULL DEFAULT false,
+            ADD COLUMN IF NOT EXISTS trait_submissions_enabled boolean NOT NULL DEFAULT false,
             ADD COLUMN IF NOT EXISTS awards jsonb NOT NULL DEFAULT '[]'::jsonb
         `)
       )
@@ -633,6 +641,8 @@ const requestSelectFields = `
   votes_per_wallet,
   winner_count,
   max_submissions_per_wallet,
+  is_trait_contest,
+  trait_submissions_enabled,
   awards,
   status,
   created_at,
@@ -772,6 +782,8 @@ const mapRoundRequest = (row: Record<string, any>): RoundRequest => ({
   votesPerWallet: Number(row.votes_per_wallet || 1),
   winnerCount: Number(row.winner_count || 1),
   maxSubmissionsPerWallet: Number(row.max_submissions_per_wallet || 1),
+  isTraitContest: Boolean(row.is_trait_contest),
+  traitSubmissionsEnabled: Boolean(row.trait_submissions_enabled),
   awards: parseJson<RoundAwardInput[]>(row.awards || []),
   status: row.status,
   createdAt: formatDate(row.created_at) || "",
@@ -1184,6 +1196,10 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
     votesPerWallet: Number(input.votesPerWallet || 1),
     winnerCount: Number(input.winnerCount || 1),
     maxSubmissionsPerWallet: Number(input.maxSubmissionsPerWallet || 1),
+    isTraitContest: Boolean(input.isTraitContest),
+    traitSubmissionsEnabled: Boolean(
+      input.traitSubmissionsEnabled ?? input.isTraitContest
+    ),
     awards: normalizeRoundAwards(input.awards),
   };
 };
@@ -1240,8 +1256,8 @@ export const validateRoundRequestInput = (input: RoundRequestInput) => {
     endsAt: request.endsAt,
     active: true,
     featured: false,
-    isTraitContest: false,
-    traitSubmissionsEnabled: false,
+    isTraitContest: request.isTraitContest,
+    traitSubmissionsEnabled: request.traitSubmissionsEnabled,
     status: "published",
     votingStrategy: request.votingStrategy,
     votesPerWallet: request.votesPerWallet,
@@ -1389,9 +1405,11 @@ export const createRoundRequest = async (input: RoundRequestInput) => {
         votes_per_wallet,
         winner_count,
         max_submissions_per_wallet,
+        is_trait_contest,
+        trait_submissions_enabled,
         awards
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       RETURNING ${requestSelectFields}
     `,
     [
@@ -1416,6 +1434,8 @@ export const createRoundRequest = async (input: RoundRequestInput) => {
       request.votesPerWallet,
       request.winnerCount,
       request.maxSubmissionsPerWallet,
+      request.isTraitContest,
+      request.traitSubmissionsEnabled,
       JSON.stringify(request.awards),
     ]
   );
@@ -1491,6 +1511,8 @@ export const approveRoundRequest = async (id: string) => {
       endsAt: request.endsAt,
       active: true,
       featured: false,
+      isTraitContest: request.isTraitContest,
+      traitSubmissionsEnabled: request.traitSubmissionsEnabled,
       status: "published",
       votingStrategy: request.votingStrategy,
       votesPerWallet: request.votesPerWallet,
