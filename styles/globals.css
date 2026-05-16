@@ -679,9 +679,9 @@
   }
 
   [data-theme="dark"] .yc-footer-icon-button svg {
-    color: #212529 !important;
-    fill: #212529 !important;
-    stroke: #212529 !important;
+    color: #000 !important;
+    fill: #000 !important;
+    stroke: #000 !important;
   }
 
   [data-theme="dark"] .bg-white {
