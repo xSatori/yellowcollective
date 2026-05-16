@@ -167,7 +167,7 @@ export default function NoundrySubmitPage() {
           {draft ? getLayerLabel(draft.traitType).toLowerCase() : "trait"}
         </h1>
 
-        <section className="relative w-full border border-[#e1e1e1] bg-white p-8 shadow-sm">
+        <section className="relative w-full border border-[#e1e1e1] bg-accent p-8 shadow-sm md:bg-white">
           <div className="flex items-start justify-between gap-4">
             <input
               value={submissionTitle}

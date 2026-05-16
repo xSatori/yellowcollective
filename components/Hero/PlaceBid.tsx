@@ -142,16 +142,16 @@ export const PlaceBid = ({
     >
       <div
         className={clsx(
-          "flex w-full flex-col items-start gap-4 min-[390px]:flex-row min-[390px]:flex-wrap"
+          "flex w-full flex-row flex-wrap items-start gap-3"
         )}
       >
-        <div className="flex w-full flex-col gap-1 min-[390px]:w-auto min-[390px]:shrink">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <input
             value={bid}
             type="number"
             onChange={(e) => setBid(e.target.value)}
             className={clsx(
-              "h-[59px] w-full min-w-0 rounded-[18px] border-2 border-accent bg-primary px-6 py-4 outline-none focus:border-accent min-[390px]:w-[265px]",
+              "h-[59px] w-full min-w-0 rounded-[18px] border-2 border-accent bg-primary px-4 py-4 outline-none focus:border-accent sm:px-6",
               getError() != undefined && getError() != "" && "border-negative"
             )}
             placeholder={
@@ -164,7 +164,7 @@ export const PlaceBid = ({
         </div>
         <div className="flex flex-col items-center justify-center gap-1">
           <Button
-            className="yc-dark-yellow-button"
+            className="yc-dark-yellow-button h-[59px] min-w-[112px] px-3 py-0 text-sm sm:min-w-[140px]"
             disabled={((!write || isLoading) && isConnected) || !!commentError}
             onClick={(e) => {
               e.preventDefault();

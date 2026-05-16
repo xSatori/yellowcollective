@@ -135,6 +135,7 @@ export default function RoundDetailPage({
     round && state === "ended"
       ? round.submissions.slice(0, round.winnerCount)
       : [];
+  const isRoundEnded = state === "ended";
 
   if (!round) {
     return (
@@ -329,8 +330,8 @@ export default function RoundDetailPage({
         </section>
 
         {winners.length > 0 && (
-          <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
-            <h2 className="font-heading text-3xl leading-none text-skin-base">
+          <section className="rounded-2xl border border-skin-stroke bg-accent p-6 text-[#212529] shadow-sm md:p-8">
+            <h2 className="font-heading text-3xl leading-none text-[#212529]">
               Winners
             </h2>
             <div className="mt-5 flex flex-col gap-3">
@@ -345,7 +346,7 @@ export default function RoundDetailPage({
                     type="button"
                     key={submission.id}
                     onClick={() => setSelectedSubmission(submission)}
-                    className={`group relative overflow-hidden rounded-xl border-2 p-4 text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-skin-highlighted ${winnerStyle.listClass}`}
+                    className="group relative overflow-hidden rounded-xl border-2 border-skin-stroke bg-accent p-4 text-left text-[#212529] shadow-[0px_4px_0px_0px_rgb(var(--color-shadow-accent))] transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
                   >
                     <WinnerGlimmer withBorder={false} />
                     <div className="relative z-10 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -353,16 +354,16 @@ export default function RoundDetailPage({
                         <div
                           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-heading text-lg leading-none ${winnerStyle.pillClass}`}
                         >
-                          {getWinnerBadge(index + 1)}
+                          <WinnerBadge rank={index + 1} />
                         </div>
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-white/75">
+                          <div className="text-sm font-semibold text-[#212529]">
                             Winner #{index + 1}
                           </div>
-                          <h3 className="mt-1 break-words font-heading text-2xl leading-none text-white">
+                          <h3 className="mt-1 break-words font-heading text-2xl leading-none text-[#212529]">
                             {submission.title}
                           </h3>
-                          <div className="mt-2 text-sm font-semibold text-white/80">
+                          <div className="mt-2 text-sm font-semibold text-[#212529]">
                             {formatSubmissionAuthor(submission.walletAddress)}
                           </div>
                         </div>
@@ -372,7 +373,7 @@ export default function RoundDetailPage({
                           {submission.voteCount} votes
                         </span>
                         {award && (
-                          <span className="text-sm leading-snug text-white/90">
+                          <span className="text-sm leading-snug text-[#212529]">
                             Prize: {award.title}
                             {award.value ? ` (${award.value})` : ""}
                           </span>
@@ -417,9 +418,17 @@ export default function RoundDetailPage({
           </section>
         )}
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+        <section
+          className={`rounded-2xl border border-skin-stroke p-5 shadow-sm md:p-6 ${
+            isRoundEnded ? "bg-accent text-[#212529]" : "bg-white"
+          }`}
+        >
           <div className="flex items-end justify-between gap-3">
-            <h2 className="font-heading text-[34px] leading-none text-skin-base">
+            <h2
+              className={`font-heading text-[34px] leading-none ${
+                isRoundEnded ? "text-[#212529]" : "text-skin-base"
+              }`}
+            >
               Submissions
             </h2>
             <span className="rounded-full bg-[#c93d2f] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#7f2219]">
@@ -434,6 +443,7 @@ export default function RoundDetailPage({
                   submission={submission}
                   rank={index + 1}
                   isWinner={state === "ended" && index < round.winnerCount}
+                  isRoundEnded={isRoundEnded}
                   canVote={state === "voting_open" && votingPower > 0}
                   allocation={allocations[submission.id] || 0}
                   remainingVotes={remainingVotes}
@@ -491,6 +501,7 @@ const SubmissionCard = ({
   submission,
   rank,
   isWinner,
+  isRoundEnded,
   canVote,
   allocation,
   remainingVotes,
@@ -503,6 +514,7 @@ const SubmissionCard = ({
   submission: RoundSubmission;
   rank: number;
   isWinner: boolean;
+  isRoundEnded: boolean;
   canVote: boolean;
   allocation: number;
   remainingVotes: number;
@@ -515,21 +527,37 @@ const SubmissionCard = ({
   const winnerStyle = isWinner ? getWinnerCardStyle(rank) : null;
   const noundrySubmission = getRoundNoundrySubmission(submission);
   const maxAllocation = allocation + remainingVotes;
+  const cardClass = isRoundEnded
+    ? "border-skin-stroke bg-accent text-[#212529] shadow-sm"
+    : winnerStyle?.cardClass ||
+      "yc-dark-yellow-form-surface border-skin-stroke";
+  const imageClass = isRoundEnded
+    ? "bg-accent"
+    : winnerStyle?.imageClass || "bg-skin-muted";
+  const primaryTextClass = isRoundEnded
+    ? "text-[#212529]"
+    : isWinner
+      ? "text-white"
+      : "text-skin-base";
+  const secondaryTextClass = isRoundEnded
+    ? "text-[#212529]"
+    : isWinner
+      ? "text-[#dce5f0]"
+      : "text-secondary";
 
   return (
   <article
-    className={`relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
-      winnerStyle?.cardClass || "yc-dark-yellow-form-surface border-skin-stroke"
-    }`}
+    className={`relative flex h-full flex-col overflow-hidden rounded-2xl border ${cardClass}`}
   >
     {isWinner && <WinnerGlimmer />}
     {showRank && (
       <div
         className={`absolute left-4 top-4 z-20 flex h-14 min-w-14 items-center justify-center rounded-full px-3 font-heading text-2xl leading-none shadow-[0px_3px_0px_0px_rgba(0,0,0,0.28)] ${
-          winnerStyle?.pillClass || "bg-white/95 text-skin-base"
+          winnerStyle?.pillClass ||
+          (isRoundEnded ? "bg-white/95 text-[#212529]" : "bg-white/95 text-skin-base")
         }`}
       >
-        {isWinner ? getWinnerBadge(rank) : `#${rank}`}
+        {isWinner ? <WinnerBadge rank={rank} /> : `#${rank}`}
       </div>
     )}
     <button
@@ -539,7 +567,7 @@ const SubmissionCard = ({
       aria-label={`Open ${submission.title}`}
     >
       {noundrySubmission ? (
-        <div className={`aspect-square w-full ${winnerStyle?.imageClass || ""}`}>
+        <div className={`aspect-square w-full ${imageClass}`}>
           <NounPreviewTile
             artwork={artwork}
             submission={noundrySubmission}
@@ -553,9 +581,7 @@ const SubmissionCard = ({
         <img
           src={submission.image}
           alt={submission.title}
-          className={`aspect-square w-full object-cover ${
-            winnerStyle?.imageClass || "bg-skin-muted"
-          }`}
+          className={`aspect-square w-full object-cover ${imageClass}`}
         />
       )}
     </button>
@@ -565,7 +591,9 @@ const SubmissionCard = ({
           {submission.submissionType === "trait" && (
             <div
               className={`mb-2 w-fit rounded-full px-2 py-0.5 font-heading text-xs ${
-                isWinner ? "bg-white/90 text-skin-base" : "bg-[#dff3ff] text-[#0f5f99]"
+                isRoundEnded || isWinner
+                  ? "bg-white/90 text-[#212529]"
+                  : "bg-[#dff3ff] text-[#0f5f99]"
               }`}
             >
               Noundry trait
@@ -575,9 +603,7 @@ const SubmissionCard = ({
           <button
             type="button"
             onClick={onOpen}
-            className={`text-left font-heading text-2xl leading-none underline-offset-4 transition hover:underline focus:outline-none focus:ring-2 focus:ring-skin-highlighted ${
-              isWinner ? "text-white" : "text-skin-base"
-            }`}
+            className={`text-left font-heading text-2xl leading-none underline-offset-4 transition hover:underline focus:outline-none focus:ring-2 focus:ring-skin-highlighted ${primaryTextClass}`}
           >
             {submission.title}
           </button>
@@ -588,20 +614,14 @@ const SubmissionCard = ({
           </div>
         )}
       </div>
-      <p
-        className={`text-base leading-snug ${
-          isWinner ? "text-[#dce5f0]" : "text-secondary"
-        }`}
-      >
+      <p className={`text-base leading-snug ${secondaryTextClass}`}>
         {submission.description}
       </p>
       <div className="mt-auto flex items-center justify-between gap-3">
         <WalletIdentityLink
           address={submission.walletAddress}
           ensName={demoAuthorNames[submission.walletAddress.toLowerCase()]}
-          className={`font-heading text-base underline ${
-            isWinner ? "text-white" : "text-skin-base"
-          }`}
+          className={`font-heading text-base underline ${primaryTextClass}`}
         />
         {canVote && (
           <div className="flex items-center gap-2 rounded-xl border border-skin-stroke bg-[#f1f1f1] p-1">
@@ -966,6 +986,22 @@ const WinnerGlimmer = ({ withBorder = true }: { withBorder?: boolean }) => (
     <div className="pointer-events-none absolute inset-0 z-10 rounded-2xl bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.28)_22%,transparent_44%)] opacity-70" />
   </>
 );
+
+const WinnerBadge = ({ rank }: { rank: number }) => {
+  if (rank <= 3) return <>{getWinnerBadge(rank)}</>;
+
+  return (
+    <span
+      className="relative block h-7 w-5"
+      aria-label="Blue ribbon"
+      role="img"
+    >
+      <span className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 rounded-full bg-[#1d9bf0] shadow-[inset_0_0_0_3px_#7cc7ff]" />
+      <span className="absolute bottom-0 left-[3px] h-4 w-2 -rotate-12 bg-[#1d9bf0] [clip-path:polygon(0_0,100%_0,100%_100%,50%_72%,0_100%)]" />
+      <span className="absolute bottom-0 right-[3px] h-4 w-2 rotate-12 bg-[#0f5f99] [clip-path:polygon(0_0,100%_0,100%_100%,50%_72%,0_100%)]" />
+    </span>
+  );
+};
 
 const RoundDetailsPanel = ({
   round,

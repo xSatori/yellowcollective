@@ -1262,23 +1262,6 @@ export default function NoundryPage() {
                   Reset zoom
                 </button>
               )}
-              {openTraitPicker && (
-                <TraitPickerOverlay
-                  layer={editableLayers.find(
-                    (layer) => layer.trait === openTraitPicker
-                  )}
-                  images={artwork.images.filter(
-                    (image) => image.trait === openTraitPicker
-                  )}
-                  value={selectedTraits[openTraitPicker] || ""}
-                  onClose={() => setOpenTraitPicker(null)}
-                  onSelect={(value) => {
-                    updateCollectionTrait(openTraitPicker, value);
-                    setTraitType(openTraitPicker);
-                    setOpenTraitPicker(null);
-                  }}
-                />
-              )}
             </div>
 
             <div className="yc-dark-yellow-surface order-3 flex h-full flex-col rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm">
@@ -1390,6 +1373,24 @@ export default function NoundryPage() {
           <ExportScaleDialog
             title={exportScaleRequest.title}
             onSelect={resolveExportScale}
+          />
+        )}
+
+        {openTraitPicker && artwork && (
+          <TraitPickerOverlay
+            layer={editableLayers.find(
+              (layer) => layer.trait === openTraitPicker
+            )}
+            images={artwork.images.filter(
+              (image) => image.trait === openTraitPicker
+            )}
+            value={selectedTraits[openTraitPicker] || ""}
+            onClose={() => setOpenTraitPicker(null)}
+            onSelect={(value) => {
+              updateCollectionTrait(openTraitPicker, value);
+              setTraitType(openTraitPicker);
+              setOpenTraitPicker(null);
+            }}
           />
         )}
       </div>
@@ -2266,8 +2267,8 @@ const TraitPickerOverlay = ({
   if (!layer) return null;
 
   return (
-    <div className="absolute inset-5 z-30 flex items-center justify-center rounded-xl bg-black/45 p-5">
-      <div className="max-h-full w-full overflow-hidden rounded-xl border border-[#555] bg-[#303030] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
+      <div className="max-h-[min(82vh,720px)] w-full max-w-[720px] overflow-hidden rounded-xl border border-[#555] bg-[#303030] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#555] px-4 py-3">
           <div className="font-heading text-lg text-[#d8d8d8]">
             Select {getLayerLabel(layer.trait)}
@@ -2280,7 +2281,7 @@ const TraitPickerOverlay = ({
             Close
           </button>
         </div>
-        <div className="grid max-h-[min(68vh,680px)] grid-cols-4 gap-3 overflow-y-auto p-4 sm:grid-cols-5 md:grid-cols-6">
+        <div className="grid max-h-[min(64vh,600px)] grid-cols-3 gap-3 overflow-y-auto p-4 sm:grid-cols-5 md:grid-cols-6">
           {images.map((image) => (
             <button
               key={image.name}

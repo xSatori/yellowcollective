@@ -609,8 +609,8 @@
 
   @media (max-width: 767px) {
     [data-theme="dark"] .yc-project-page {
-      background-color: rgb(var(--color-accent)) !important;
-      color: #212529 !important;
+      background-color: rgb(var(--color-surface-muted)) !important;
+      color: rgb(var(--color-text-base)) !important;
     }
   }
 
