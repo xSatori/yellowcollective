@@ -1,5 +1,16 @@
 import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import {
+  braveWallet,
+  coinbaseWallet,
+  injectedWallet,
+  metaMaskWallet,
+  phantomWallet,
+  rabbyWallet,
+  rainbowWallet,
+  safeWallet,
+  walletConnectWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 import { mainnet, goerli, configureChains, createClient } from "wagmi";
 import type { Chain } from "wagmi";
 import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
@@ -121,11 +132,25 @@ const { chains, provider } = configureChains(
   [...rpcProviders, publicProvider()]
 );
 
-const { connectors } = getDefaultWallets({
-  appName: "Yellow Collective",
-  chains,
-  projectId: "afb449b5b1ea52d11db1ec72bc452500",
-});
+const appName = "Yellow Collective";
+const projectId = "afb449b5b1ea52d11db1ec72bc452500";
+
+const connectors = connectorsForWallets([
+  {
+    groupName: "Popular",
+    wallets: [
+      injectedWallet({ chains }),
+      safeWallet({ chains }),
+      rainbowWallet({ chains, projectId }),
+      coinbaseWallet({ appName, chains }),
+      metaMaskWallet({ chains, projectId }),
+      rabbyWallet({ chains }),
+      phantomWallet({ chains }),
+      walletConnectWallet({ chains, projectId }),
+      braveWallet({ chains }),
+    ],
+  },
+]);
 
 const wagmiClient = createClient({
   autoConnect: true,
