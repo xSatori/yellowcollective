@@ -29,7 +29,11 @@ import { getRoundSignedRequestAction } from "@/utils/rounds/auth";
 import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
 import { TOKEN_NETWORK } from "constants/addresses";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
-import type { GetServerSidePropsContext, GetServerSidePropsResult, InferGetServerSidePropsType } from "next";
+import type {
+  GetServerSidePropsContext,
+  GetServerSidePropsResult,
+  InferGetServerSidePropsType,
+} from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -111,7 +115,9 @@ export default function RoundDetailPage({
   const [isVoting, setIsVoting] = useState(false);
   const state = round ? getRoundState(round) : "draft";
   const hasTraitSubmissions = Boolean(
-    round?.submissions.some((submission) => submission.submissionType === "trait")
+    round?.submissions.some(
+      (submission) => submission.submissionType === "trait"
+    )
   );
   const { data: artwork } = useSWR<PlaygroundArtwork>(
     hasTraitSubmissions ? "/api/playground/artwork" : null,
@@ -255,8 +261,13 @@ export default function RoundDetailPage({
         <section className="yc-dark-yellow-form-surface grid gap-6 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm lg:grid-cols-[1fr_360px]">
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <RoundStatusPill status={getRoundStateLabel(state)} />
-              {round.featured && <RoundStatusPill status="featured" />}
+              <RoundStatusPill
+                status={getRoundStateLabel(state)}
+                state={state}
+              />
+              {round.featured && (
+                <RoundStatusPill status="featured" state="featured" />
+              )}
             </div>
             <h1 className="mt-4 font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
               {round.title}
@@ -418,17 +429,9 @@ export default function RoundDetailPage({
           </section>
         )}
 
-        <section
-          className={`rounded-2xl border border-skin-stroke p-5 shadow-sm md:p-6 ${
-            isRoundEnded ? "bg-accent text-[#212529]" : "bg-white"
-          }`}
-        >
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-accent p-5 text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] md:p-6">
           <div className="flex items-end justify-between gap-3">
-            <h2
-              className={`font-heading text-[34px] leading-none ${
-                isRoundEnded ? "text-[#212529]" : "text-skin-base"
-              }`}
-            >
+            <h2 className="font-heading text-[34px] leading-none text-[#212529]">
               Submissions
             </h2>
             <span className="rounded-full bg-[#c93d2f] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#7f2219]">
@@ -456,14 +459,14 @@ export default function RoundDetailPage({
               ))}
             </div>
           ) : (
-            <div className="yc-dark-yellow-form-surface rounded-2xl border border-dashed border-skin-stroke bg-white p-8 text-center text-secondary shadow-sm">
+            <div className="rounded-2xl border border-dashed border-skin-stroke bg-[#fff7bf] p-8 text-center text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))]">
               No approved submissions yet.
             </div>
           )}
         </section>
 
         {state === "voting_open" && votingPower > 0 && (
-          <div className="yc-dark-yellow-form-surface sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-white p-4 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))]">
+          <div className="yc-dark-yellow-form-surface sticky bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--miniapp-safe-area-bottom))] z-30 rounded-2xl border border-skin-stroke bg-accent p-4 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))]">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="text-base text-secondary">
                 Allocating{" "}
@@ -475,7 +478,12 @@ export default function RoundDetailPage({
               <button
                 type="button"
                 onClick={submitVotes}
-                disabled={allocatedVotes <= 0 || allocatedVotes > votingPower || isVoting || isSigning}
+                disabled={
+                  allocatedVotes <= 0 ||
+                  allocatedVotes > votingPower ||
+                  isVoting ||
+                  isSigning
+                }
                 className="yc-dark-submit-blue rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isVoting || isSigning ? "Submitting..." : "Submit votes"}
@@ -546,118 +554,120 @@ const SubmissionCard = ({
       : "text-secondary";
 
   return (
-  <article
-    className={`relative flex h-full flex-col overflow-hidden rounded-2xl border ${cardClass}`}
-  >
-    {isWinner && <WinnerGlimmer />}
-    {showRank && (
-      <div
-        className={`absolute left-4 top-4 z-20 flex h-14 min-w-14 items-center justify-center rounded-full px-3 font-heading text-2xl leading-none shadow-[0px_3px_0px_0px_rgba(0,0,0,0.28)] ${
-          winnerStyle?.pillClass ||
-          (isRoundEnded ? "bg-white/95 text-[#212529]" : "bg-white/95 text-skin-base")
-        }`}
-      >
-        {isWinner ? <WinnerBadge rank={rank} /> : `#${rank}`}
-      </div>
-    )}
-    <button
-      type="button"
-      onClick={onOpen}
-      className="block text-left transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
-      aria-label={`Open ${submission.title}`}
+    <article
+      className={`relative flex h-full flex-col overflow-hidden rounded-2xl border ${cardClass}`}
     >
-      {noundrySubmission ? (
-        <div className={`aspect-square w-full ${imageClass}`}>
-          <NounPreviewTile
-            artwork={artwork}
-            submission={noundrySubmission}
-            traits={getSubmissionPreviewTraits(noundrySubmission)}
-            showEditedTrait
-            fullBleed
-          />
+      {isWinner && <WinnerGlimmer />}
+      {showRank && (
+        <div
+          className={`absolute left-4 top-4 z-20 flex h-14 min-w-14 items-center justify-center rounded-full px-3 font-heading text-2xl leading-none shadow-[0px_3px_0px_0px_rgba(0,0,0,0.28)] ${
+            winnerStyle?.pillClass ||
+            (isRoundEnded
+              ? "bg-white/95 text-[#212529]"
+              : "bg-white/95 text-skin-base")
+          }`}
+        >
+          {isWinner ? <WinnerBadge rank={rank} /> : `#${rank}`}
         </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={submission.image}
-          alt={submission.title}
-          className={`aspect-square w-full object-cover ${imageClass}`}
-        />
       )}
-    </button>
-    <div className="flex flex-1 flex-col gap-4 p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          {submission.submissionType === "trait" && (
-            <div
-              className={`mb-2 w-fit rounded-full px-2 py-0.5 font-heading text-xs ${
-                isRoundEnded || isWinner
-                  ? "bg-white/90 text-[#212529]"
-                  : "bg-[#dff3ff] text-[#0f5f99]"
-              }`}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="block text-left transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+        aria-label={`Open ${submission.title}`}
+      >
+        {noundrySubmission ? (
+          <div className={`aspect-square w-full ${imageClass}`}>
+            <NounPreviewTile
+              artwork={artwork}
+              submission={noundrySubmission}
+              traits={getSubmissionPreviewTraits(noundrySubmission)}
+              showEditedTrait
+              fullBleed
+            />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={submission.image}
+            alt={submission.title}
+            className={`aspect-square w-full object-cover ${imageClass}`}
+          />
+        )}
+      </button>
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            {submission.submissionType === "trait" && (
+              <div
+                className={`mb-2 w-fit rounded-full px-2 py-0.5 font-heading text-xs ${
+                  isRoundEnded || isWinner
+                    ? "bg-white/90 text-[#212529]"
+                    : "bg-[#dff3ff] text-[#0f5f99]"
+                }`}
+              >
+                Noundry trait
+                {submission.traitType ? `: ${submission.traitType}` : ""}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onOpen}
+              className={`text-left font-heading text-2xl leading-none underline-offset-4 transition hover:underline focus:outline-none focus:ring-2 focus:ring-skin-highlighted ${primaryTextClass}`}
             >
-              Noundry trait
-              {submission.traitType ? `: ${submission.traitType}` : ""}
+              {submission.title}
+            </button>
+          </div>
+          {showVoteCount && (
+            <div className="rounded-full bg-[#1d9bf0] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99]">
+              {submission.voteCount} votes
             </div>
           )}
-          <button
-            type="button"
-            onClick={onOpen}
-            className={`text-left font-heading text-2xl leading-none underline-offset-4 transition hover:underline focus:outline-none focus:ring-2 focus:ring-skin-highlighted ${primaryTextClass}`}
-          >
-            {submission.title}
-          </button>
         </div>
-        {showVoteCount && (
-          <div className="rounded-full bg-[#1d9bf0] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99]">
-            {submission.voteCount} votes
-          </div>
-        )}
+        <p className={`text-base leading-snug ${secondaryTextClass}`}>
+          {submission.description}
+        </p>
+        <div className="mt-auto flex items-center justify-between gap-3">
+          <WalletIdentityLink
+            address={submission.walletAddress}
+            ensName={demoAuthorNames[submission.walletAddress.toLowerCase()]}
+            className={`font-heading text-base underline ${primaryTextClass}`}
+          />
+          {canVote && (
+            <div className="flex items-center gap-2 rounded-xl border border-skin-stroke bg-[#f1f1f1] p-1">
+              <button
+                type="button"
+                onClick={() => onChange(allocation - 1)}
+                disabled={allocation <= 0}
+                className="yc-round-vote-remove h-9 w-9 rounded-lg font-heading text-xl disabled:opacity-40"
+                aria-label={`Remove vote from ${submission.title}`}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={maxAllocation}
+                value={allocation}
+                onChange={(event) => onChange(Number(event.target.value))}
+                aria-label={`Votes for ${submission.title}`}
+                className="h-9 w-16 rounded-lg border border-skin-stroke bg-white text-center font-heading text-lg text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+              />
+              <button
+                type="button"
+                onClick={() => onChange(allocation + 1)}
+                disabled={remainingVotes <= 0}
+                className="yc-round-vote-add h-9 w-9 rounded-lg font-heading text-xl disabled:opacity-40"
+                aria-label={`Add vote to ${submission.title}`}
+              >
+                +
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-      <p className={`text-base leading-snug ${secondaryTextClass}`}>
-        {submission.description}
-      </p>
-      <div className="mt-auto flex items-center justify-between gap-3">
-        <WalletIdentityLink
-          address={submission.walletAddress}
-          ensName={demoAuthorNames[submission.walletAddress.toLowerCase()]}
-          className={`font-heading text-base underline ${primaryTextClass}`}
-        />
-        {canVote && (
-          <div className="flex items-center gap-2 rounded-xl border border-skin-stroke bg-[#f1f1f1] p-1">
-            <button
-              type="button"
-              onClick={() => onChange(allocation - 1)}
-              disabled={allocation <= 0}
-              className="yc-round-vote-remove h-9 w-9 rounded-lg font-heading text-xl disabled:opacity-40"
-              aria-label={`Remove vote from ${submission.title}`}
-            >
-              -
-            </button>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={maxAllocation}
-              value={allocation}
-              onChange={(event) => onChange(Number(event.target.value))}
-              aria-label={`Votes for ${submission.title}`}
-              className="h-9 w-16 rounded-lg border border-skin-stroke bg-white text-center font-heading text-lg text-skin-base focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
-            />
-            <button
-              type="button"
-              onClick={() => onChange(allocation + 1)}
-              disabled={remainingVotes <= 0}
-              className="yc-round-vote-add h-9 w-9 rounded-lg font-heading text-xl disabled:opacity-40"
-              aria-label={`Add vote to ${submission.title}`}
-            >
-              +
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  </article>
+    </article>
   );
 };
 
@@ -675,7 +685,8 @@ const SubmissionModal = ({
   const [isVotesOpen, setIsVotesOpen] = useState(false);
   const noundrySubmission = getRoundNoundrySubmission(submission);
   const noundryPreviewTraits = useMemo(
-    () => (noundrySubmission ? getSubmissionPreviewTraits(noundrySubmission) : {}),
+    () =>
+      noundrySubmission ? getSubmissionPreviewTraits(noundrySubmission) : {},
     [noundrySubmission]
   );
   const submittedTraitBase = useMemo(
@@ -738,107 +749,107 @@ const SubmissionModal = ({
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex flex-col p-6 md:p-8">
-          <h2
-            id="round-submission-modal-title"
-            className="break-words font-heading text-[38px] leading-none text-skin-base md:text-[52px]"
-          >
-            {submission.title}
-          </h2>
-          <p className="mt-6 max-w-3xl text-lg leading-snug text-secondary">
-            {submission.description}
-          </p>
-          {submission.submissionType === "trait" && (
-            <div className="mt-4 w-fit rounded-full bg-[#dff3ff] px-3 py-1 font-heading text-sm text-[#0f5f99]">
-              Noundry trait
-              {submission.traitType ? `: ${submission.traitType}` : ""}
-            </div>
-          )}
-          {noundrySubmission && (
-            <div className="mt-5 grid gap-4 md:grid-cols-[1fr_180px]">
-              <div className="rounded-2xl border border-skin-stroke bg-white p-3">
-                <div className="mb-2 font-heading text-lg leading-none text-skin-base">
-                  Submission description
-                </div>
-                <div className="rounded-xl bg-[#fff7bf] p-4">
-                  <p className="text-base leading-snug text-secondary">
-                    {submission.description}
-                  </p>
-                </div>
+            <h2
+              id="round-submission-modal-title"
+              className="break-words font-heading text-[38px] leading-none text-skin-base md:text-[52px]"
+            >
+              {submission.title}
+            </h2>
+            <p className="mt-6 max-w-3xl text-lg leading-snug text-secondary">
+              {submission.description}
+            </p>
+            {submission.submissionType === "trait" && (
+              <div className="mt-4 w-fit rounded-full bg-[#dff3ff] px-3 py-1 font-heading text-sm text-[#0f5f99]">
+                Noundry trait
+                {submission.traitType ? `: ${submission.traitType}` : ""}
               </div>
-              <div className="rounded-2xl border border-skin-stroke bg-white p-3">
-                <div className="mb-2 font-heading text-lg leading-none text-skin-base">
-                  Submitted trait
-                </div>
-                <div className="aspect-square rounded-xl bg-[#fff7bf] p-3">
-                  <PixelPreview submission={noundrySubmission} />
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="mx-auto mt-6 w-full max-w-[420px] overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
-            {noundrySubmission ? (
-              <NounPreviewTile
-                artwork={artwork}
-                submission={noundrySubmission}
-                traits={noundryPreviewTraits}
-                showEditedTrait
-                fullBleed
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={submission.image}
-                alt={submission.title}
-                className="max-h-[520px] w-full object-contain"
-              />
             )}
-          </div>
-          {noundrySubmission && (
-            <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <NoundryModalPreviewSet
-                artwork={artwork}
-                submission={noundrySubmission}
-                title="Generated with this trait"
-                traits={generatedTraits}
-                editedIndexes={generatedTraits.map((_, index) => index)}
-              />
-              <NoundryModalPreviewSet
-                artwork={artwork}
-                submission={noundrySubmission}
-                title="Randomized from the collection"
-                traits={collectionTraits}
-                editedIndexes={[1, 6, 11]}
+            {noundrySubmission && (
+              <div className="mt-5 grid gap-4 md:grid-cols-[1fr_180px]">
+                <div className="rounded-2xl border border-skin-stroke bg-white p-3">
+                  <div className="mb-2 font-heading text-lg leading-none text-skin-base">
+                    Submission description
+                  </div>
+                  <div className="rounded-xl bg-[#fff7bf] p-4">
+                    <p className="text-base leading-snug text-secondary">
+                      {submission.description}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-skin-stroke bg-white p-3">
+                  <div className="mb-2 font-heading text-lg leading-none text-skin-base">
+                    Submitted trait
+                  </div>
+                  <div className="aspect-square rounded-xl bg-[#fff7bf] p-3">
+                    <PixelPreview submission={noundrySubmission} />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="mx-auto mt-6 w-full max-w-[420px] overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
+              {noundrySubmission ? (
+                <NounPreviewTile
+                  artwork={artwork}
+                  submission={noundrySubmission}
+                  traits={noundryPreviewTraits}
+                  showEditedTrait
+                  fullBleed
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={submission.image}
+                  alt={submission.title}
+                  className="max-h-[520px] w-full object-contain"
+                />
+              )}
+            </div>
+            {noundrySubmission && (
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                <NoundryModalPreviewSet
+                  artwork={artwork}
+                  submission={noundrySubmission}
+                  title="Generated with this trait"
+                  traits={generatedTraits}
+                  editedIndexes={generatedTraits.map((_, index) => index)}
+                />
+                <NoundryModalPreviewSet
+                  artwork={artwork}
+                  submission={noundrySubmission}
+                  title="Randomized from the collection"
+                  traits={collectionTraits}
+                  editedIndexes={[1, 6, 11]}
+                />
+              </div>
+            )}
+            {submission.url && <SubmissionLinks submission={submission} />}
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setIsVotesOpen(true)}
+                  className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
+                >
+                  Votes
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="yc-dark-yellow-button flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+                >
+                  Close
+                </button>
+              </div>
+              <WalletIdentityLink
+                address={submission.walletAddress}
+                ensName={
+                  demoAuthorNames[submission.walletAddress.toLowerCase()]
+                }
+                className="break-all text-right text-sm font-semibold text-black"
               />
             </div>
-          )}
-          {submission.url && (
-            <SubmissionLinks submission={submission} />
-          )}
-          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => setIsVotesOpen(true)}
-                className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
-              >
-                Votes
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="yc-dark-yellow-button flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
-              >
-                Close
-              </button>
-            </div>
-            <WalletIdentityLink
-              address={submission.walletAddress}
-              ensName={demoAuthorNames[submission.walletAddress.toLowerCase()]}
-              className="break-all text-right text-sm font-semibold text-black"
-            />
           </div>
         </div>
-      </div>
       </div>
       {isVotesOpen && (
         <div
@@ -886,7 +897,9 @@ const SubmissionModal = ({
                     >
                       <WalletIdentityLink
                         address={vote.walletAddress}
-                        ensName={demoAuthorNames[vote.walletAddress.toLowerCase()]}
+                        ensName={
+                          demoAuthorNames[vote.walletAddress.toLowerCase()]
+                        }
                         className="min-w-0 break-all font-heading text-lg leading-none text-skin-base"
                       />
                       <span className="shrink-0 rounded-full bg-[#1d9bf0] px-3 py-1 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99]">
@@ -1041,11 +1054,7 @@ const RoundStat = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const RoundAwardsPanel = ({
-  round,
-}: {
-  round: RoundWithSubmissions;
-}) => (
+const RoundAwardsPanel = ({ round }: { round: RoundWithSubmissions }) => (
   <article className="yc-dark-yellow-form-surface flex min-h-[320px] flex-col rounded-2xl border border-skin-stroke bg-white p-6 text-skin-base shadow-sm">
     <h2 className="font-heading text-3xl leading-none text-skin-base">
       AWARDS
@@ -1131,11 +1140,7 @@ const RoundActivityPanel = ({
   );
 };
 
-type RoundActivityItemType =
-  | "milestone"
-  | "submission"
-  | "trait"
-  | "vote";
+type RoundActivityItemType = "milestone" | "submission" | "trait" | "vote";
 
 type RoundActivityItemData = {
   id: string;
@@ -1270,8 +1275,8 @@ const getRoundActivityItems = (
   }
 
   return items.sort((a, b) => {
-  const aTime = new Date(a.timestamp).getTime();
-  const bTime = new Date(b.timestamp).getTime();
+    const aTime = new Date(a.timestamp).getTime();
+    const bTime = new Date(b.timestamp).getTime();
     return bTime - aTime;
   });
 };
@@ -1293,7 +1298,10 @@ const getVotingStrategyLabel = (round: RoundWithSubmissions | null) => {
 const getRoundNoundrySubmission = (
   submission: RoundSubmission
 ): NoundrySubmission | null => {
-  if (submission.submissionType !== "trait" || submission.source !== "noundry") {
+  if (
+    submission.submissionType !== "trait" ||
+    submission.source !== "noundry"
+  ) {
     return null;
   }
 
@@ -1385,8 +1393,7 @@ const getWinnerCardStyle = (rank: number) => {
   return {
     cardClass:
       "border-[#6e95ff] bg-[#0b2f8e] shadow-[0px_4.02px_0px_0px_#081f5d]",
-    listClass:
-      "border-[#7ba1ff] bg-[#0b2f8e] shadow-[0px_4px_0px_0px_#081f5d]",
+    listClass: "border-[#7ba1ff] bg-[#0b2f8e] shadow-[0px_4px_0px_0px_#081f5d]",
     imageClass: "bg-[#123ea5]",
     pillClass: "bg-[#7ba1ff] text-[#0d244f]",
   };

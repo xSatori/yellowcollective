@@ -221,7 +221,7 @@ export default function PlaygroundPage() {
           <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[56px]">
             Playground
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-snug text-secondary md:text-lg">
+          <p className="mt-4 max-w-3xl text-base leading-snug text-[#212529] md:text-lg">
             Generate combinations from the Yellow Collective onchain artwork.
           </p>
         </section>

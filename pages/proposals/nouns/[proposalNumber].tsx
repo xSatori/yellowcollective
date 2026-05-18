@@ -1,6 +1,5 @@
 import WalletIdentityLink from "@/components/WalletIdentityLink";
 import Layout from "@/components/Layout";
-import ProposalPropdates from "@/components/ProposalPropdates";
 import ProposalTabs from "@/components/ProposalTabs";
 import ProposalTransactions from "@/components/ProposalTransactions";
 import ProposalVoteList, { ProposalVote } from "@/components/ProposalVoteList";
@@ -10,7 +9,6 @@ import {
   getNounsDaoProposals,
   type NounsDaoProposal,
 } from "data/nouns-dao/proposals";
-import { NOUNS_TOKEN_CONTRACT } from "constants/addresses";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type {
   GetStaticPaths,
@@ -265,16 +263,6 @@ export default function NounsProposalDetailPage({
                     />
                   </div>
                 </section>
-              ),
-            },
-            {
-              id: "propdates",
-              label: "Propdates",
-              content: (
-                <ProposalPropdates
-                  proposalId={proposal.proposalId}
-                  tokenAddress={NOUNS_TOKEN_CONTRACT}
-                />
               ),
             },
           ]}

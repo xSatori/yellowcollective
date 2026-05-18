@@ -8,6 +8,9 @@ type SubmitRoundBody = {
     description?: string;
     image?: string;
     url?: string;
+    submissionType?: "project" | "trait";
+    source?: string;
+    sourcePayload?: Record<string, unknown>;
   };
 };
 

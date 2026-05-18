@@ -189,9 +189,9 @@ export default function ProbePage() {
             <h1 className="font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
               Probe
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-snug text-secondary md:text-lg">
+            <p className="mt-4 max-w-3xl text-base leading-snug text-[#212529] md:text-lg">
               Explore every minted Collective Noun by token ID, owner, and
-              metadata traits pulled from the Yellow Collective token contract.
+              metadata traits.
             </p>
           </div>
           <div className="grid grid-cols-2 place-items-center gap-3 rounded-xl border border-skin-stroke bg-skin-muted p-4 text-center">

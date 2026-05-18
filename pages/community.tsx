@@ -63,7 +63,7 @@ export default function CommunityPage({
               return (
                 <div
                   key={project.slug}
-                  className="yc-project-surface group overflow-hidden rounded-2xl border border-skin-stroke bg-white text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+                  className="yc-project-surface group overflow-hidden rounded-2xl border border-skin-stroke bg-white text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] active:translate-y-1 active:shadow-none"
                 >
                   <Link
                     href={`/projects/${project.slug}`}

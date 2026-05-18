@@ -21,7 +21,7 @@ export default function ThemeToggle({ className }: ThemeToggleProps) {
       title={label}
       onClick={toggleThemeMode}
       className={clsx(
-        "shrink-0 rounded-xl border border-skin-stroke text-skin-base transition ease-in-out hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral-hover))]",
+        "yc-theme-toggle shrink-0 rounded-xl border border-skin-stroke text-skin-base transition ease-in-out hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral-hover))]",
         className
       )}
     >

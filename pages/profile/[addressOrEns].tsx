@@ -1,5 +1,8 @@
 import Layout from "@/components/Layout";
+import CoinMediaPreview from "@/components/coins/CoinMediaPreview";
 import {
+  buildRandomTraits,
+  NounPreviewTile,
   SubmissionGalleryCard,
   type NoundrySubmission,
 } from "@/components/noundry/NoundryPreview";
@@ -25,7 +28,10 @@ import {
   type ProfileMetadata,
 } from "data/profile";
 import type { ProfileRoundSubmission, ProfileRoundVote } from "data/rounds";
-import type { PlaygroundArtwork } from "data/nouns-builder/artwork";
+import {
+  getYellowCollectiveArtwork,
+  type PlaygroundArtwork,
+} from "data/nouns-builder/artwork";
 import type { ProbeToken } from "data/nouns-builder/probe";
 import type {
   GetServerSidePropsContext,
@@ -52,6 +58,7 @@ import { utils as ethersUtils } from "ethers";
 
 type ProfilePageProps = {
   profile: PublicProfileData | null;
+  artwork: PlaygroundArtwork | null;
   lookup: string;
   error?: string;
 };
@@ -72,6 +79,7 @@ const PROFILE_BUTTON_RED =
   "bg-[#c93d2f] text-white shadow-[0px_4.02px_0px_0px_#7f2219] hover:bg-[#d95042] hover:shadow-[0px_6px_0px_0px_#7f2219]";
 const PROFILE_BUTTON_PURPLE =
   "bg-[#855DCD] text-white shadow-[0px_4.02px_0px_0px_#4f3285] hover:bg-[#9b75df] hover:shadow-[0px_6px_0px_0px_#4f3285]";
+const EMPTY_NOUN_PIXELS = Array.from({ length: 32 * 32 }, () => "transparent");
 type ProfileFeedItem = {
   id: string;
   href: string;
@@ -111,6 +119,7 @@ export const getServerSideProps = async ({
     return {
       props: {
         lookup,
+        artwork: null,
         profile: null,
         error: "Enter a wallet address or ENS name to view a profile.",
       },
@@ -127,6 +136,7 @@ export const getServerSideProps = async ({
     return {
       props: {
         lookup,
+        artwork: null,
         profile: null,
         error: lookupIsEnsName
           ? "That ENS name did not resolve to a wallet address."
@@ -145,12 +155,19 @@ export const getServerSideProps = async ({
   }
 
   try {
+    const [profileData, artwork] = await Promise.all([
+      getPublicProfileData(resolvedAddress),
+      getYellowCollectiveArtwork().catch((artworkError) => {
+        console.error("Unable to load profile fallback artwork", artworkError);
+        return null;
+      }),
+    ]);
+
     return {
       props: {
         lookup,
-        profile: toSerializableProfile(
-          await getPublicProfileData(resolvedAddress)
-        ),
+        artwork,
+        profile: toSerializableProfile(profileData),
       },
     };
   } catch (error) {
@@ -158,6 +175,7 @@ export const getServerSideProps = async ({
     return {
       props: {
         lookup,
+        artwork: null,
         profile: null,
         error: "Unable to load this profile right now.",
       },
@@ -167,6 +185,7 @@ export const getServerSideProps = async ({
 
 export default function ProfilePage({
   profile,
+  artwork: initialArtwork,
   lookup,
   error,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
@@ -188,8 +207,9 @@ export default function ProfilePage({
     message: string;
   }>({ status: "idle", message: "" });
   const { data: artwork } = useSWR<PlaygroundArtwork>(
-    profile?.noundrySubmissions.length ? "/api/playground/artwork" : null,
-    fetcher
+    profile ? "/api/playground/artwork" : null,
+    fetcher,
+    { fallbackData: initialArtwork || undefined }
   );
   const { data: roundsSettings } = useSWR<{ roundsPublicEnabled: boolean }>(
     "/api/rounds/settings",
@@ -203,6 +223,7 @@ export default function ProfilePage({
 
     return [
       ["Noundry", profile.noundrySubmissions.length],
+      ["Content coins", profile.contentCoins.length],
       ["Round art", profile.roundSubmissions.length],
       ["DAO tokens", profile.ownedTokens.length],
       ["Proposals", profile.submittedProposals.length],
@@ -281,7 +302,9 @@ export default function ProfilePage({
 
   const customDisplayName = metadata?.username?.trim() || "";
   const displayName =
-    customDisplayName || profile.ensName || shortenWalletAddress(profile.address);
+    customDisplayName ||
+    profile.ensName ||
+    shortenWalletAddress(profile.address);
   const showEnsPill = Boolean(customDisplayName && profile.ensName);
   const avatarUrl = metadata?.avatarUrl || profile.ensAvatar || "";
   const explorerLinks = [
@@ -290,13 +313,13 @@ export default function ProfilePage({
   ] as const;
   const socialLinks = [
     metadata?.websiteUrl
-        ? {
-            label: "Website",
-            href: metadata.websiteUrl,
-            icon: "/chain-link.svg",
-            className: PROFILE_BUTTON_RED,
-          }
-        : undefined,
+      ? {
+          label: "Website",
+          href: metadata.websiteUrl,
+          icon: "/chain-link.svg",
+          className: PROFILE_BUTTON_RED,
+        }
+      : undefined,
     metadata?.farcaster
       ? {
           label: "Farcaster",
@@ -339,6 +362,7 @@ export default function ProfilePage({
                   address={profile.address}
                   avatar={avatarUrl}
                   label={displayName}
+                  artwork={artwork}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -423,7 +447,7 @@ export default function ProfilePage({
               )}
             </div>
 
-            <div className="grid grid-cols-[repeat(5,minmax(0,1fr))] border-t border-skin-stroke bg-[#f7f7f7]">
+            <div className="grid grid-cols-2 border-t border-skin-stroke bg-[#f7f7f7] sm:grid-cols-3 lg:grid-cols-[repeat(6,minmax(0,1fr))]">
               {stats.map(([label, value]) => (
                 <div
                   key={label}
@@ -442,6 +466,7 @@ export default function ProfilePage({
         </section>
 
         <CommunityProjectsSection projects={profile.communityProjects} />
+        <ContentCoinsSection coins={profile.contentCoins} />
         <GalleryTab
           artwork={artwork}
           submissions={profile.noundrySubmissions}
@@ -474,6 +499,7 @@ export default function ProfilePage({
               value={formState.avatarUrl}
               fallbackAvatar={profile.ensAvatar}
               label={displayName}
+              artwork={artwork}
               onChange={(avatarUrl) =>
                 setFormState((current) => ({ ...current, avatarUrl }))
               }
@@ -557,23 +583,56 @@ const ProfileAvatar = ({
   address,
   avatar,
   label,
+  artwork,
 }: {
   address: string;
   avatar?: string;
   label: string;
-}) => (
-  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-skin-stroke bg-[#ffcc00] shadow-[0px_5px_0px_0px_#b89400] sm:h-28 sm:w-28">
-    {avatar ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={avatar} alt={label} className="h-full w-full object-cover" />
-    ) : (
-      <Jazzicon
-        diameter={72}
-        seed={jsNumberForAddress(address || zeroAddress)}
-      />
-    )}
-  </div>
-);
+  artwork?: PlaygroundArtwork;
+}) => {
+  const normalizedAddress = address || zeroAddress;
+  const fallbackTraits = useMemo(
+    () =>
+      artwork
+        ? buildRandomTraits(artwork, normalizedAddress.toLowerCase())
+        : {},
+    [artwork, normalizedAddress]
+  );
+  const fallbackSubmission = useMemo<NoundrySubmission>(
+    () => ({
+      id: `profile-${normalizedAddress}`,
+      title: `${label} profile noun`,
+      artist: normalizedAddress,
+      traitType: "heads",
+      pixels: EMPTY_NOUN_PIXELS,
+      selectedTraits: fallbackTraits,
+      previewTraits: fallbackTraits,
+      status: "approved",
+      createdAt: "",
+      updatedAt: "",
+    }),
+    [fallbackTraits, label, normalizedAddress]
+  );
+
+  return (
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-skin-stroke bg-[#ffcc00] shadow-[0px_5px_0px_0px_#b89400] sm:h-28 sm:w-28">
+      {avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatar} alt={label} className="h-full w-full object-cover" />
+      ) : artwork ? (
+        <NounPreviewTile
+          artwork={artwork}
+          submission={fallbackSubmission}
+          traits={fallbackTraits}
+          showEditedTrait={false}
+          fullBleed
+        />
+      ) : (
+        <Jazzicon diameter={72} seed={jsNumberForAddress(normalizedAddress)} />
+      )}
+    </div>
+  );
+};
 
 const resizeAvatarFile = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -624,6 +683,7 @@ const ProfileAvatarUpload = ({
   value,
   fallbackAvatar,
   label,
+  artwork,
   onChange,
   onError,
 }: {
@@ -631,6 +691,7 @@ const ProfileAvatarUpload = ({
   value: string;
   fallbackAvatar?: string;
   label: string;
+  artwork?: PlaygroundArtwork;
   onChange: (value: string) => void;
   onError: (message: string) => void;
 }) => {
@@ -656,14 +717,20 @@ const ProfileAvatarUpload = ({
   return (
     <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <ProfileAvatar address={address} avatar={previewAvatar} label={label} />
+        <ProfileAvatar
+          address={address}
+          avatar={previewAvatar}
+          label={label}
+          artwork={artwork}
+        />
         <div className="flex flex-1 flex-col gap-3">
           <div>
             <div className="font-heading text-lg leading-none">
               Profile picture
             </div>
             <p className="mt-1 text-sm text-secondary">
-              Uses your ENS photo by default. Uploading here overrides it.
+              Uses your ENS photo when available. Otherwise, this falls back to
+              a wallet-generated Collective Noun.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -714,6 +781,8 @@ const GalleryTab = ({
           submission={submission}
           artwork={artwork}
           compact
+          showArtist={false}
+          profileTone
         />
       ))}
     </div>
@@ -753,6 +822,52 @@ const CommunityProjectsSection = ({
             </h3>
             <p className="mt-2 line-clamp-3 text-sm leading-5 text-secondary">
               {project.description}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </ProfileSection>
+);
+
+const ContentCoinsSection = ({
+  coins,
+}: {
+  coins: PublicProfileData["contentCoins"];
+}) => (
+  <ProfileSection
+    title="Content Coins"
+    emptyTitle="No content coins yet"
+    emptyBody="Content coins owned by this wallet will appear here."
+    isEmpty={coins.length === 0}
+  >
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {coins.map((coin) => (
+        <Link
+          key={coin.address}
+          href={`/coins/${coin.address}`}
+          className="group overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf]"
+        >
+          <div className="aspect-square w-full bg-[#ffcc00]">
+            <CoinMediaPreview
+              mediaUrl={coin.mediaUrl}
+              imageUrl={coin.imageUrl}
+              title={coin.title}
+              symbol={coin.symbol}
+              className="h-full w-full object-cover"
+              fallbackClassName="flex h-full w-full items-center justify-center bg-[#ffcc00] p-4 text-center font-heading text-3xl text-skin-base"
+              hoverScale
+            />
+          </div>
+          <div className="border-t border-skin-stroke p-4">
+            <div className="caption font-semibold text-secondary">
+              {coin.symbol}
+            </div>
+            <h3 className="mt-2 font-heading text-xl leading-tight text-skin-base">
+              {coin.title}
+            </h3>
+            <p className="mt-2 line-clamp-3 text-sm leading-5 text-secondary">
+              {coin.description}
             </p>
           </div>
         </Link>
@@ -1037,8 +1152,7 @@ const ActivityStatusButton = ({
     },
     submission: {
       label: "Submitted",
-      className:
-        "bg-[#ffcc00] text-skin-base shadow-[0px_4px_0px_0px_#b89400]",
+      className: "bg-[#ffcc00] text-skin-base shadow-[0px_4px_0px_0px_#b89400]",
       Icon: DocumentTextIcon,
     },
     vote: {
@@ -1051,8 +1165,7 @@ const ActivityStatusButton = ({
     },
     won: {
       label: "Won",
-      className:
-        "bg-[#ffcc00] text-skin-base shadow-[0px_4px_0px_0px_#b89400]",
+      className: "bg-[#ffcc00] text-skin-base shadow-[0px_4px_0px_0px_#b89400]",
       Icon: TrophyIcon,
     },
   }[status];
