@@ -14,6 +14,7 @@ export type ThemeColors = {
   "surface-muted"?: RGBType;
   stroke?: RGBType;
   "stroke-strong"?: RGBType;
+  "selector-stroke"?: RGBType;
   backdrop?: RGBType;
   "header-bg"?: RGBType;
   "header-text"?: RGBType;

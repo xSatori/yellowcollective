@@ -141,7 +141,7 @@ export default function NounsProposalsPage({
               <h1 className="text-[36px] leading-none md:text-[44px]">
                 Proposals
               </h1>
-              <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_rgb(var(--color-stroke-strong))] lg:w-fit lg:max-w-none lg:gap-1.5 lg:shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
+              <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_rgb(var(--color-selector-stroke))] lg:w-fit lg:max-w-none lg:gap-1.5 lg:shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))]">
                 <Link
                   href="/proposals"
                   className="proposal-tab-button flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-heading text-sm leading-tight transition hover:bg-[#fff7bf] lg:flex-none lg:px-5 lg:py-3 lg:text-base"

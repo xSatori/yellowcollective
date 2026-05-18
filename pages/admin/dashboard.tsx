@@ -681,7 +681,7 @@ const CommunityAdminPanel = ({
         error={error}
         isLoading={isLoading}
         header={
-          <div className="mt-4 flex gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
+          <div className="mt-4 flex gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))]">
             {communityListModes.map((mode) => {
               const isActive = activeMode === mode.id;
               const count = projectCounts[mode.id];
@@ -1308,7 +1308,7 @@ const AdminModeTabs = ({
   activeMode: string;
   onChange: (mode: string) => void;
 }) => (
-  <div className="flex gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
+  <div className="flex gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))]">
     {modes.map(([mode, label]) => {
       const isActive = activeMode === mode;
 
@@ -2389,7 +2389,7 @@ const ProjectEditor = ({
       showStatusInTitle={false}
       headingAddon={
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <div className="flex w-fit gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))]">
+          <div className="flex w-fit gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))]">
             {projectEditorModes.map((mode) => {
               const isActive = editorMode === mode.id;
 

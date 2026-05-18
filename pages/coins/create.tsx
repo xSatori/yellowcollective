@@ -742,7 +742,7 @@ const ModeToggle = ({
   mode: SubmitMode;
   setMode: (mode: SubmitMode) => void;
 }) => (
-  <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 sm:w-auto sm:max-w-none">
+  <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 sm:w-auto sm:max-w-none">
     {[
       { value: "direct" as const, label: "Create" },
       { value: "droposal" as const, label: "Droposal" },

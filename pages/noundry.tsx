@@ -1120,7 +1120,7 @@ export default function NoundryPage() {
                 submissions, and assemble them against the live collection.
               </p>
             </div>
-            <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] lg:w-fit">
+            <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))] lg:w-fit">
               {(["studio", "gallery"] as const).map((tab) => (
                 <button
                   key={tab}
@@ -2493,7 +2493,7 @@ const GalleryView = ({
   if (submissions.length === 0) {
     return (
       <section className="flex flex-col gap-4">
-        <div className="yc-dark-text-black flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
+        <div className="yc-dark-text-black flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))] sm:w-fit">
           {galleryTabs.map(([tab, label]) => (
             <button
               key={tab}
@@ -2524,7 +2524,7 @@ const GalleryView = ({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="yc-dark-text-black flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-stroke-strong))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-stroke-strong))] sm:w-fit">
+      <div className="yc-dark-text-black flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))] sm:w-fit">
         {galleryTabs.map(([tab, label]) => (
           <button
             key={tab}
