@@ -1,5 +1,9 @@
 import type { Round } from "data/rounds";
-import { getRoundState, getRoundStateLabel } from "@/utils/rounds/state";
+import {
+  getRoundState,
+  getRoundStateLabel,
+  type RoundState,
+} from "@/utils/rounds/state";
 import Link from "next/link";
 
 const formatDate = (value: string) =>
@@ -9,22 +13,70 @@ const formatDate = (value: string) =>
     year: "numeric",
   }).format(new Date(value));
 
-export const RoundStatusPill = ({ status }: { status: string }) => {
-  const color =
-    status === "published" ||
-    status === "approved" ||
-    status === "voting_open" ||
-    status === "submissions_open"
+const getStatusDotColor = (state: RoundState | "featured" | null) => {
+  if (state === "submissions_open") return "bg-[#16a34a]";
+  if (state === "upcoming" || state === "voting_open") return "bg-[#1d9bf0]";
+  if (state === "ended" || state === "archived") return "bg-[#c93d2f]";
+  return "bg-[#d7aa00]";
+};
+
+const inferRoundStatusState = (
+  status: string
+): RoundState | "featured" | null => {
+  const normalized = status.toLowerCase().replace(/\s+/g, "_");
+
+  if (normalized.includes("featured")) return "featured";
+  if (normalized.includes("submissions_open")) return "submissions_open";
+  if (normalized.includes("voting_open")) return "voting_open";
+  if (normalized.includes("upcoming")) return "upcoming";
+  if (normalized.includes("ended") || normalized.includes("completed")) {
+    return "ended";
+  }
+  if (normalized.includes("archived")) return "archived";
+
+  return null;
+};
+
+export const RoundStatusPill = ({
+  status,
+  state,
+}: {
+  status: string;
+  state?: RoundState | "featured";
+}) => {
+  const resolvedState = state ?? inferRoundStatusState(status);
+  const isFeatured = resolvedState === "featured";
+  const color = isFeatured
+    ? "bg-[#fff7bf] text-[#212529]"
+    : resolvedState === "submissions_open"
       ? "bg-[#e7f7df] text-[#276514]"
-      : status === "archived" || status === "rejected" || status === "hidden"
-        ? "bg-[#f8d7d7] text-[#8c1d1d]"
-        : "bg-[#fff7bf] text-[#6d5600]";
+      : resolvedState === "voting_open" || resolvedState === "upcoming"
+        ? "bg-[#dff3ff] text-[#0f5f99]"
+        : resolvedState === "ended" ||
+            resolvedState === "archived" ||
+            status === "rejected" ||
+            status === "hidden"
+          ? "bg-[#f8d7d7] text-[#8c1d1d]"
+          : "bg-[#fff7bf] text-[#6d5600]";
 
   return (
     <span
-      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${color}`}
+      className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${color}`}
     >
+      {!isFeatured && (
+        <span
+          aria-hidden="true"
+          className={`h-2.5 w-2.5 rounded-full ${getStatusDotColor(
+            resolvedState
+          )}`}
+        />
+      )}
       {status.replace(/_/g, " ")}
+      {isFeatured && (
+        <span aria-hidden="true" className="yc-round-featured-star">
+          ★
+        </span>
+      )}
     </span>
   );
 };
@@ -35,22 +87,20 @@ export const RoundCard = ({ round }: { round: Round }) => {
   const isVoting = state === "voting_open";
   const isUpcoming = state === "upcoming";
   const isCompleted = state === "ended";
-  const statusLabel =
-    isUpcoming
-      ? `Submissions open ${formatDate(round.submissionsOpenAt)}`
-      : getRoundStateLabel(state);
-  const dateDetail =
-    isOpen
+  const statusLabel = isUpcoming
+    ? `Submissions open ${formatDate(round.submissionsOpenAt)}`
+    : getRoundStateLabel(state);
+  const dateDetail = isOpen
+    ? {
+        label: "Voting starts",
+        value: formatDate(round.votingStartsAt),
+      }
+    : isVoting
       ? {
-          label: "Voting starts",
-          value: formatDate(round.votingStartsAt),
+          label: "Voting ends",
+          value: formatDate(round.votingEndsAt),
         }
-      : isVoting
-        ? {
-            label: "Voting ends",
-            value: formatDate(round.votingEndsAt),
-          }
-        : null;
+      : null;
   const showStats = !isUpcoming;
   const showVotes = isVoting || isCompleted;
 
@@ -79,7 +129,7 @@ export const RoundCard = ({ round }: { round: Round }) => {
             {round.title}
           </h2>
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <RoundStatusPill status={statusLabel} />
+            <RoundStatusPill status={statusLabel} state={state} />
             {dateDetail && (
               <div className="whitespace-nowrap text-xs font-semibold text-secondary">
                 {dateDetail.label} {dateDetail.value}

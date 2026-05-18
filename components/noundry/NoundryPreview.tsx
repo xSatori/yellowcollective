@@ -221,11 +221,15 @@ export const SubmissionGalleryCard = ({
   submission,
   footer,
   compact = false,
+  showArtist = true,
+  profileTone = false,
 }: {
   artwork?: PlaygroundArtwork;
   submission: NoundrySubmission;
   footer?: React.ReactNode;
   compact?: boolean;
+  showArtist?: boolean;
+  profileTone?: boolean;
 }) => (
   <div
     className={`yc-dark-yellow-surface overflow-hidden border border-skin-stroke bg-white shadow-sm ${
@@ -248,27 +252,33 @@ export const SubmissionGalleryCard = ({
     <div className={`border-t border-skin-stroke ${compact ? "p-2 sm:p-3" : "p-4"}`}>
       <Link
         href={getTraitPath(submission.id)}
-        className={`font-heading leading-tight text-skin-base transition hover:text-[#b89400] ${
+        className={`font-heading leading-tight transition hover:text-[#b89400] ${
+          profileTone ? "text-skin-highlighted" : "text-skin-base"
+        } ${
           compact ? "text-sm" : "text-xl"
         }`}
       >
         {submission.title}
       </Link>
       <div
-        className={`mt-1 leading-snug text-secondary ${
+        className={`mt-1 leading-snug ${
+          profileTone ? "text-skin-highlighted" : "text-secondary"
+        } ${
           compact ? "text-xs" : "text-sm"
         }`}
       >
         {getLayerLabel(submission.traitType)}
       </div>
-      <Link
-        href={getProfilePath({ address: submission.artist })}
-        className={`mt-2 block truncate font-heading text-skin-base transition hover:text-[#b89400] ${
-          compact ? "text-xs" : "text-sm"
-        }`}
-      >
-        <WalletIdentityLink address={submission.artist} link={false} />
-      </Link>
+      {showArtist && (
+        <Link
+          href={getProfilePath({ address: submission.artist })}
+          className={`mt-2 block truncate font-heading text-skin-base transition hover:text-[#b89400] ${
+            compact ? "text-xs" : "text-sm"
+          }`}
+        >
+          <WalletIdentityLink address={submission.artist} link={false} />
+        </Link>
+      )}
       {footer}
     </div>
   </div>

@@ -22,10 +22,7 @@ export type RoundSubmissionStatus =
   | "approved"
   | "rejected"
   | "hidden";
-export type RoundRequestStatus =
-  | "pending"
-  | "approved"
-  | "rejected";
+export type RoundRequestStatus = "pending" | "approved" | "rejected";
 export type RoundVotingStrategy =
   | "one_per_wallet"
   | "one_per_nft"
@@ -132,7 +129,6 @@ export type RoundRequest = {
   title: string;
   description: string;
   content: string;
-  goals: string;
   image: string;
   url: string;
   timeline: string;
@@ -223,7 +219,6 @@ export type RoundRequestInput = Partial<
     | "title"
     | "description"
     | "content"
-    | "goals"
     | "image"
     | "url"
     | "timeline"
@@ -256,6 +251,7 @@ const DEFAULT_LIMITS = {
 let pool: Pool | null = null;
 let tableReady: Promise<void> | null = null;
 const ROUNDS_PUBLIC_SETTING_KEY = "rounds_public_enabled";
+const DEMO_ROUND_SLUG_PATTERN = "demo-%";
 
 const getConnectionString = () =>
   process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
@@ -401,7 +397,6 @@ const ensureTables = async () => {
             title text NOT NULL,
             description text NOT NULL,
             content text NOT NULL DEFAULT '',
-            goals text NOT NULL DEFAULT '',
             image text NOT NULL DEFAULT '',
             url text NOT NULL DEFAULT '',
             timeline text NOT NULL DEFAULT '',
@@ -498,6 +493,12 @@ const ensureTables = async () => {
       )
       .then(() =>
         getPool().query(`
+          ALTER TABLE round_requests
+            DROP COLUMN IF EXISTS goals
+        `)
+      )
+      .then(() =>
+        getPool().query(`
           UPDATE rounds
           SET ends_at = voting_ends_at
           WHERE ends_at IS DISTINCT FROM voting_ends_at
@@ -555,7 +556,9 @@ const ensureTables = async () => {
 
 const formatDate = (value: Date | string | null) => {
   if (!value) return null;
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+  return value instanceof Date
+    ? value.toISOString()
+    : new Date(value).toISOString();
 };
 
 const parseJson = <T>(value: T | string): T =>
@@ -628,7 +631,6 @@ const requestSelectFields = `
   title,
   description,
   content,
-  goals,
   image,
   url,
   timeline,
@@ -769,7 +771,6 @@ const mapRoundRequest = (row: Record<string, any>): RoundRequest => ({
   title: row.title,
   description: row.description,
   content: row.content,
-  goals: row.goals,
   image: row.image,
   url: row.url,
   timeline: row.timeline,
@@ -857,7 +858,10 @@ export const normalizeRoundInput = (
       allowInternal: true,
       allowDataImages: true,
     }),
-    startsAt: normalizeDate(input.startsAt ?? current?.startsAt, startsAtFallback),
+    startsAt: normalizeDate(
+      input.startsAt ?? current?.startsAt,
+      startsAtFallback
+    ),
     submissionsOpenAt: normalizeDate(
       input.submissionsOpenAt ?? current?.submissionsOpenAt,
       submissionsFallback
@@ -897,10 +901,14 @@ export const normalizeRoundInput = (
         DEFAULT_LIMITS.maxSubmissionsPerWallet
     ),
     minTitleLength: Number(
-      input.minTitleLength ?? current?.minTitleLength ?? DEFAULT_LIMITS.minTitleLength
+      input.minTitleLength ??
+        current?.minTitleLength ??
+        DEFAULT_LIMITS.minTitleLength
     ),
     maxTitleLength: Number(
-      input.maxTitleLength ?? current?.maxTitleLength ?? DEFAULT_LIMITS.maxTitleLength
+      input.maxTitleLength ??
+        current?.maxTitleLength ??
+        DEFAULT_LIMITS.maxTitleLength
     ),
     minDescriptionLength: Number(
       input.minDescriptionLength ??
@@ -924,7 +932,11 @@ export const validateRoundInput = (input: NormalizedRoundInput) => {
     return "A round title is required and must be 160 characters or fewer.";
   }
 
-  if (input.status !== "draft" && input.status !== "published" && input.status !== "archived") {
+  if (
+    input.status !== "draft" &&
+    input.status !== "published" &&
+    input.status !== "archived"
+  ) {
     return "Round status is invalid.";
   }
 
@@ -940,7 +952,10 @@ export const validateRoundInput = (input: NormalizedRoundInput) => {
     return "Votes per wallet must be at least 1.";
   }
 
-  if (!Number.isInteger(input.maxSubmissionsPerWallet) || input.maxSubmissionsPerWallet < 1) {
+  if (
+    !Number.isInteger(input.maxSubmissionsPerWallet) ||
+    input.maxSubmissionsPerWallet < 1
+  ) {
     return "Max submissions per wallet must be at least 1.";
   }
 
@@ -1011,7 +1026,10 @@ const normalizeRoundAwards = (awards?: RoundAwardInput[]) =>
     .filter((award) => award.title || award.description || award.value)
     .sort((first, second) => first.position - second.position);
 
-const validateRoundAwards = (awards: RoundAwardInput[], winnerCount: number) => {
+const validateRoundAwards = (
+  awards: RoundAwardInput[],
+  winnerCount: number
+) => {
   const normalizedAwards = normalizeRoundAwards(awards);
   const seenPositions = new Set<number>();
 
@@ -1170,14 +1188,16 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
   const submissionsOpenAt = normalizeDate(input.submissionsOpenAt, new Date());
 
   return {
-    walletAddress: walletAddress && isAddress(walletAddress) ? getAddress(walletAddress) : null,
+    walletAddress:
+      walletAddress && isAddress(walletAddress)
+        ? getAddress(walletAddress)
+        : null,
     requesterName: String(input.requesterName || "").trim(),
     requesterEmail: String(input.requesterEmail || "").trim(),
     requestedSlug: normalizeSlug(input.requestedSlug || input.title || ""),
     title: String(input.title || "").trim(),
     description: String(input.description || "").trim(),
     content: String(input.content || "").trim(),
-    goals: String(input.goals || "").trim(),
     image: normalizeSafeImageUrl(input.image, {
       allowInternal: true,
       allowDataImages: true,
@@ -1192,7 +1212,8 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
     ),
     votingEndsAt,
     endsAt: votingEndsAt,
-    votingStrategy: (input.votingStrategy || "one_per_nft") as RoundVotingStrategy,
+    votingStrategy: (input.votingStrategy ||
+      "one_per_nft") as RoundVotingStrategy,
     votesPerWallet: Number(input.votesPerWallet || 1),
     winnerCount: Number(input.winnerCount || 1),
     maxSubmissionsPerWallet: Number(input.maxSubmissionsPerWallet || 1),
@@ -1207,7 +1228,11 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
 export const validateRoundRequestInput = (input: RoundRequestInput) => {
   const request = normalizeRoundRequestInput(input);
 
-  if (!request.title || request.title.length < 3 || request.title.length > 120) {
+  if (
+    !request.title ||
+    request.title.length < 3 ||
+    request.title.length > 120
+  ) {
     return "Round title must be 3-120 characters.";
   }
 
@@ -1223,12 +1248,20 @@ export const validateRoundRequestInput = (input: RoundRequestInput) => {
     return "Email must be valid.";
   }
 
-  if (!request.description || request.description.length < 20 || request.description.length > 2000) {
-    return "Round description must be 20-2000 characters.";
+  if (
+    !request.description ||
+    request.description.length < 20 ||
+    request.description.length > 2000
+  ) {
+    return "Summary must be 20-2000 characters.";
   }
 
-  if (!request.content || request.content.length < 20 || request.content.length > 4000) {
-    return "Round details must be 20-4000 characters.";
+  if (
+    !request.content ||
+    request.content.length < 20 ||
+    request.content.length > 4000
+  ) {
+    return "Description must be 20-4000 characters.";
   }
 
   if (!request.requestedSlug || !/^[a-z0-9-]+$/.test(request.requestedSlug)) {
@@ -1292,8 +1325,10 @@ export const listPublicRounds = async () => {
       WHERE r.deleted_at IS NULL
         AND r.status = 'published'
         AND r.active = true
+        AND r.slug NOT LIKE $1
       ORDER BY r.featured DESC, r.starts_at DESC
-    `
+    `,
+    [DEMO_ROUND_SLUG_PATTERN]
   );
 
   return hydrateRoundsWithAwards(result.rows.map(mapRound));
@@ -1341,6 +1376,7 @@ export const listAdminRounds = async () => {
       FROM rounds r
       ${roundStatsJoin}
       WHERE r.deleted_at IS NULL
+        AND r.slug NOT LIKE $1
       ORDER BY
         CASE r.status
           WHEN 'draft' THEN 0
@@ -1348,7 +1384,8 @@ export const listAdminRounds = async () => {
           ELSE 2
         END,
         r.created_at DESC
-    `
+    `,
+    [DEMO_ROUND_SLUG_PATTERN]
   );
 
   return hydrateRoundsWithAwards(result.rows.map(mapRound));
@@ -1392,7 +1429,6 @@ export const createRoundRequest = async (input: RoundRequestInput) => {
         title,
         description,
         content,
-        goals,
         image,
         url,
         timeline,
@@ -1409,7 +1445,7 @@ export const createRoundRequest = async (input: RoundRequestInput) => {
         trait_submissions_enabled,
         awards
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
       RETURNING ${requestSelectFields}
     `,
     [
@@ -1421,7 +1457,6 @@ export const createRoundRequest = async (input: RoundRequestInput) => {
       request.title,
       request.description,
       request.content,
-      request.goals,
       request.image,
       request.url,
       request.timeline,
@@ -1677,6 +1712,8 @@ export const getRoundBySlug = async (slug: string) => {
 };
 
 export const getPublicRoundBySlug = async (slug: string) => {
+  if (slug.startsWith("demo-")) return null;
+
   const round = await getRoundBySlug(slug);
   if (!round || round.status !== "published" || !round.active) return null;
 
@@ -2555,7 +2592,9 @@ export const updateRoundSubmission = async (
     `,
     [roundId, submissionId]
   );
-  const current = currentResult.rows[0] ? mapSubmission(currentResult.rows[0]) : null;
+  const current = currentResult.rows[0]
+    ? mapSubmission(currentResult.rows[0])
+    : null;
   if (!current) return null;
 
   const merged = {
@@ -2793,7 +2832,11 @@ export const castRoundVotes = async ({
       );
     }
 
-    const usedVotes = await getRoundVoteUsage(round.id, normalizedWallet, client);
+    const usedVotes = await getRoundVoteUsage(
+      round.id,
+      normalizedWallet,
+      client
+    );
     if (usedVotes > votingPower) {
       throw new Error("Vote allocation exceeds available voting power.");
     }
