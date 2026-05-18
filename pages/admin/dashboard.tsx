@@ -1,15 +1,14 @@
 import Layout from "@/components/Layout";
+import CoinMediaPreview from "@/components/coins/CoinMediaPreview";
 import ProjectMemberSelector from "@/components/community/ProjectMemberSelector";
 import { isAdminAddress } from "@/utils/admin";
 import { getAdminSessionSignedRequestAction } from "@/utils/admin-auth";
 import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
-import {
-  getSafeLinkProps,
-  normalizeSafeImageUrl,
-} from "@/utils/url-safety";
+import { getSafeLinkProps, normalizeSafeImageUrl } from "@/utils/url-safety";
 import { TOKEN_NETWORK } from "constants/addresses";
 import type { CommunityProject } from "data/community";
 import type { CommunityProjectRecord } from "data/community-project-submissions";
+import type { GalleryCoin } from "data/coins";
 import type { DaoMemberSummary } from "data/members";
 import type { NoundrySubmission } from "data/noundry/submissions";
 import type {
@@ -19,20 +18,19 @@ import type {
   RoundRequest,
 } from "data/rounds";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import useSWR, { type Fetcher, type KeyedMutator } from "swr";
 import { useAccount, useSignMessage } from "wagmi";
 
-type AdminSection = "community" | "noundry" | "rounds";
+type AdminSection = "community" | "noundry" | "gallery" | "rounds";
 type CommunityListMode = "queue" | "existing";
 type ProjectEditorMode = "edit" | "preview";
 type RoundListMode = "draft" | "published" | "archived";
 
-type AdminAuth = Required<
-  Pick<{ adminAddress?: string }, "adminAddress">
->;
+type AdminAuth = Required<Pick<{ adminAddress?: string }, "adminAddress">>;
 
 type AdminRequestBody = Record<string, unknown>;
 type AdminSWRKey = readonly [string, AdminAuth];
@@ -45,6 +43,10 @@ const adminSections: { id: AdminSection; label: string }[] = [
   {
     id: "noundry",
     label: "Noundry Gallery",
+  },
+  {
+    id: "gallery",
+    label: "Gallery",
   },
   {
     id: "rounds",
@@ -78,6 +80,8 @@ const fieldClass =
 const labelClass = "block text-sm font-semibold text-secondary";
 const primaryButtonClass =
   "whitespace-nowrap rounded-[18px] bg-accent px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
+const saveButtonClass =
+  "yc-admin-save-button whitespace-nowrap rounded-[18px] bg-[#16a34a] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#15803d] transition hover:-translate-y-0.5 hover:bg-[#22c55e] hover:shadow-[0px_6px_0px_0px_#15803d] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const secondaryButtonClass =
   "whitespace-nowrap rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 const dangerButtonClass =
@@ -149,6 +153,11 @@ const communityProjectsFetcher = createAdminFetcher<{
 
 const noundrySubmissionsFetcher = createAdminFetcher<{
   submissions: NoundrySubmission[];
+}>();
+
+const galleryFetcher = createAdminFetcher<{
+  coins: GalleryCoin[];
+  galleryPublicEnabled: boolean;
 }>();
 
 const roundsFetcher = createAdminFetcher<{
@@ -249,7 +258,8 @@ const formatAwards = (awards: Round["awards"] = []) =>
 const parseAwards = (value: string) =>
   fromLines(value)
     .map((line, index) => {
-      const [position, title, awardValue, ...descriptionParts] = line.split("|");
+      const [position, title, awardValue, ...descriptionParts] =
+        line.split("|");
 
       return {
         position: Number(position?.trim()) || index + 1,
@@ -284,15 +294,20 @@ export default function AdminDashboardPage() {
   const activeSection: AdminSection =
     router.query.section === "noundry"
       ? "noundry"
-      : router.query.section === "rounds"
-        ? "rounds"
-        : "community";
+      : router.query.section === "gallery"
+        ? "gallery"
+        : router.query.section === "rounds"
+          ? "rounds"
+          : "community";
 
   const communityKey = adminAuth
     ? (["/api/admin/community-projects", adminAuth] as const)
     : null;
   const noundryKey = adminAuth
     ? (["/api/admin/noundry-submissions", adminAuth] as const)
+    : null;
+  const galleryKey = adminAuth
+    ? (["/api/admin/gallery", adminAuth] as const)
     : null;
   const roundsKey = adminAuth
     ? (["/api/admin/rounds", adminAuth] as const)
@@ -320,6 +335,15 @@ export default function AdminDashboardPage() {
     noundryKey,
     noundrySubmissionsFetcher
   );
+  const {
+    data: galleryData,
+    error: galleryError,
+    mutate: mutateGallery,
+  } = useSWR<
+    { coins: GalleryCoin[]; galleryPublicEnabled: boolean },
+    Error,
+    AdminSWRKey | null
+  >(galleryKey, galleryFetcher);
 
   const {
     data: roundsData,
@@ -333,11 +357,10 @@ export default function AdminDashboardPage() {
     data: roundsSettingsData,
     error: roundsSettingsError,
     mutate: mutateRoundsSettings,
-  } = useSWR<
-    { roundsPublicEnabled: boolean },
-    Error,
-    AdminSWRKey | null
-  >(roundsSettingsKey, roundsSettingsFetcher);
+  } = useSWR<{ roundsPublicEnabled: boolean }, Error, AdminSWRKey | null>(
+    roundsSettingsKey,
+    roundsSettingsFetcher
+  );
   const {
     data: roundRequestsData,
     error: roundRequestsError,
@@ -420,7 +443,7 @@ export default function AdminDashboardPage() {
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-snug text-secondary">
                 Review database submissions, approve community projects, and
-                manage Noundry gallery entries and rounds.
+                manage Gallery, Noundry, and rounds.
               </p>
             </div>
             {isAdmin && (
@@ -500,6 +523,17 @@ export default function AdminDashboardPage() {
                     isLoading={!noundryData && !noundryError}
                     mutate={mutateNoundry}
                   />
+                ) : activeSection === "gallery" ? (
+                  <GalleryAdminPanel
+                    adminAuth={adminAuth}
+                    coins={galleryData?.coins || []}
+                    galleryPublicEnabled={
+                      galleryData?.galleryPublicEnabled ?? true
+                    }
+                    error={galleryError?.message}
+                    isLoading={!galleryData && !galleryError}
+                    mutate={mutateGallery}
+                  />
                 ) : (
                   <RoundsAdminPanel
                     adminAuth={adminAuth}
@@ -549,9 +583,13 @@ const AdminNotice = ({
 
 const StatusPill = ({ status }: { status: string }) => {
   const color =
-    status === "approved" || status === "published"
+    status === "approved" || status === "published" || status === "visible"
       ? "bg-[#e7f7df] text-[#276514]"
-      : status === "removed" || status === "archived" || status === "rejected" || status === "hidden"
+      : status === "removed" ||
+          status === "archived" ||
+          status === "rejected" ||
+          status === "hidden" ||
+          status === "disabled"
         ? "bg-[#f8d7d7] text-[#8c1d1d]"
         : "bg-[#fff7bf] text-[#6d5600]";
 
@@ -797,6 +835,131 @@ const NoundryAdminPanel = ({
   );
 };
 
+const GalleryAdminPanel = ({
+  adminAuth,
+  coins,
+  galleryPublicEnabled,
+  error,
+  isLoading,
+  mutate,
+}: {
+  adminAuth: AdminAuth;
+  coins: GalleryCoin[];
+  galleryPublicEnabled: boolean;
+  error?: string;
+  isLoading: boolean;
+  mutate: KeyedMutator<{
+    coins: GalleryCoin[];
+    galleryPublicEnabled: boolean;
+  }>;
+}) => {
+  const router = useRouter();
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+  const requestedAddress = getQueryValue(router.query.coin);
+  const selectedCoin = useMemo(
+    () =>
+      coins.find(
+        (coin) => coin.address.toLowerCase() === requestedAddress?.toLowerCase()
+      ) || coins[0],
+    [coins, requestedAddress]
+  );
+
+  const selectCoin = (coin: GalleryCoin) => {
+    void router.push(
+      {
+        pathname: "/admin/dashboard",
+        query: { section: "gallery", coin: coin.address },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
+  const updateGalleryVisibility = async (enabled: boolean) => {
+    try {
+      setIsUpdatingVisibility(true);
+      await sendAdminRequest(
+        "/api/admin/gallery/settings",
+        adminAuth,
+        "PATCH",
+        { galleryPublicEnabled: enabled }
+      );
+      await mutate();
+    } catch (visibilityError) {
+      window.alert(
+        visibilityError instanceof Error
+          ? visibilityError.message
+          : "Unable to update gallery visibility."
+      );
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
+  return (
+    <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <AdminList
+        title="Gallery"
+        surfaceClassName="yc-dark-yellow-form-surface"
+        titleAction={
+          <RoundsVisibilitySwitch
+            enabled={galleryPublicEnabled}
+            isUpdating={isUpdatingVisibility}
+            onChange={updateGalleryVisibility}
+          />
+        }
+        error={error}
+        isLoading={isLoading}
+      >
+        {coins.map((coin) => (
+          <button
+            key={coin.address}
+            type="button"
+            onClick={() => selectCoin(coin)}
+            className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+              selectedCoin?.address === coin.address
+                ? "border-[#d7aa00] bg-[#fff7bf]"
+                : "border-skin-stroke bg-white hover:bg-[#fffbe0]"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="break-words font-heading text-lg leading-tight text-skin-base">
+                  {coin.title}
+                </div>
+                <div className="mt-1 break-all font-mono text-xs text-secondary">
+                  {coin.address}
+                </div>
+              </div>
+              <StatusPill status={coin.hidden ? "hidden" : "visible"} />
+            </div>
+          </button>
+        ))}
+        {!isLoading && !error && coins.length === 0 && (
+          <p className="rounded-xl border border-dashed border-skin-stroke bg-white p-4 text-sm leading-snug text-secondary">
+            No content coins have been added to the Gallery yet.
+          </p>
+        )}
+      </AdminList>
+
+      {selectedCoin ? (
+        <GalleryCoinEditor
+          key={selectedCoin.address}
+          adminAuth={adminAuth}
+          coin={selectedCoin}
+          galleryPublicEnabled={galleryPublicEnabled}
+          mutate={mutate}
+        />
+      ) : (
+        <EmptyEditor
+          title="No content coins yet"
+          surfaceClassName="yc-dark-yellow-form-surface"
+        />
+      )}
+    </section>
+  );
+};
+
 const RoundsAdminPanel = ({
   adminAuth,
   rounds,
@@ -869,7 +1032,8 @@ const RoundsAdminPanel = ({
   );
   const requestCounts = useMemo(
     () => ({
-      pending: requests.filter((request) => request.status === "pending").length,
+      pending: requests.filter((request) => request.status === "pending")
+        .length,
       closed: requests.filter(
         (request) =>
           request.status === "approved" || request.status === "rejected"
@@ -962,12 +1126,9 @@ const RoundsAdminPanel = ({
   const updateRoundsVisibility = async (enabled: boolean) => {
     try {
       setIsUpdatingVisibility(true);
-      await sendAdminRequest(
-        "/api/admin/rounds/settings",
-        adminAuth,
-        "PATCH",
-        { roundsPublicEnabled: enabled }
-      );
+      await sendAdminRequest("/api/admin/rounds/settings", adminAuth, "PATCH", {
+        roundsPublicEnabled: enabled,
+      });
       await mutateSettings();
     } catch (visibilityError) {
       window.alert(
@@ -993,7 +1154,10 @@ const RoundsAdminPanel = ({
           />
         }
         error={error || submissionsError?.message}
-        isLoading={isLoading || Boolean(selectedRound && !submissionData && !submissionsError)}
+        isLoading={
+          isLoading ||
+          Boolean(selectedRound && !submissionData && !submissionsError)
+        }
         header={
           <div className="mt-4 flex flex-col gap-4">
             <button
@@ -1109,7 +1273,9 @@ const RoundsAdminPanel = ({
           />
           <RoundSubmissionsManager
             submissions={submissions}
-            isLoading={Boolean(selectedRound && !submissionData && !submissionsError)}
+            isLoading={Boolean(
+              selectedRound && !submissionData && !submissionsError
+            )}
             error={submissionsError?.message}
             onSelect={setSelectedSubmission}
           />
@@ -1278,7 +1444,13 @@ const getRoundPayloadFromForm = ({
 });
 
 const validateRoundPublishForm = (round: RoundInput) => {
-  if (!round.title || !round.slug || !round.description || !round.content || !round.image) {
+  if (
+    !round.title ||
+    !round.slug ||
+    !round.description ||
+    !round.content ||
+    !round.image
+  ) {
     return "Title, slug, description, content, and image are required before publishing.";
   }
 
@@ -1409,7 +1581,9 @@ const RoundEditor = ({
               : "Round saved."
       );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save round.");
+      setMessage(
+        error instanceof Error ? error.message : "Unable to save round."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -1427,7 +1601,7 @@ const RoundEditor = ({
             type="button"
             onClick={() => submit()}
             disabled={isSaving}
-            className={primaryButtonClass}
+            className={saveButtonClass}
           >
             Save changes
           </button>
@@ -1466,8 +1640,18 @@ const RoundEditor = ({
         <FormField label="Title" value={title} onChange={setTitle} />
         <FormField label="Slug" value={slug} onChange={setSlug} />
       </div>
-      <FormField label="Description" value={description} onChange={setDescription} rows={3} />
-      <FormField label="Content" value={content} onChange={setContent} rows={6} />
+      <FormField
+        label="Description"
+        value={description}
+        onChange={setDescription}
+        rows={3}
+      />
+      <FormField
+        label="Content"
+        value={content}
+        onChange={setContent}
+        rows={6}
+      />
       <FormField label="Image URL" value={image} onChange={setImage} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <DateField label="Start date" value={startsAt} onChange={setStartsAt} />
@@ -1490,7 +1674,9 @@ const RoundEditor = ({
           Status
           <select
             value={status}
-            onChange={(event) => setStatus(event.target.value as Round["status"])}
+            onChange={(event) =>
+              setStatus(event.target.value as Round["status"])
+            }
             className={`${fieldClass} mt-2`}
           >
             <option value="draft">Draft</option>
@@ -1529,8 +1715,16 @@ const RoundEditor = ({
           value={maxSubmissionsPerWallet}
           onChange={setMaxSubmissionsPerWallet}
         />
-        <NumberField label="Min title" value={minTitleLength} onChange={setMinTitleLength} />
-        <NumberField label="Max title" value={maxTitleLength} onChange={setMaxTitleLength} />
+        <NumberField
+          label="Min title"
+          value={minTitleLength}
+          onChange={setMinTitleLength}
+        />
+        <NumberField
+          label="Max title"
+          value={maxTitleLength}
+          onChange={setMaxTitleLength}
+        />
         <NumberField
           label="Min description"
           value={minDescriptionLength}
@@ -1614,7 +1808,9 @@ const RoundSubmissionsManager = ({
                         : "bg-[#fff7bf] text-skin-base"
                     }`}
                   >
-                    {submission.submissionType === "trait" ? "Trait" : "Project"}
+                    {submission.submissionType === "trait"
+                      ? "Trait"
+                      : "Project"}
                   </span>
                   <span>{submission.voteCount} votes</span>
                   <span className="break-all">{submission.walletAddress}</span>
@@ -1706,7 +1902,10 @@ const RoundSubmissionEditor = ({
         adminAuth,
         action === "remove" ? "DELETE" : "PATCH",
         action
-          ? { action, submission: { title, description, image, url, walletAddress } }
+          ? {
+              action,
+              submission: { title, description, image, url, walletAddress },
+            }
           : { submission: { title, description, image, url, walletAddress } }
       );
       await mutateSubmissions();
@@ -1746,7 +1945,7 @@ const RoundSubmissionEditor = ({
             type="button"
             onClick={() => submit()}
             disabled={isSaving}
-            className={primaryButtonClass}
+            className={saveButtonClass}
           >
             Save changes
           </button>
@@ -1878,9 +2077,7 @@ const RoundRequestEditor = ({
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const submit = async (
-    action: "approved" | "rejected" | "remove"
-  ) => {
+  const submit = async (action: "approved" | "rejected" | "remove") => {
     if (
       (action === "rejected" || action === "remove") &&
       !window.confirm(`${action} this round request?`)
@@ -1980,20 +2177,38 @@ const RoundRequestEditor = ({
           )}
         </div>
         <div className="flex flex-col gap-4">
-          <ReadonlyField label="Requested by" value={request.requesterName || "Not provided"} />
-          <ReadonlyField label="Email" value={request.requesterEmail || "Not provided"} />
-          <ReadonlyField label="Wallet" value={request.walletAddress || "Not connected"} />
-          <ReadonlyField label="Slug" value={`/rounds/${request.requestedSlug}`} />
+          <ReadonlyField
+            label="Requested by"
+            value={request.requesterName || "Not provided"}
+          />
+          <ReadonlyField
+            label="Email"
+            value={request.requesterEmail || "Not provided"}
+          />
+          <ReadonlyField
+            label="Wallet"
+            value={request.walletAddress || "Not connected"}
+          />
+          <ReadonlyField
+            label="Slug"
+            value={`/rounds/${request.requestedSlug}`}
+          />
           <ReadonlyField
             label="Round type"
             value={
-              request.isTraitContest
-                ? "Noundry trait round"
-                : "Project round"
+              request.isTraitContest ? "Noundry trait round" : "Project round"
             }
           />
-          <ReadonlyField label="Description" value={request.description} multiline />
-          <ReadonlyField label="Round details" value={request.content} multiline />
+          <ReadonlyField
+            label="Summary"
+            value={request.description}
+            multiline
+          />
+          <ReadonlyField
+            label="Description"
+            value={request.content}
+            multiline
+          />
           <ReadonlyField
             label="Voting type"
             value={formatVotingStrategy(
@@ -2030,9 +2245,6 @@ const RoundRequestEditor = ({
               value={formatAwards(request.awards as Round["awards"])}
               multiline
             />
-          )}
-          {request.goals && (
-            <ReadonlyField label="Goals" value={request.goals} multiline />
           )}
           {request.timeline && (
             <ReadonlyField label="Timing" value={request.timeline} multiline />
@@ -2148,7 +2360,9 @@ const ProjectEditor = ({
         `/api/admin/community-projects/${project.id}`,
         adminAuth,
         action === "remove" ? "DELETE" : "PATCH",
-        action ? { action, project: projectPayload } : { project: projectPayload }
+        action
+          ? { action, project: projectPayload }
+          : { project: projectPayload }
       );
       await mutate();
       setMessage(
@@ -2204,7 +2418,7 @@ const ProjectEditor = ({
             type="button"
             onClick={() => submit()}
             disabled={isSaving}
-            className={primaryButtonClass}
+            className={saveButtonClass}
           >
             Save changes
           </button>
@@ -2306,8 +2520,8 @@ const ProjectPreview = ({ project }: { project: CommunityProject }) => {
 
   return (
     <div className="rounded-2xl border border-skin-stroke bg-[#ffcc00]/20 p-4">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       {imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageUrl}
           alt={project.title}
@@ -2416,6 +2630,141 @@ const ProjectPreview = ({ project }: { project: CommunityProject }) => {
   );
 };
 
+const GalleryCoinEditor = ({
+  adminAuth,
+  coin,
+  galleryPublicEnabled,
+  mutate,
+}: {
+  adminAuth: AdminAuth;
+  coin: GalleryCoin;
+  galleryPublicEnabled: boolean;
+  mutate: KeyedMutator<{
+    coins: GalleryCoin[];
+    galleryPublicEnabled: boolean;
+  }>;
+}) => {
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const updateHidden = async (hidden: boolean) => {
+    try {
+      setIsSaving(true);
+      setMessage(null);
+      await sendAdminRequest(
+        `/api/admin/gallery/${encodeURIComponent(coin.address)}`,
+        adminAuth,
+        "PATCH",
+        { hidden }
+      );
+      await mutate();
+      setMessage(hidden ? "Coin hidden from the Gallery." : "Coin restored.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to save coin."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <EditorCard
+      title={coin.title}
+      status={coin.hidden ? "hidden" : "visible"}
+      message={message}
+      surfaceClassName="yc-dark-yellow-form-surface"
+      headingAddon={
+        !galleryPublicEnabled ? (
+          <p className="mt-3 rounded-xl border border-skin-stroke bg-[#fff7bf] p-3 text-sm leading-snug text-secondary">
+            The Gallery is globally disabled, so this coin is hidden publicly
+            even if its individual status is visible.
+          </p>
+        ) : undefined
+      }
+      actions={
+        <>
+          {!coin.hidden && (
+            <Link
+              href={`/coins/${coin.address}`}
+              target="_blank"
+              rel="noreferrer"
+              className={secondaryButtonClass}
+            >
+              View coin
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => updateHidden(!coin.hidden)}
+            disabled={isSaving}
+            className={coin.hidden ? primaryButtonClass : dangerButtonClass}
+          >
+            {coin.hidden ? "Show in Gallery" : "Hide from Gallery"}
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
+        <div>
+          <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
+            <div className="aspect-square w-full">
+              <CoinMediaPreview
+                mediaUrl={coin.mediaUrl}
+                imageUrl={coin.imageUrl}
+                title={coin.title}
+                symbol={coin.symbol}
+                className="h-full w-full object-cover"
+                fallbackClassName="flex h-full w-full items-center justify-center font-heading text-4xl text-skin-base"
+              />
+            </div>
+          </div>
+          <p className="mt-3 text-sm leading-snug text-secondary">
+            Hiding a coin removes it from the public Gallery, direct coin page,
+            and owner profile coin section.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <ReadonlyField label="Coin name" value={coin.coinName} />
+          <ReadonlyField label="Symbol" value={coin.symbol} />
+          <ReadonlyField label="Owner" value={coin.ownerAddress} />
+          <ReadonlyField
+            label="Payout recipient"
+            value={coin.payoutRecipient}
+          />
+          <ReadonlyField label="Contract" value={coin.address} />
+          <ReadonlyField
+            label="Created"
+            value={
+              coin.createdAt
+                ? new Date(coin.createdAt).toLocaleString()
+                : "Unknown"
+            }
+          />
+          <div className="md:col-span-2">
+            <ReadonlyField
+              label="Description"
+              value={coin.description}
+              multiline
+            />
+          </div>
+          <div className="md:col-span-2">
+            <ReadonlyField label="Media URL" value={coin.mediaUrl} multiline />
+          </div>
+          {coin.imageUrl && (
+            <div className="md:col-span-2">
+              <ReadonlyField
+                label="Image URL"
+                value={coin.imageUrl}
+                multiline
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </EditorCard>
+  );
+};
+
 const NoundryEditor = ({
   adminAuth,
   submission,
@@ -2486,7 +2835,7 @@ const NoundryEditor = ({
             type="button"
             onClick={() => submit()}
             disabled={isSaving}
-            className={primaryButtonClass}
+            className={saveButtonClass}
           >
             Save metadata
           </button>
@@ -2631,8 +2980,8 @@ const FormField = ({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`${fieldClass} mt-2`}
-    />
-  )}
+      />
+    )}
   </label>
 );
 

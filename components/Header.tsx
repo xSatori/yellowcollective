@@ -36,6 +36,7 @@ const daoItems = [
 ];
 
 const baseArtItems = [
+  { label: "Gallery", href: "/gallery" },
   { label: "Projects", href: "/projects" },
   { label: "Playground", href: "/playground" },
   { label: "Probe", href: "/probe" },
@@ -63,6 +64,9 @@ export default function Header() {
   const { data: roundsSettings } = useSWR<{
     roundsPublicEnabled: boolean;
   }>("/api/rounds/settings", fetcher);
+  const { data: gallerySettings } = useSWR<{
+    galleryPublicEnabled: boolean;
+  }>("/api/gallery/settings", fetcher);
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
@@ -116,12 +120,33 @@ export default function Header() {
 
   const isAdmin = isMounted && isAdminAddress(address);
   const artItems = useMemo(() => {
+    const visibleBaseArtItems =
+      isAdmin || gallerySettings?.galleryPublicEnabled
+        ? baseArtItems
+        : baseArtItems.slice(1);
+
     if (isAdmin || roundsSettings?.roundsPublicEnabled) {
-      return [baseArtItems[0], roundsNavItem, ...baseArtItems.slice(1)];
+      const projectsIndex = visibleBaseArtItems.findIndex(
+        (item) => item.href === "/projects"
+      );
+
+      if (projectsIndex >= 0) {
+        return [
+          ...visibleBaseArtItems.slice(0, projectsIndex + 1),
+          roundsNavItem,
+          ...visibleBaseArtItems.slice(projectsIndex + 1),
+        ];
+      }
+
+      return [roundsNavItem, ...visibleBaseArtItems];
     }
 
-    return baseArtItems;
-  }, [isAdmin, roundsSettings?.roundsPublicEnabled]);
+    return visibleBaseArtItems;
+  }, [
+    gallerySettings?.galleryPublicEnabled,
+    isAdmin,
+    roundsSettings?.roundsPublicEnabled,
+  ]);
 
   const treasuryHref = `${ETHERSCAN_BASEURL}/tokenholdings?a=${addresses?.treasury}`;
 

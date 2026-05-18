@@ -3,6 +3,7 @@ import Layout from "@/components/Layout";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import Head from "next/head";
 import Link from "next/link";
+import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 
@@ -17,7 +18,6 @@ type FormValues = {
   title: string;
   description: string;
   content: string;
-  goals: string;
   image: string;
   url: string;
   timeline: string;
@@ -34,7 +34,10 @@ type FormValues = {
 
 const prizeCountOptions = Array.from({ length: 10 }, (_, index) => index + 1);
 
-const createAwardValues = (count: number, currentAwards: AwardFormValue[] = []) =>
+const createAwardValues = (
+  count: number,
+  currentAwards: AwardFormValue[] = []
+) =>
   Array.from({ length: count }, (_, index) => ({
     value: currentAwards[index]?.value || "",
   }));
@@ -46,7 +49,6 @@ const createInitialValues = (): FormValues => ({
   title: "",
   description: "",
   content: "",
-  goals: "",
   image: "",
   url: "",
   timeline: "",
@@ -95,7 +97,7 @@ export default function RequestRoundPage() {
       Boolean(
         values.requesterName.trim() &&
           values.requesterEmail.trim() &&
-          values.requestedSlug.trim() &&
+          slugify(values.title).trim() &&
           values.title.trim().length >= 3 &&
           values.description.trim().length >= 20 &&
           values.content.trim().length >= 20 &&
@@ -115,7 +117,7 @@ export default function RequestRoundPage() {
   const updateValue = (field: StringFormField, value: string) => {
     setMessage(null);
     setValues((currentValues) => {
-      if (field === "title" && !currentValues.requestedSlug.trim()) {
+      if (field === "title") {
         return {
           ...currentValues,
           title: value,
@@ -167,6 +169,7 @@ export default function RequestRoundPage() {
         body: JSON.stringify({
           request: {
             ...values,
+            requestedSlug: slugify(values.title),
             walletAddress: address || undefined,
             submissionsOpenAt: dateInputToIso(values.submissionsOpenAt),
             votingStartsAt: dateInputToIso(values.votingStartsAt),
@@ -222,8 +225,8 @@ export default function RequestRoundPage() {
             Request a round
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-snug text-secondary md:text-lg">
-            Submit the full round setup for admin review. If approved, the
-            round can be published directly from this request.
+            Submit the full round setup for admin review. If approved, the round
+            can be published directly from this request.
           </p>
         </section>
 
@@ -262,26 +265,25 @@ export default function RequestRoundPage() {
               required
             />
             <FormField
-              label="Round slug"
-              value={values.requestedSlug}
-              onChange={(value) => updateValue("requestedSlug", slugify(value))}
-              placeholder="yellow-poster-round"
-              required
-            />
-            <FormField
-              label="Image URL"
-              value={values.image}
-              onChange={(value) => updateValue("image", value)}
-              placeholder="example.com/image.png"
-              required
-            />
-            <FormField
               label="Reference URL"
               value={values.url}
               onChange={(value) => updateValue("url", value)}
               placeholder="example.com"
+              note="If there is an announcement, proposal, etc that you want to link out to."
+            />
+            <ImageUploadField
+              value={values.image}
+              onChange={(value) => updateValue("image", value)}
+              onError={(text) => setMessage({ type: "error", text })}
+              required
             />
           </div>
+
+          <input
+            type="hidden"
+            name="requestedSlug"
+            value={values.requestedSlug}
+          />
 
           <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-skin-stroke bg-[#fff7bf] p-4 transition hover:bg-[#fff3a3]">
             <input
@@ -304,30 +306,24 @@ export default function RequestRoundPage() {
           </label>
 
           <TextAreaField
-            label="Description"
+            label="Summary"
             value={values.description}
             onChange={(value) => updateValue("description", value)}
             placeholder="Short public summary for the round card."
             required
           />
           <TextAreaField
-            label="Round details"
+            label="Description"
             value={values.content}
             onChange={(value) => updateValue("content", value)}
             placeholder="Submission rules, judging context, eligibility, and anything participants need to know."
             required
           />
           <TextAreaField
-            label="Goals"
-            value={values.goals}
-            onChange={(value) => updateValue("goals", value)}
-            placeholder="What would this round produce for Yellow Collective?"
-          />
-          <TextAreaField
-            label="Timing note"
+            label="Notes"
             value={values.timeline}
             onChange={(value) => updateValue("timeline", value)}
-            placeholder="Any scheduling notes for admins."
+            placeholder="Any notes or comments for the admins."
           />
 
           <div className="mt-6 grid gap-5 md:grid-cols-3">
@@ -435,6 +431,11 @@ export default function RequestRoundPage() {
               Reset
             </button>
           </div>
+          <p className="mt-4 max-w-3xl rounded-xl border border-skin-stroke bg-[#fff7bf] p-4 text-sm leading-snug text-secondary">
+            Prizes for the Round must be transferred to yellowcollective.eth
+            prior to the Round being approved. An admin will reach out to
+            coordinate once your request is reviewed.
+          </p>
           {message && (
             <p
               role={message.type === "error" ? "alert" : "status"}
@@ -463,6 +464,51 @@ const slugify = (value: string) =>
 const dateInputToIso = (value: string) =>
   value ? new Date(value).toISOString() : "";
 
+const resizeRoundImageFile = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("Choose an image file."));
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      reject(new Error("Choose an image smaller than 8MB."));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = document.createElement("img");
+      image.onload = () => {
+        const maxSize = 1600;
+        const scale = Math.min(
+          1,
+          maxSize / Math.max(image.width, image.height)
+        );
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("Unable to process image."));
+          return;
+        }
+
+        context.fillStyle = "#ffcc00";
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.88));
+      };
+      image.onerror = () => reject(new Error("Unable to read image."));
+      image.src = String(reader.result || "");
+    };
+    reader.onerror = () => reject(new Error("Unable to read image."));
+    reader.readAsDataURL(file);
+  });
+
 const buildAwards = (awards: AwardFormValue[]) =>
   awards
     .map((award, index) => {
@@ -477,8 +523,7 @@ const buildAwards = (awards: AwardFormValue[]) =>
     })
     .filter((award) => award.value);
 
-const formatRankLabel = (rank: number) =>
-  `Rank ${rank}`;
+const formatRankLabel = (rank: number) => `Rank ${rank}`;
 
 const fieldId = (label: string) =>
   `round-request-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
@@ -488,6 +533,7 @@ const FormField = ({
   value,
   onChange,
   placeholder,
+  note,
   className = "",
   required = false,
   type = "text",
@@ -496,6 +542,7 @@ const FormField = ({
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  note?: string;
   className?: string;
   required?: boolean;
   type?: string;
@@ -517,6 +564,80 @@ const FormField = ({
         required={required}
         className="mt-2 w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
       />
+      {note && (
+        <p className="mt-2 text-sm leading-snug text-secondary">{note}</p>
+      )}
+    </div>
+  );
+};
+
+const ImageUploadField = ({
+  value,
+  onChange,
+  onError,
+  required = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onError: (message: string) => void;
+  required?: boolean;
+}) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      onChange(await resizeRoundImageFile(file));
+    } catch (error) {
+      onError(
+        error instanceof Error ? error.message : "Unable to upload image."
+      );
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  return (
+    <div>
+      <div className="font-heading text-base text-skin-base">
+        Image
+        {required ? " *" : ""}
+      </div>
+      <div className="mt-2 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="yc-dark-submit-blue flex w-fit cursor-pointer items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none">
+              Upload image
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="sr-only"
+                onChange={handleFileChange}
+              />
+            </label>
+            {value && (
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                className="yc-dark-reset-red yc-dark-reset-white-hover rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-base text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <p className="max-w-[260px] text-sm leading-snug text-secondary">
+            Image for the Round preview and banner.
+          </p>
+        </div>
+        {value && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={value}
+            alt="Round preview"
+            className="aspect-[16/9] w-full rounded-lg border border-skin-stroke bg-white object-cover"
+          />
+        )}
+      </div>
     </div>
   );
 };

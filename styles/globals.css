@@ -64,8 +64,8 @@
     --color-backdrop: 34, 34, 34;
     --color-header-bg: 251, 203, 7;
     --color-header-text: 33, 37, 41;
-    --color-shadow-neutral: 0, 0, 0;
-    --color-shadow-neutral-hover: 0, 0, 0;
+    --color-shadow-neutral: 69, 74, 78;
+    --color-shadow-neutral-hover: 69, 74, 78;
     --color-shadow-accent: 138, 95, 10;
     --color-focus-ring: 251, 203, 7;
     --color-focus-offset: 16, 16, 16;
@@ -501,6 +501,10 @@
     background-color: rgb(var(--color-accent)) !important;
   }
 
+  .yc-coin-review-card {
+    border-color: #ffcc00 !important;
+  }
+
   .yc-round-vote-add,
   [data-theme="dark"] .yc-round-vote-add {
     background-color: rgb(22, 163, 74) !important;
@@ -607,6 +611,71 @@
     color: #212529 !important;
   }
 
+  [data-theme="dark"] .yc-round-submit-panel,
+  [data-theme="dark"] .yc-round-submit-panel h2,
+  [data-theme="dark"] .yc-round-submit-panel p {
+    color: #ffffff !important;
+  }
+
+  [data-theme="dark"] .yc-round-submit-panel select {
+    color: #212529 !important;
+  }
+
+  .yc-admin-save-button,
+  .yc-admin-save-button *,
+  [data-theme="dark"] .yc-admin-save-button,
+  [data-theme="dark"] .yc-admin-save-button * {
+    background-color: #16a34a !important;
+    border-color: #15803d !important;
+    color: #ffffff !important;
+    box-shadow: 0px 4.02px 0px 0px #15803d !important;
+  }
+
+  .yc-admin-save-button:hover,
+  [data-theme="dark"] .yc-admin-save-button:hover {
+    background-color: #22c55e !important;
+    color: #ffffff !important;
+    box-shadow: 0px 6px 0px 0px #15803d !important;
+  }
+
+  .yc-round-featured-star {
+    color: rgb(var(--color-accent)) !important;
+    font-size: 0.85em;
+    line-height: 1;
+  }
+
+  [data-theme="dark"] .yc-round-featured-star {
+    color: #ffffff !important;
+  }
+
+  [class~="bg-accent"][class*="shadow-"],
+  [class~="bg-[#ffcc00]"][class*="shadow-"],
+  [class~="bg-[#fff7bf]"][class*="shadow-"] {
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [class~="bg-accent"][class*="hover:shadow-"]:hover,
+  [class~="bg-[#ffcc00]"][class*="hover:shadow-"]:hover,
+  [class~="bg-[#fff7bf]"][class*="hover:shadow-"]:hover,
+  [class~="hover:bg-[#fff7bf]"][class*="hover:shadow-"]:hover,
+  [class~="hover:!bg-[#fff7bf]"][class*="hover:shadow-"]:hover,
+  [class~="hover:bg-[#ffd84d]"][class*="hover:shadow-"]:hover,
+  [class~="hover:bg-[rgb(var(--color-accent-hover))]"][class*="hover:shadow-"]:hover,
+  .yc-dark-yellow-button:hover {
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-dark-yellow-form-surface[class*="shadow-"],
+  [data-theme="dark"] .yc-dark-yellow-surface[class*="shadow-"] {
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"]
+    .yc-dark-yellow-form-surface[class*="hover:shadow-"]:hover,
+  [data-theme="dark"] .yc-dark-yellow-surface[class*="hover:shadow-"]:hover {
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
   @media (max-width: 767px) {
     [data-theme="dark"] .yc-project-page {
       background-color: rgb(var(--color-surface-muted)) !important;
@@ -615,9 +684,70 @@
   }
 
   [data-theme="dark"] .yc-members-count-button {
-    background-color: rgb(34, 34, 34) !important;
-    color: rgb(247, 247, 247) !important;
-    box-shadow: 0px 4.02px 0px 0px rgb(0, 0, 0) !important;
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-neutral)) !important;
+  }
+
+  [data-theme="dark"] .yc-theme-toggle {
+    background-color: rgb(var(--color-accent)) !important;
+    border-color: rgb(var(--color-stroke-strong)) !important;
+    color: #212529 !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-theme-toggle:hover {
+    background-color: rgb(var(--color-accent-hover)) !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-theme-toggle * {
+    color: #212529 !important;
+  }
+
+  .yc-coin-edit-dialog,
+  .yc-coin-info-dialog {
+    background-color: rgb(var(--color-accent)) !important;
+    color: #212529 !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
+  }
+
+  .yc-coin-edit-textarea {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+  }
+
+  .yc-coin-info-row {
+    background-color: #fff7bf !important;
+    color: #212529 !important;
+  }
+
+  .yc-coin-edit-dialog > button,
+  .yc-coin-info-dialog > button,
+  .yc-coin-media-dialog > button {
+    background-color: rgb(var(--color-accent)) !important;
+    border: 1px solid rgb(var(--color-stroke-strong)) !important;
+    border-radius: 999px !important;
+    opacity: 1 !important;
+  }
+
+  [data-theme="dark"] .yc-coin-edit-dialog,
+  [data-theme="dark"] .yc-coin-info-dialog {
+    background-color: #212529 !important;
+    border-color: rgb(var(--color-shadow-accent)) !important;
+    color: rgb(var(--color-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-coin-edit-textarea,
+  [data-theme="dark"] .yc-coin-info-row {
+    background-color: rgb(var(--color-accent)) !important;
+    border-color: rgb(var(--color-shadow-accent)) !important;
+    color: #212529 !important;
+  }
+
+  [data-theme="dark"] .yc-coin-info-row *,
+  [data-theme="dark"] .yc-coin-edit-textarea {
+    color: #212529 !important;
   }
 
   .proposal-tab-button,

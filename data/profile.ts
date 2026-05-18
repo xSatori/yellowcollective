@@ -25,6 +25,10 @@ import {
 import { getCommunityProjectsForMember } from "@/utils/community-projects";
 import type { CommunityProject } from "data/community";
 import {
+  listPublicGalleryCoinsByOwner,
+  type GalleryCoin,
+} from "data/coins";
+import {
   listProfileRoundSubmissions,
   listProfileRoundVotes,
   type ProfileRoundSubmission,
@@ -98,6 +102,7 @@ export type PublicProfileData = {
   ensAvatar?: string;
   metadata: ProfileMetadata | null;
   noundrySubmissions: NoundrySubmission[];
+  contentCoins: GalleryCoin[];
   ownedTokens: ProbeToken[];
   submittedProposals: ProfileDaoProposal[];
   daoVotes: ProfileDaoVote[];
@@ -549,9 +554,9 @@ const buildActivity = ({
   daoVotes,
   auctionBids,
   auctionWins,
-    ownedTokens,
-    communityProjects,
-  }: Pick<
+  ownedTokens,
+  communityProjects,
+}: Pick<
   PublicProfileData,
   | "noundrySubmissions"
   | "roundSubmissions"
@@ -672,6 +677,7 @@ export const getPublicProfileData = async (
   const [
     metadata,
     noundrySubmissions,
+    contentCoins,
     ownedTokens,
     roundSubmissions,
     roundVotes,
@@ -688,6 +694,12 @@ export const getPublicProfileData = async (
     settled(
       "Noundry submissions",
       getNoundrySubmissionsForAddress(normalizedAddress),
+      errors,
+      []
+    ),
+    settled(
+      "content coins",
+      listPublicGalleryCoinsByOwner(normalizedAddress),
       errors,
       []
     ),
@@ -735,6 +747,7 @@ export const getPublicProfileData = async (
     ensAvatar: identity[1].ensAvatar,
     metadata,
     noundrySubmissions,
+    contentCoins,
     ownedTokens,
     submittedProposals: daoActivity.submittedProposals,
     daoVotes: daoActivity.daoVotes,
