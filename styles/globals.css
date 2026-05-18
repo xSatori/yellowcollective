@@ -59,8 +59,8 @@
     --color-muted: 34, 34, 34;
     --color-surface: 23, 23, 23;
     --color-surface-muted: 34, 34, 34;
-    --color-stroke: 74, 79, 82;
-    --color-stroke-strong: 95, 99, 104;
+    --color-stroke: 251, 203, 7;
+    --color-stroke-strong: 255, 227, 106;
     --color-backdrop: 34, 34, 34;
     --color-header-bg: 251, 203, 7;
     --color-header-text: 33, 37, 41;
@@ -801,6 +801,23 @@
   --tw-ring-shadow: 0 0 #0000 !important;
   border-color: rgb(var(--color-stroke)) !important;
   outline: none !important;
+}
+
+[data-theme="dark"] [class~="border-skin-stroke"],
+[data-theme="dark"] [class~="border-[rgb(var(--color-stroke-strong))]"],
+[data-theme="dark"] [class~="border-white"],
+[data-theme="dark"] [class~="border-white/35"],
+[data-theme="dark"] [class~="border-[#555]"],
+[data-theme="dark"] [class~="border-[#8a8f98]"],
+[data-theme="dark"] [class~="border-[#b8b8b8]"],
+[data-theme="dark"] [class~="border-[#bfc7cc]"],
+[data-theme="dark"] [class~="border-[#cfd6da]"],
+[data-theme="dark"] [class~="border-[#d1d5db]"],
+[data-theme="dark"] [class~="border-[#d6d6d6]"],
+[data-theme="dark"] [class~="border-[#d7d7d7]"],
+[data-theme="dark"] [class~="border-[#d8d8df]"],
+[data-theme="dark"] [class~="border-[#e1e1e1]"] {
+  border-color: rgb(var(--color-stroke)) !important;
 }
 
 [data-theme="dark"] .yc-mobile-dark-page {
