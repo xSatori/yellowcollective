@@ -10,6 +10,11 @@ assert.equal(farcaster.includes("https://esm.sh"), false);
 assert.equal(farcaster.includes("return import(url)"), false);
 console.log("ok - Farcaster SDK uses no remote runtime import");
 
+const siteConfig = read("utils/site.ts");
+assert.match(siteConfig, /export const MINI_APP_EMBED[\s\S]*type: "launch_miniapp"/);
+assert.match(siteConfig, /export const LEGACY_FRAME_EMBED[\s\S]*type: "launch_frame"/);
+console.log("ok - Farcaster embed uses Mini App launch with legacy frame fallback");
+
 const adminDashboard = read("pages/admin/dashboard.tsx");
 assert.equal(adminDashboard.includes("URLSearchParams"), false);
 assert.equal(adminDashboard.includes("adminSignature"), false);

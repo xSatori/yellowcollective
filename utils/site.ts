@@ -30,7 +30,7 @@ export const MINI_APP_EMBED = {
   button: {
     title: "Open Yellow",
     action: {
-      type: "launch_frame",
+      type: "launch_miniapp",
       name: SITE_NAME,
       url: SITE_URL,
       splashImageUrl: getAbsoluteUrl("/miniapp-splash.png"),
