@@ -25,6 +25,9 @@ export const config = {
   nounsDaoAddress:
     process.env.NOUNS_DAO_ADDRESS ||
     "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+  nounsTokenAddress:
+    process.env.NOUNS_TOKEN_ADDRESS ||
+    "0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03",
   snapshotGraphql:
     process.env.SNAPSHOT_GRAPHQL_URL || "https://hub.snapshot.org/graphql",
   snapshotSequencer:
@@ -74,4 +77,13 @@ export const validateConfig = () => {
 
   getAddress(config.safeAddress);
   getAddress(config.nounsDaoAddress);
+  getAddress(config.nounsTokenAddress);
+
+  if (
+    getAddress(config.nounsTokenAddress) === getAddress(config.nounsDaoAddress)
+  ) {
+    throw new Error(
+      "NOUNS_TOKEN_ADDRESS cannot equal NOUNS_DAO_ADDRESS. Use the Nouns token contract 0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03."
+    );
+  }
 };

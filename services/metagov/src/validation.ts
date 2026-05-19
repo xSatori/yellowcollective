@@ -15,7 +15,7 @@ const SPACE_QUERY = `
   }
 `;
 
-const NOUNS_DAO_ABI = [
+const NOUNS_TOKEN_ABI = [
   "function getCurrentVotes(address account) view returns (uint96)",
 ];
 
@@ -53,15 +53,24 @@ export const validateRuntime = async () => {
     );
   }
 
-  const nounsDao = new ethers.Contract(
-    config.nounsDaoAddress,
-    NOUNS_DAO_ABI,
-    provider
-  );
-  const votes = await nounsDao.getCurrentVotes(config.safeAddress);
-  if (votes === 0n) {
+  try {
+    const nounsToken = new ethers.Contract(
+      config.nounsTokenAddress,
+      NOUNS_TOKEN_ABI,
+      provider
+    );
+    const votes = await nounsToken.getCurrentVotes(config.safeAddress);
+    if (votes === 0n) {
+      console.warn(
+        "Safe currently has 0 Nouns current votes. Execution may fail unless delegation/voting power is set before vote time."
+      );
+    } else {
+      console.log(`Safe has ${votes.toString()} Nouns current votes.`);
+    }
+  } catch (error) {
     console.warn(
-      "Safe currently has 0 Nouns current votes. Execution may fail unless delegation/voting power is set before vote time."
+      "Unable to validate Safe Nouns voting power at startup. Continuing; execution will still fail later if the Safe has no voting power.",
+      error
     );
   }
 

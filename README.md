@@ -171,6 +171,7 @@ Recommended variables:
 ```bash
 NOUNS_GRAPHQL_ENDPOINT="https://api.goldsky.com/api/public/project_clnbcoajmebxn33wdbt98f439/subgraphs/nouns-mainnet/1.0.0/gn"
 NOUNS_DAO_ADDRESS="0x6f3E6272A167e8AcCb32072d08E0957F9c79223d"
+NOUNS_TOKEN_ADDRESS="0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03"
 SNAPSHOT_GRAPHQL_URL="https://hub.snapshot.org/graphql"
 SNAPSHOT_SEQUENCER_URL="https://seq.snapshot.org"
 PROPOSAL_LINK_TEMPLATE="https://nouns.wtf/vote/{id}"
