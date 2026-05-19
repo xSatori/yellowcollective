@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRoundRequest, type RoundRequestInput } from "data/rounds";
 import { applyRateLimit } from "@/utils/rate-limit";
+import { verifyRoundWalletSignedRequest } from "@/utils/rounds/server-auth";
 
 type RequestRoundBody = {
   request?: RoundRequestInput;
@@ -35,7 +36,17 @@ export default async function handler(
 
   try {
     const body = req.body as RequestRoundBody;
-    const request = await createRoundRequest(body.request || {});
+    const walletAddress = await verifyRoundWalletSignedRequest({
+      req,
+      res,
+      action: "request",
+    });
+    if (!walletAddress) return;
+
+    const request = await createRoundRequest({
+      ...(body.request || {}),
+      walletAddress,
+    });
 
     return res.status(201).json({ request });
   } catch (error) {

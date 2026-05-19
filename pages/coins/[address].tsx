@@ -302,7 +302,7 @@ export default function CoinDetailPage({
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 pb-12">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link
-            href="/gallery"
+            href="/art"
             className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
           >
             <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">

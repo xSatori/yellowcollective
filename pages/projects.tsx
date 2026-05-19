@@ -1,4 +1,4 @@
-import CommunityPage, { getStaticProps } from "./community";
+import CommunityPage, { getServerSideProps } from "./community";
 
-export { getStaticProps };
+export { getServerSideProps };
 export default CommunityPage;

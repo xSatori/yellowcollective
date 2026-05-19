@@ -2,6 +2,7 @@ import Button from "@/components/Button";
 import CustomConnectButton from "@/components/CustomConnectButton";
 import Layout from "@/components/Layout";
 import CoinMediaPreview from "@/components/coins/CoinMediaPreview";
+import ContentCoinInfoDialog from "@/components/coins/ContentCoinInfoDialog";
 import { useCurrentThreshold } from "@/hooks/fetch/useCurrentThreshold";
 import { useDAOAddresses } from "@/hooks/fetch/useDAOAddresses";
 import { useUserVotes } from "@/hooks/fetch/useUserVotes";
@@ -35,7 +36,10 @@ import {
 } from "@/utils/ipfs-upload-config";
 import { uploadFile } from "@/utils/ipfs-upload";
 import { GovernorABI } from "@buildersdk/sdk";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
+import {
+  ArrowLeftIcon,
+  ArrowTopRightOnSquareIcon,
+} from "@heroicons/react/20/solid";
 import { TOKEN_CONTRACT } from "constants/addresses";
 import { ethers } from "ethers";
 import Head from "next/head";
@@ -547,9 +551,22 @@ export default function CreateCoinPage() {
       <div className="mx-auto -mt-4 flex w-full max-w-[1120px] flex-col gap-8 pb-12 sm:-mt-8">
         <div>
           <div>
-            <h1 className="font-heading text-[38px] leading-none text-skin-base md:text-[56px]">
-              Create a content post
-            </h1>
+            <div className="mb-4 flex items-center gap-2">
+              <Link
+                href="/art"
+                className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
+              >
+                <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none">
+                  <ArrowLeftIcon className="h-4 text-skin-base" />
+                </span>
+                Back to Gallery
+              </Link>
+            </div>
+            <div>
+              <h1 className="font-heading text-[38px] leading-none text-skin-base md:text-[56px]">
+                Create a content post
+              </h1>
+            </div>
             <p className="mt-4 max-w-[720px] text-base leading-snug text-secondary md:text-lg">
               Publish a post on Base with the fixed Yellow pairing coin. Create
               it permissionlessly, or submit the same transaction as a Droposal
@@ -576,7 +593,13 @@ export default function CreateCoinPage() {
                     These fields become the Zora post metadata.
                   </p>
                 </div>
-                <ModeToggle mode={mode} setMode={setMode} />
+                <div className="flex w-full items-center gap-3 sm:w-auto">
+                  <ModeToggle mode={mode} setMode={setMode} />
+                  <ContentCoinInfoDialog
+                    variant="create"
+                    triggerClassName="yc-coin-create-info-button h-[52px] w-[52px]"
+                  />
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-[1fr_240px]">
@@ -1109,7 +1132,7 @@ const SuccessBox = ({
         )}
       </div>
       <Link
-        href="/gallery"
+        href="/art"
         className="self-center rounded-xl bg-emerald-600 px-5 py-3 text-center font-heading text-base text-white no-underline shadow-[0px_3px_0px_0px_#047857] transition hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-[0px_5px_0px_0px_#047857] active:translate-y-0.5 active:shadow-none sm:ml-auto"
       >
         Go to Gallery

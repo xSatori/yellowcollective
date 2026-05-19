@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import CoinMediaPreview from "@/components/coins/CoinMediaPreview";
+import ContentCoinInfoDialog from "@/components/coins/ContentCoinInfoDialog";
 import WalletIdentityLink from "@/components/WalletIdentityLink";
 import {
   getGalleryPublicEnabled,
@@ -24,12 +25,23 @@ type CoinGalleryPageProps = {
 
 export const getServerSideProps: GetServerSideProps<
   CoinGalleryPageProps
-> = async () => ({
-  props: {
-    galleryPublicEnabled: await getGalleryPublicEnabled(),
-    coins: JSON.parse(JSON.stringify(await listPublicGalleryCoins())),
-  },
-});
+> = async (context) => {
+  if (context.resolvedUrl === "/coins") {
+    return {
+      redirect: {
+        destination: "/art",
+        permanent: true,
+      },
+    };
+  }
+
+  return {
+    props: {
+      galleryPublicEnabled: await getGalleryPublicEnabled(),
+      coins: JSON.parse(JSON.stringify(await listPublicGalleryCoins())),
+    },
+  };
+};
 
 export default function CoinGalleryPage({
   coins,
@@ -55,12 +67,15 @@ export default function CoinGalleryPage({
               the fixed Base pairing configured for this site.
             </p>
           </div>
-          <Link
-            href="/coins/create"
-            className="flex w-fit shrink-0 items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none"
-          >
-            Create coin
-          </Link>
+          <div className="flex shrink-0 items-center gap-3">
+            <Link
+              href="/coins/create"
+              className="flex w-fit items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none"
+            >
+              Create coin
+            </Link>
+            <ContentCoinInfoDialog triggerClassName="h-[52px] w-[52px]" />
+          </div>
         </section>
 
         {!galleryPublicEnabled ? (

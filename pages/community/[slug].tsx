@@ -1,24 +1,15 @@
 import Layout from "@/components/Layout";
 import WalletIdentityLink from "@/components/WalletIdentityLink";
 import { type CommunityProject } from "data/community";
-import {
-  getCommunityProject,
-  getCommunityProjects,
-} from "@/utils/community-projects";
+import { getCommunityProject } from "@/utils/community-projects";
 import { areSameWalletAddress } from "@/utils/profile/identity";
 import { isAdminAddress } from "@/utils/admin";
-import {
-  getSafeLinkProps,
-  normalizeSafeImageUrl,
-} from "@/utils/url-safety";
-import {
-  getDaoMemberSummaries,
-  type DaoMemberSummary,
-} from "data/members";
+import { getSafeLinkProps, normalizeSafeImageUrl } from "@/utils/url-safety";
+import { getDaoMemberSummaries, type DaoMemberSummary } from "data/members";
 import type {
-  GetStaticPaths,
-  GetStaticPropsResult,
-  InferGetStaticPropsType,
+  GetServerSidePropsContext,
+  GetServerSidePropsResult,
+  InferGetServerSidePropsType,
 } from "next";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 import Head from "next/head";
@@ -36,37 +27,23 @@ type ProjectMemberSummary = Pick<
   "address" | "displayName" | "avatarUrl" | "firstTokenImage"
 >;
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const projects = await getCommunityProjects();
-
-  return {
-    paths: projects.map((project) => ({
-      params: { slug: project.slug },
-    })),
-    fallback: "blocking",
-  };
-};
-
-export const getStaticProps = async ({
+export const getServerSideProps = async ({
   params,
-}: {
-  params?: { slug?: string };
-}): Promise<GetStaticPropsResult<CommunityDetailProps>> => {
+}: GetServerSidePropsContext): Promise<
+  GetServerSidePropsResult<CommunityDetailProps>
+> => {
   const project = params?.slug
-    ? await getCommunityProject(params.slug)
+    ? await getCommunityProject(String(params.slug))
     : undefined;
 
-  if (!project) return { notFound: true, revalidate: 60 };
+  if (!project) return { notFound: true };
 
   const memberAddresses = project.memberAddresses || [];
   const projectMembers =
-    memberAddresses.length > 0
-      ? await getProjectMembers(memberAddresses)
-      : [];
+    memberAddresses.length > 0 ? await getProjectMembers(memberAddresses) : [];
 
   return {
     props: { project, projectMembers },
-    revalidate: 60,
   };
 };
 
@@ -101,7 +78,7 @@ const getProjectMembers = async (memberAddresses: string[]) => {
 export default function CommunityDetailPage({
   project,
   projectMembers,
-}: InferGetStaticPropsType<typeof getStaticProps>) {
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { address } = useAccount();
   const isAdmin = isAdminAddress(address);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);

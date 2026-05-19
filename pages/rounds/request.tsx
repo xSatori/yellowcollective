@@ -1,11 +1,14 @@
 import CustomConnectButton from "@/components/CustomConnectButton";
 import Layout from "@/components/Layout";
+import { createSignedRequestAuthHeader } from "@/utils/signature-auth-client";
+import { getRoundSignedRequestAction } from "@/utils/rounds/auth";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
+import { TOKEN_NETWORK } from "constants/addresses";
 import Head from "next/head";
 import Link from "next/link";
 import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 
 type AwardFormValue = {
   value: string;
@@ -33,6 +36,7 @@ type FormValues = {
 };
 
 const prizeCountOptions = Array.from({ length: 10 }, (_, index) => index + 1);
+const ROUND_SIGNED_REQUEST_CHAIN_ID = Number(TOKEN_NETWORK);
 
 const createAwardValues = (
   count: number,
@@ -87,6 +91,7 @@ const votingStrategyOptions = [
 
 export default function RequestRoundPage() {
   const { address, isConnected } = useAccount();
+  const { signMessageAsync, isLoading: isSigning } = useSignMessage();
   const [values, setValues] = useState<FormValues>(() => createInitialValues());
   const [message, setMessage] = useState<MessageState>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,10 +113,11 @@ export default function RequestRoundPage() {
           Number(values.winnerCount) > 0 &&
           Number(values.maxSubmissionsPerWallet) > 0 &&
           Number(values.votesPerWallet) > 0 &&
+          address &&
           values.awards.length === Number(values.winnerCount) &&
           values.awards.every((award) => award.value.trim())
       ),
-    [values]
+    [address, values]
   );
 
   const updateValue = (field: StringFormField, value: string) => {
@@ -157,30 +163,52 @@ export default function RequestRoundPage() {
   };
 
   const submit = async () => {
+    if (!address) {
+      setMessage({
+        type: "error",
+        text: "Connect a wallet before requesting a round.",
+      });
+      return;
+    }
     if (!canSubmit) return;
 
     setIsSubmitting(true);
     setMessage(null);
 
     try {
-      const response = await fetch("/api/rounds/request", {
+      const path = "/api/rounds/request";
+      const payload = {
+        request: {
+          ...values,
+          requestedSlug: slugify(values.title),
+          walletAddress: address,
+          submissionsOpenAt: dateInputToIso(values.submissionsOpenAt),
+          votingStartsAt: dateInputToIso(values.votingStartsAt),
+          votingEndsAt: dateInputToIso(values.votingEndsAt),
+          votesPerWallet: Number(values.votesPerWallet),
+          winnerCount: Number(values.winnerCount),
+          maxSubmissionsPerWallet: Number(values.maxSubmissionsPerWallet),
+          traitSubmissionsEnabled: values.isTraitContest,
+          awards: buildAwards(values.awards),
+        },
+      };
+      const authorization = await createSignedRequestAuthHeader({
+        walletAddress: address,
+        chainId: ROUND_SIGNED_REQUEST_CHAIN_ID,
+        action: getRoundSignedRequestAction("request"),
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          request: {
-            ...values,
-            requestedSlug: slugify(values.title),
-            walletAddress: address || undefined,
-            submissionsOpenAt: dateInputToIso(values.submissionsOpenAt),
-            votingStartsAt: dateInputToIso(values.votingStartsAt),
-            votingEndsAt: dateInputToIso(values.votingEndsAt),
-            votesPerWallet: Number(values.votesPerWallet),
-            winnerCount: Number(values.winnerCount),
-            maxSubmissionsPerWallet: Number(values.maxSubmissionsPerWallet),
-            traitSubmissionsEnabled: values.isTraitContest,
-            awards: buildAwards(values.awards),
-          },
-        }),
+        path,
+        payload,
+        signMessageAsync,
+      });
+      const response = await fetch(path, {
+        method: "POST",
+        headers: {
+          Authorization: authorization,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
 
@@ -234,8 +262,8 @@ export default function RequestRoundPage() {
           {!isConnected && (
             <div className="mb-5 rounded-xl border border-skin-stroke bg-[#fff7bf] p-4">
               <p className="mb-3 text-base text-secondary">
-                You can submit without connecting, or connect a wallet so admins
-                can see who requested the round.
+                Connect the wallet that should be logged with this round
+                request.
               </p>
               <CustomConnectButton className="h-11 rounded-xl border border-skin-stroke bg-skin-backdrop px-6 text-skin-base" />
             </div>
@@ -418,10 +446,10 @@ export default function RequestRoundPage() {
             <button
               type="button"
               onClick={submit}
-              disabled={!canSubmit || isSubmitting}
+              disabled={!canSubmit || isSubmitting || isSigning}
               className="yc-dark-submit-blue flex items-center justify-center rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting ? "Submitting..." : "Submit request"}
+              {isSubmitting || isSigning ? "Submitting..." : "Submit request"}
             </button>
             <button
               type="button"

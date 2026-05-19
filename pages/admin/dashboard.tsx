@@ -168,6 +168,10 @@ const roundsSettingsFetcher = createAdminFetcher<{
   roundsPublicEnabled: boolean;
 }>();
 
+const testingSettingsFetcher = createAdminFetcher<{
+  dummyContentEnabled: boolean;
+}>();
+
 const roundSubmissionsFetcher = createAdminFetcher<{
   submissions: RoundSubmission[];
 }>();
@@ -315,6 +319,9 @@ export default function AdminDashboardPage() {
   const roundsSettingsKey = adminAuth
     ? (["/api/admin/rounds/settings", adminAuth] as const)
     : null;
+  const testingSettingsKey = adminAuth
+    ? (["/api/admin/testing/settings", adminAuth] as const)
+    : null;
   const roundRequestsKey = adminAuth
     ? (["/api/admin/rounds/requests", adminAuth] as const)
     : null;
@@ -360,6 +367,14 @@ export default function AdminDashboardPage() {
   } = useSWR<{ roundsPublicEnabled: boolean }, Error, AdminSWRKey | null>(
     roundsSettingsKey,
     roundsSettingsFetcher
+  );
+  const {
+    data: testingSettingsData,
+    error: testingSettingsError,
+    mutate: mutateTestingSettings,
+  } = useSWR<{ dummyContentEnabled: boolean }, Error, AdminSWRKey | null>(
+    testingSettingsKey,
+    testingSettingsFetcher
   );
   const {
     data: roundRequestsData,
@@ -507,6 +522,15 @@ export default function AdminDashboardPage() {
             </div>
             {adminAuth && (
               <>
+                <TestingSettingsPanel
+                  adminAuth={adminAuth}
+                  dummyContentEnabled={
+                    testingSettingsData?.dummyContentEnabled || false
+                  }
+                  error={testingSettingsError?.message}
+                  isLoading={!testingSettingsData && !testingSettingsError}
+                  mutate={mutateTestingSettings}
+                />
                 {activeSection === "community" ? (
                   <CommunityAdminPanel
                     adminAuth={adminAuth}
@@ -580,6 +604,67 @@ const AdminNotice = ({
     <p className="mt-2 text-base text-secondary">{children}</p>
   </section>
 );
+
+const TestingSettingsPanel = ({
+  adminAuth,
+  dummyContentEnabled,
+  error,
+  isLoading,
+  mutate,
+}: {
+  adminAuth: AdminAuth;
+  dummyContentEnabled: boolean;
+  error?: string;
+  isLoading: boolean;
+  mutate: KeyedMutator<{ dummyContentEnabled: boolean }>;
+}) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const updateDummyContent = async (enabled: boolean) => {
+    try {
+      setIsUpdating(true);
+      await sendAdminRequest(
+        "/api/admin/testing/settings",
+        adminAuth,
+        "PATCH",
+        { dummyContentEnabled: enabled }
+      );
+      await mutate();
+    } catch (testingError) {
+      window.alert(
+        testingError instanceof Error
+          ? testingError.message
+          : "Unable to update dummy testing content."
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <section className="yc-dark-yellow-form-surface flex flex-col gap-4 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 className="font-heading text-2xl leading-none text-skin-base">
+          Testing content
+        </h2>
+        <p className="mt-2 max-w-3xl text-sm leading-snug text-secondary">
+          Toggle dummy rounds, community projects, and content coin posts on
+          public pages. This does not write or delete production records.
+        </p>
+        {error && (
+          <p className="mt-2 text-sm font-semibold text-skin-proposal-danger">
+            {error}
+          </p>
+        )}
+      </div>
+      <RoundsVisibilitySwitch
+        enabled={dummyContentEnabled}
+        isUpdating={isUpdating || isLoading}
+        onChange={updateDummyContent}
+      />
+    </section>
+  );
+};
 
 const StatusPill = ({ status }: { status: string }) => {
   const color =

@@ -87,7 +87,7 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
                   </Button>
                   <div
                     className={clsx(
-                      "absolute right-0 top-full z-50 flex min-w-[190px] translate-y-2 flex-col rounded-2xl border border-skin-stroke bg-primary p-2 opacity-0 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100",
+                      "absolute right-0 top-full z-50 flex min-w-[190px] translate-y-2 flex-col rounded-2xl border border-skin-stroke bg-skin-muted p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100",
                       isMenuOpen
                         ? "visible translate-y-0 opacity-100"
                         : "invisible"

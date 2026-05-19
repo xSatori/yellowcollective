@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import { getAddress, isAddress } from "viem";
+import { getDummyGalleryCoins } from "data/dummy-content";
 
 export type GalleryCoin = {
   address: string;
@@ -326,8 +327,20 @@ export const listPublicGalleryCoins = async () => {
   const galleryPublicEnabled = await getGalleryPublicEnabled();
   if (!galleryPublicEnabled) return [];
 
-  const coins = await listGalleryCoins();
-  return coins.filter((coin) => !coin.hidden);
+  const [coins, dummyCoins] = await Promise.all([
+    listGalleryCoins(),
+    getDummyGalleryCoins(),
+  ]);
+
+  const coinAddresses = new Set(
+    coins.map((coin) => coin.address.toLowerCase())
+  );
+  return [
+    ...dummyCoins.filter(
+      (coin) => !coin.hidden && !coinAddresses.has(coin.address.toLowerCase())
+    ),
+    ...coins.filter((coin) => !coin.hidden),
+  ];
 };
 
 export const getGalleryCoinByAddressOrSlug = async (value: string) => {

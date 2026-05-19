@@ -8,6 +8,7 @@ import {
   getApprovedCommunityProjectBySlug,
   listApprovedCommunityProjects,
 } from "data/community-project-submissions";
+import { getDummyCommunityProjects } from "data/dummy-content";
 import {
   normalizeSafeImageUrl,
   normalizeSafeProjectUrl,
@@ -78,7 +79,9 @@ const isCommunityProject = (value: unknown): value is CommunityProject => {
     return false;
   }
 
-  if (getInvalidCommunityProjectMemberAddresses(project.memberAddresses).length) {
+  if (
+    getInvalidCommunityProjectMemberAddresses(project.memberAddresses).length
+  ) {
     return false;
   }
 
@@ -137,10 +140,7 @@ const getLocalCommunityProjects = (): CommunityProject[] => {
     })
     .filter((project): project is CommunityProject => Boolean(project));
 
-  return [
-    ...communityProjects.map(normalizeProject),
-    ...submittedProjects,
-  ];
+  return [...communityProjects.map(normalizeProject), ...submittedProjects];
 };
 
 const dedupeProjects = (projects: CommunityProject[]) => {
@@ -157,11 +157,19 @@ export const getCommunityProjects = async (): Promise<CommunityProject[]> => {
   const localProjects = getLocalCommunityProjects();
 
   try {
-    const approvedProjects = await listApprovedCommunityProjects();
-    return dedupeProjects([...localProjects, ...approvedProjects]);
+    const [approvedProjects, dummyProjects] = await Promise.all([
+      listApprovedCommunityProjects(),
+      getDummyCommunityProjects(),
+    ]);
+    return dedupeProjects([
+      ...localProjects,
+      ...approvedProjects,
+      ...dummyProjects,
+    ]);
   } catch (error) {
     console.warn("Unable to load approved community projects", error);
-    return localProjects;
+    const dummyProjects = await getDummyCommunityProjects();
+    return dedupeProjects([...localProjects, ...dummyProjects]);
   }
 };
 
@@ -177,12 +185,19 @@ export const getCommunityProject = async (slug: string) => {
     (project) => project.slug === slug
   );
 
-  return project ? normalizeProject(project) : undefined;
+  if (project) return normalizeProject(project);
+
+  const dummyProject = (await getDummyCommunityProjects()).find(
+    (project) => project.slug === slug
+  );
+
+  return dummyProject ? normalizeProject(dummyProject) : undefined;
 };
 
 export const getCommunityProjectsForMember = async (address: string) => {
-  const normalizedAddress =
-    normalizeCommunityProjectMemberAddresses([address])[0];
+  const normalizedAddress = normalizeCommunityProjectMemberAddresses([
+    address,
+  ])[0];
   if (!normalizedAddress) return [];
 
   const projects = await getCommunityProjects();

@@ -533,6 +533,17 @@
     color: rgb(255, 255, 255) !important;
   }
 
+  [data-theme="dark"] .yc-round-submission-card,
+  [data-theme="dark"] .yc-round-submission-card * {
+    color: #ffffff !important;
+  }
+
+  [data-theme="dark"] .yc-round-submission-card .yc-round-rank-pill,
+  [data-theme="dark"] .yc-round-submission-card .yc-round-rank-pill *,
+  [data-theme="dark"] .yc-round-submission-card .yc-round-vote-controls input {
+    color: #212529 !important;
+  }
+
   .yc-connect-wallet-button {
     --color-text-base: 33, 37, 41;
     --color-text-muted: 69, 74, 78;
@@ -641,7 +652,7 @@
   }
 
   .yc-round-featured-star {
-    color: rgb(var(--color-accent)) !important;
+    color: #ffffff !important;
     font-size: 0.85em;
     line-height: 1;
   }
@@ -724,6 +735,16 @@
     color: #212529 !important;
   }
 
+  .yc-coin-info-trigger .yc-coin-info-center,
+  [data-theme="dark"] .yc-coin-info-trigger .yc-coin-info-center {
+    background-color: #ffffff !important;
+  }
+
+  .yc-coin-info-trigger .yc-coin-info-icon,
+  [data-theme="dark"] .yc-coin-info-trigger .yc-coin-info-icon {
+    color: #c93d2f !important;
+  }
+
   .yc-coin-edit-dialog > button,
   .yc-coin-info-dialog > button,
   .yc-coin-media-dialog > button {
@@ -760,11 +781,13 @@
   [data-theme="dark"] .proposal-detail-tab-active {
     background-color: rgb(var(--color-accent)) !important;
     color: #212529 !important;
+    box-shadow: 4px 0px 0px 0px rgb(var(--color-shadow-accent)) !important;
   }
 
   [data-theme="dark"] .proposal-detail-tab-inactive {
     background-color: rgb(255, 255, 255) !important;
     color: #212529 !important;
+    box-shadow: none !important;
   }
 
   [data-theme="dark"] .proposal-detail-tab {

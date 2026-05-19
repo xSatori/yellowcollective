@@ -3,7 +3,10 @@ import { type CommunityProject } from "data/community";
 import { isAdminAddress } from "@/utils/admin";
 import { getCommunityProjects } from "@/utils/community-projects";
 import { normalizeSafeImageUrl } from "@/utils/url-safety";
-import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
+import type {
+  GetServerSidePropsResult,
+  InferGetServerSidePropsType,
+} from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useAccount } from "wagmi";
@@ -12,18 +15,17 @@ type CommunityPageProps = {
   projects: CommunityProject[];
 };
 
-export const getStaticProps = async (): Promise<
-  GetStaticPropsResult<CommunityPageProps>
+export const getServerSideProps = async (): Promise<
+  GetServerSidePropsResult<CommunityPageProps>
 > => ({
   props: {
     projects: await getCommunityProjects(),
   },
-  revalidate: 60,
 });
 
 export default function CommunityPage({
   projects,
-}: InferGetStaticPropsType<typeof getStaticProps>) {
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { address } = useAccount();
   const isAdmin = isAdminAddress(address);
 

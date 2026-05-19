@@ -1,7 +1,4 @@
-import CommunityDetailPage, {
-  getStaticPaths,
-  getStaticProps,
-} from "../community/[slug]";
+import CommunityDetailPage, { getServerSideProps } from "../community/[slug]";
 
-export { getStaticPaths, getStaticProps };
+export { getServerSideProps };
 export default CommunityDetailPage;

@@ -47,7 +47,7 @@ export const RoundStatusPill = ({
   const resolvedState = state ?? inferRoundStatusState(status);
   const isFeatured = resolvedState === "featured";
   const color = isFeatured
-    ? "bg-[#fff7bf] text-[#212529]"
+    ? "bg-[#c93d2f] text-white"
     : resolvedState === "submissions_open"
       ? "bg-[#e7f7df] text-[#276514]"
       : resolvedState === "voting_open" || resolvedState === "upcoming"
@@ -61,7 +61,7 @@ export const RoundStatusPill = ({
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${color}`}
+      className={`inline-flex h-7 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-0 text-xs font-semibold leading-none ${color}`}
     >
       {!isFeatured && (
         <span

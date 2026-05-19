@@ -258,21 +258,18 @@ export default function RoundDetailPage({
           Back to rounds
         </Link>
 
-        <section className="yc-dark-yellow-form-surface grid gap-6 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm lg:grid-cols-[1fr_360px]">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <RoundStatusPill
-                status={getRoundStateLabel(state)}
-                state={state}
-              />
-              {round.featured && (
-                <RoundStatusPill status="featured" state="featured" />
-              )}
-            </div>
-            <h1 className="mt-4 font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
-              {round.title}
-            </h1>
-            <div className="mt-6 rounded-2xl border border-skin-stroke bg-[#fff7bf] p-5">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <RoundStatusPill status={getRoundStateLabel(state)} state={state} />
+            {round.featured && (
+              <RoundStatusPill status="featured" state="featured" />
+            )}
+          </div>
+          <h1 className="mt-4 font-heading text-[42px] leading-none text-skin-base md:text-[58px]">
+            {round.title}
+          </h1>
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px] lg:items-stretch">
+            <div className="flex min-h-[230px] flex-col justify-center rounded-2xl border border-skin-stroke bg-[#fff7bf] p-5">
               <div className="font-heading text-xl leading-none text-skin-base">
                 About this round
               </div>
@@ -294,35 +291,35 @@ export default function RoundDetailPage({
                 </p>
               )}
             </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {state === "submissions_open" && (
-                <Link
-                  href={
-                    round.isTraitContest && round.traitSubmissionsEnabled
-                      ? "/noundry?tab=gallery"
-                      : `/rounds/${round.slug}/submit`
-                  }
-                  className="yc-dark-submit-blue rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
-                >
-                  {round.isTraitContest && round.traitSubmissionsEnabled
-                    ? "Submit Noundry trait"
-                    : "Submit project"}
-                </Link>
+            <div className="flex min-h-[230px] overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
+              {round.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={round.image}
+                  alt={round.title}
+                  className="h-full min-h-[230px] w-full object-cover"
+                />
+              ) : (
+                <div className="flex min-h-[230px] w-full items-center justify-center p-8 text-center font-heading text-3xl">
+                  {round.title}
+                </div>
               )}
             </div>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-skin-stroke bg-[#fff7bf]">
-            {round.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={round.image}
-                alt={round.title}
-                className="aspect-square h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex aspect-square items-center justify-center p-8 text-center font-heading text-3xl">
-                {round.title}
-              </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {state === "submissions_open" && (
+              <Link
+                href={
+                  round.isTraitContest && round.traitSubmissionsEnabled
+                    ? "/noundry?tab=gallery"
+                    : `/rounds/${round.slug}/submit`
+                }
+                className="yc-dark-submit-blue rounded-[18px] bg-[#1d9bf0] px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
+              >
+                {round.isTraitContest && round.traitSubmissionsEnabled
+                  ? "Submit Noundry trait"
+                  : "Submit project"}
+              </Link>
             )}
           </div>
         </section>
@@ -535,32 +532,21 @@ const SubmissionCard = ({
   const winnerStyle = isWinner ? getWinnerCardStyle(rank) : null;
   const noundrySubmission = getRoundNoundrySubmission(submission);
   const maxAllocation = allocation + remainingVotes;
-  const cardClass = isRoundEnded
-    ? "border-skin-stroke bg-accent text-[#212529] shadow-sm"
-    : winnerStyle?.cardClass ||
-      "yc-dark-yellow-form-surface border-skin-stroke";
-  const imageClass = isRoundEnded
-    ? "bg-accent"
-    : winnerStyle?.imageClass || "bg-skin-muted";
-  const primaryTextClass = isRoundEnded
-    ? "text-[#212529]"
-    : isWinner
-      ? "text-white"
-      : "text-skin-base";
-  const secondaryTextClass = isRoundEnded
-    ? "text-[#212529]"
-    : isWinner
-      ? "text-[#dce5f0]"
-      : "text-secondary";
+  const cardClass = isWinner
+    ? winnerStyle?.cardClass
+    : "border-[#555b60] bg-[#212529] text-white shadow-[0px_4.02px_0px_0px_#4b5563]";
+  const imageClass = isWinner ? winnerStyle?.imageClass : "bg-[#2b3035]";
+  const primaryTextClass = "text-white";
+  const secondaryTextClass = "text-[#dce5f0]";
 
   return (
     <article
-      className={`relative flex h-full flex-col overflow-hidden rounded-2xl border ${cardClass}`}
+      className={`yc-round-submission-card relative flex h-full flex-col overflow-hidden rounded-2xl border ${cardClass}`}
     >
       {isWinner && <WinnerGlimmer />}
       {showRank && (
         <div
-          className={`absolute left-4 top-4 z-20 flex h-14 min-w-14 items-center justify-center rounded-full px-3 font-heading text-2xl leading-none shadow-[0px_3px_0px_0px_rgba(0,0,0,0.28)] ${
+          className={`yc-round-rank-pill absolute left-4 top-4 z-20 flex h-14 min-w-14 items-center justify-center rounded-full px-3 font-heading text-2xl leading-none shadow-[0px_3px_0px_0px_rgba(0,0,0,0.28)] ${
             winnerStyle?.pillClass ||
             (isRoundEnded
               ? "bg-white/95 text-[#212529]"
@@ -624,9 +610,11 @@ const SubmissionCard = ({
             </div>
           )}
         </div>
-        <p className={`text-base leading-snug ${secondaryTextClass}`}>
-          {submission.description}
-        </p>
+        <SubmissionDescription
+          description={submission.description}
+          className={secondaryTextClass}
+          compact
+        />
         <div className="mt-auto flex items-center justify-between gap-3">
           <WalletIdentityLink
             address={submission.walletAddress}
@@ -634,7 +622,7 @@ const SubmissionCard = ({
             className={`font-heading text-base underline ${primaryTextClass}`}
           />
           {canVote && (
-            <div className="flex items-center gap-2 rounded-xl border border-skin-stroke bg-[#f1f1f1] p-1">
+            <div className="yc-round-vote-controls flex items-center gap-2 rounded-xl border border-skin-stroke bg-[#f1f1f1] p-1">
               <button
                 type="button"
                 onClick={() => onChange(allocation - 1)}
@@ -668,6 +656,42 @@ const SubmissionCard = ({
         </div>
       </div>
     </article>
+  );
+};
+
+const SubmissionDescription = ({
+  description,
+  className = "",
+  compact = false,
+}: {
+  description: string;
+  className?: string;
+  compact?: boolean;
+}) => {
+  const blocks = description
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  const visibleBlocks = compact
+    ? blocks.filter((block) => !block.startsWith("#")).slice(0, 1)
+    : blocks;
+
+  return (
+    <div className={`space-y-3 text-base leading-snug ${className}`}>
+      {visibleBlocks.map((block, index) => {
+        const heading = block.match(/^#{1,3}\s+(.+)$/);
+
+        if (heading) {
+          return (
+            <h3 key={index} className="font-heading text-xl leading-none">
+              {heading[1]}
+            </h3>
+          );
+        }
+
+        return <p key={index}>{block}</p>;
+      })}
+    </div>
   );
 };
 
@@ -755,9 +779,10 @@ const SubmissionModal = ({
             >
               {submission.title}
             </h2>
-            <p className="mt-6 max-w-3xl text-lg leading-snug text-secondary">
-              {submission.description}
-            </p>
+            <SubmissionDescription
+              description={submission.description}
+              className="mt-6 max-w-3xl text-secondary"
+            />
             {submission.submissionType === "trait" && (
               <div className="mt-4 w-fit rounded-full bg-[#dff3ff] px-3 py-1 font-heading text-sm text-[#0f5f99]">
                 Noundry trait
@@ -771,9 +796,10 @@ const SubmissionModal = ({
                     Submission description
                   </div>
                   <div className="rounded-xl bg-[#fff7bf] p-4">
-                    <p className="text-base leading-snug text-secondary">
-                      {submission.description}
-                    </p>
+                    <SubmissionDescription
+                      description={submission.description}
+                      className="text-secondary"
+                    />
                   </div>
                 </div>
                 <div className="rounded-2xl border border-skin-stroke bg-white p-3">

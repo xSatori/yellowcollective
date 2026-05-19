@@ -15,6 +15,10 @@ import {
   normalizeSafeImageUrl,
   normalizeSafeProjectUrl,
 } from "@/utils/url-safety";
+import {
+  getDummyPublicRoundBySlug,
+  getDummyPublicRounds,
+} from "data/dummy-content";
 
 export type RoundStatus = "draft" | "published" | "archived";
 export type RoundSubmissionStatus =
@@ -1228,6 +1232,10 @@ const normalizeRoundRequestInput = (input: RoundRequestInput) => {
 export const validateRoundRequestInput = (input: RoundRequestInput) => {
   const request = normalizeRoundRequestInput(input);
 
+  if (!request.walletAddress || !isAddress(request.walletAddress)) {
+    return "A valid connected wallet is required.";
+  }
+
   if (
     !request.title ||
     request.title.length < 3 ||
@@ -1331,7 +1339,12 @@ export const listPublicRounds = async () => {
     [DEMO_ROUND_SLUG_PATTERN]
   );
 
-  return hydrateRoundsWithAwards(result.rows.map(mapRound));
+  const [rounds, dummyRounds] = await Promise.all([
+    hydrateRoundsWithAwards(result.rows.map(mapRound)),
+    getDummyPublicRounds(),
+  ]);
+
+  return [...dummyRounds, ...rounds];
 };
 
 export const getRoundsPublicEnabled = async () => {
@@ -1712,7 +1725,9 @@ export const getRoundBySlug = async (slug: string) => {
 };
 
 export const getPublicRoundBySlug = async (slug: string) => {
-  if (slug.startsWith("demo-")) return null;
+  if (slug.startsWith("demo-")) {
+    return getDummyPublicRoundBySlug(slug);
+  }
 
   const round = await getRoundBySlug(slug);
   if (!round || round.status !== "published" || !round.active) return null;
