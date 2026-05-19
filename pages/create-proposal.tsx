@@ -27,7 +27,8 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment } from "react";
+import { useRouter } from "next/router";
+import { Fragment, useMemo } from "react";
 import {
   useContractWrite,
   usePrepareContractWrite,
@@ -64,6 +65,7 @@ interface Transaction {
   tokenId: string;
   fromAddress: string;
   notes: string;
+  confirmedCustomCalldata: boolean;
 }
 
 interface PreparedTransaction {
@@ -247,12 +249,86 @@ const getEmptyTransaction = (type: TransactionType): Transaction => ({
   tokenId: "",
   fromAddress: "",
   notes: "",
+  confirmedCustomCalldata: false,
 });
 
+const isStrictHexCalldata = (value: string) =>
+  /^0x(?:[0-9a-fA-F]{2})*$/.test(value);
+
+const getFunctionSelector = (calldata: string) =>
+  isStrictHexCalldata(calldata) && calldata.length >= 10
+    ? calldata.slice(0, 10)
+    : "0x";
+
+const decodeKnownCalldata = (calldata: string) => {
+  if (!isStrictHexCalldata(calldata) || calldata.length < 10) return null;
+
+  for (const contractInterface of [erc20Interface, erc721Interface]) {
+    try {
+      const parsed = contractInterface.parseTransaction({ data: calldata });
+      return {
+        name: parsed.name,
+        args: parsed.args.map((arg) => arg.toString()),
+      };
+    } catch {
+      // Try the next known interface.
+    }
+  }
+
+  return null;
+};
+
+const getInitialProposalValues = (template?: string | string[]): Values => {
+  const defaultValues: Values = {
+    title: "",
+    summary: "",
+    transactions: [getEmptyTransaction("send-tokens")],
+  };
+
+  if (
+    template !== "noundry" ||
+    typeof window === "undefined" ||
+    !window.sessionStorage
+  ) {
+    return defaultValues;
+  }
+
+  try {
+    const draft = JSON.parse(
+      window.sessionStorage.getItem("yellow-noundry-proposal-draft") || "{}"
+    );
+    const transaction = getEmptyTransaction("add-artwork");
+
+    transaction.notes = [
+      `Trait slot: ${draft.traitType || ""}`,
+      `Trait name: ${draft.traitName || ""}`,
+      `Artist: ${draft.artist || ""}`,
+      "Exported image data is stored in this browser session from Noundry.",
+      draft.imageData ? "Image export: ready" : "Image export: missing",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return {
+      title: draft.title || defaultValues.title,
+      summary: draft.summary || defaultValues.summary,
+      transactions: [transaction],
+    };
+  } catch (error) {
+    console.warn("Unable to load Noundry proposal draft", error);
+    return defaultValues;
+  }
+};
+
 export default function CreateProposalPage() {
+  const router = useRouter();
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
+  const initialValues = useMemo(
+    () => getInitialProposalValues(router.query.template),
+    [router.query.template]
+  );
 
   return (
     <Layout>
@@ -264,7 +340,7 @@ export default function CreateProposalPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/proposals"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
+            className="yc-dark-yellow-button flex h-10 min-h-[2.5rem] w-10 min-w-[2.5rem] flex-none items-center justify-center rounded-full border border-skin-stroke bg-white transition hover:bg-[#fff7bf]"
             aria-label="Back to proposals"
           >
             <ArrowLeftIcon className="h-5" />
@@ -282,16 +358,13 @@ export default function CreateProposalPage() {
         </div>
 
         <Formik
-          initialValues={{
-            title: "",
-            summary: "",
-            transactions: [getEmptyTransaction("send-tokens")],
-          }}
+          enableReinitialize
+          initialValues={initialValues}
           onSubmit={() => {}}
         >
           {({ values, setFieldValue }) => (
             <Form className="flex flex-col gap-6">
-              <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+              <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-5">
                   <h2 className="font-heading text-2xl leading-none text-skin-base">
                     Proposal details
@@ -317,7 +390,7 @@ export default function CreateProposalPage() {
                 <HTMLTextEditor />
               </section>
 
-              <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+              <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-5">
                   <h2 className="font-heading text-2xl leading-none text-skin-base">
                     Proposal actions
@@ -386,7 +459,7 @@ export default function CreateProposalPage() {
                 </FieldArray>
               </section>
 
-              <section className="rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
+              <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm md:p-6">
                 <div className="mb-5">
                   <h2 className="font-heading text-2xl leading-none text-skin-base">
                     Review and submit
@@ -518,7 +591,11 @@ const TransactionFields = ({
             generated by the matching Builder flow below.
           </p>
         </div>
-        <CustomTransactionFields index={index} />
+        <CustomTransactionFields
+          index={index}
+          transaction={transaction}
+          treasuryAddress={treasuryAddress}
+        />
         <div>
           <label className="text-sm font-semibold text-skin-base">
             Builder notes
@@ -535,7 +612,13 @@ const TransactionFields = ({
     );
   }
 
-  return <CustomTransactionFields index={index} />;
+  return (
+    <CustomTransactionFields
+      index={index}
+      transaction={transaction}
+      treasuryAddress={treasuryAddress}
+    />
+  );
 };
 
 const ProposalTypeDropdown = ({
@@ -604,24 +687,88 @@ const ProposalTypeOptionContent = ({
   </div>
 );
 
-const CustomTransactionFields = ({ index }: { index: number }) => (
-  <div className="mt-5 grid gap-4 md:grid-cols-[1fr_180px]">
-    <AddressField name={`transactions[${index}].address`} label="Target" />
-    <AmountField
-      name={`transactions[${index}].valueInETH`}
-      label="ETH value"
-      suffix="ETH"
-    />
-    <div className="md:col-span-2">
-      <label className="text-sm font-semibold text-skin-base">Calldata</label>
-      <Field
-        name={`transactions[${index}].calldata`}
-        placeholder="0x"
-        className="mt-2 w-full rounded-xl border border-skin-stroke bg-white px-4 py-3 font-mono text-sm text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+const CustomTransactionFields = ({
+  index,
+  transaction,
+  treasuryAddress,
+}: {
+  index: number;
+  transaction: Transaction;
+  treasuryAddress?: string;
+}) => {
+  const decoded = decodeKnownCalldata(transaction.calldata);
+  const selector = getFunctionSelector(transaction.calldata);
+  const isKnownTarget =
+    treasuryAddress &&
+    transaction.address.toLowerCase() === treasuryAddress.toLowerCase();
+  const needsUnknownConfirmation =
+    !decoded || !isKnownTarget || transaction.valueInETH !== "0";
+
+  return (
+    <div className="mt-5 grid gap-4 md:grid-cols-[1fr_180px]">
+      <AddressField name={`transactions[${index}].address`} label="Target" />
+      <AmountField
+        name={`transactions[${index}].valueInETH`}
+        label="ETH value"
+        suffix="ETH"
       />
+      <div className="md:col-span-2">
+        <label className="text-sm font-semibold text-skin-base">Calldata</label>
+        <Field
+          name={`transactions[${index}].calldata`}
+          placeholder="0x"
+          className="mt-2 w-full rounded-xl border border-skin-stroke bg-white px-4 py-3 font-mono text-sm text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+        />
+      </div>
+      <div className="md:col-span-2 rounded-xl border border-[#d9a300] bg-[#fff7bf] p-4 text-sm leading-snug text-skin-base">
+        <div className="font-heading text-base">Custom calldata review</div>
+        <dl className="mt-3 grid gap-2 font-mono text-xs">
+          <div>
+            <dt className="font-sans font-semibold">Target</dt>
+            <dd className="break-all">{transaction.address || "Missing"}</dd>
+          </div>
+          <div>
+            <dt className="font-sans font-semibold">ETH value</dt>
+            <dd>{transaction.valueInETH || "0"} ETH</dd>
+          </div>
+          <div>
+            <dt className="font-sans font-semibold">Function selector</dt>
+            <dd>{selector}</dd>
+          </div>
+          <div>
+            <dt className="font-sans font-semibold">Decoded function</dt>
+            <dd>{decoded ? decoded.name : "Unknown ABI"}</dd>
+          </div>
+          {decoded && (
+            <div>
+              <dt className="font-sans font-semibold">Decoded arguments</dt>
+              <dd className="break-all">{decoded.args.join(", ") || "None"}</dd>
+            </div>
+          )}
+          <div>
+            <dt className="font-sans font-semibold">Raw calldata</dt>
+            <dd className="break-all">{transaction.calldata || "0x"}</dd>
+          </div>
+        </dl>
+        {needsUnknownConfirmation && (
+          <p className="mt-3 font-semibold text-[#8a5a00]">
+            Unknown targets, non-zero ETH value, or undecoded calldata can move
+            treasury assets. Verify the target and calldata externally before
+            submitting.
+          </p>
+        )}
+        <label className="mt-4 flex items-start gap-3 font-sans text-sm">
+          <Field
+            type="checkbox"
+            name={`transactions[${index}].confirmedCustomCalldata`}
+            className="mt-1"
+          />
+          <span>I verified this target, value, and calldata.</span>
+        </label>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AddressField = ({
   name,
@@ -689,6 +836,11 @@ const SubmitButton = () => {
     preparedTransactions.every(
       (transaction): transaction is PreparedTransaction => Boolean(transaction)
     );
+  const hasConfirmedCustomTransactions = transactions.every(
+    (transaction) =>
+      transaction.type !== "custom-transaction" ||
+      transaction.confirmedCustomCalldata
+  );
   const validTransactions = preparedTransactions.filter(
     (transaction): transaction is PreparedTransaction => Boolean(transaction)
   );
@@ -706,7 +858,8 @@ const SubmitButton = () => {
 
   const args = [targets, values, callDatas, description] as const;
   const debouncedArgs = useDebounce(args);
-  const shouldPrepare = hasValidContent && hasValidTransactions;
+  const shouldPrepare =
+    hasValidContent && hasValidTransactions && hasConfirmedCustomTransactions;
 
   const { config } = usePrepareContractWrite({
     address: addresses?.governor,
@@ -730,12 +883,13 @@ const SubmitButton = () => {
     disabled
       ? "bg-skin-button-muted"
       : "bg-skin-button-accent hover:bg-skin-button-accent-hover"
-  } flex h-12 w-full items-center justify-center rounded-[18px] px-4 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#0464BC] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#0464BC] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none`;
+  } yc-dark-submit-blue flex min-h-12 w-full items-center justify-center rounded-[18px] px-4 py-3 text-center font-heading text-base leading-tight text-skin-inverted shadow-[0px_4.02px_0px_0px_#0464BC] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#0464BC] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none`;
 
   const getButtonLabel = () => {
     if (!hasBalance) return "You don't have enough votes to submit a proposal";
     if (!hasValidContent) return "Add a title and description";
     if (!hasValidTransactions) return "Complete every proposal action";
+    if (!hasConfirmedCustomTransactions) return "Confirm custom calldata";
     if (isSuccess) return "Proposal submitted";
     return "Submit proposal";
   };
@@ -818,7 +972,8 @@ const prepareTransaction = (
       default:
         if (
           !ethers.utils.isAddress(transaction.address) ||
-          !transaction.calldata.startsWith("0x")
+          !isStrictHexCalldata(transaction.calldata) ||
+          !transaction.confirmedCustomCalldata
         )
           return null;
         return {

@@ -1,11 +1,8 @@
-import { applyThemeProperties } from "@/utils/applyThemeProperties";
 import { useEffect } from "react";
-import { useTheme } from "./useTheme";
+import { applyThemeMode, getPreferredThemeMode } from "@/utils/themeMode";
 
 export const useInitTheme = () => {
-  const [theme] = useTheme();
-
   useEffect(() => {
-    applyThemeProperties(theme);
-  }, [theme]);
+    applyThemeMode(getPreferredThemeMode());
+  }, []);
 };

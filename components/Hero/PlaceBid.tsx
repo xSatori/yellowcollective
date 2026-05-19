@@ -1,14 +1,14 @@
 import { BigNumber, utils } from "ethers";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  usePrepareContractWrite,
-  useContractWrite,
   useWaitForTransaction,
   useAccount,
+  useBalance,
   Address,
+  usePrepareSendTransaction,
+  useSendTransaction,
 } from "wagmi";
-import { AuctionABI } from "@buildersdk/sdk";
 import { useDebounce } from "@/hooks/useDebounce";
 import Button from "../Button";
 import clsx from "clsx";
@@ -16,6 +16,26 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { track } from "@vercel/analytics";
 import ExternalLink from "../ExternalLink";
 import { auctionAbi } from "abis/auction";
+import { COLLECTIVE_NOUNS_TREASURY } from "constants/addresses";
+import {
+  appendBidCommentDataSuffix,
+  getBidCommentByteLength,
+  getBidCommentDataSuffix,
+  MAX_BID_COMMENT_LENGTH,
+  truncateBidCommentToByteLimit,
+  validateBidCommentText,
+} from "@/utils/bid-comments";
+
+const auctionInterface = new utils.Interface(auctionAbi as any);
+const BASE_CHAIN_ID = 8453;
+
+const parseBidAmount = (value: string) => {
+  try {
+    return value ? utils.parseEther(value) : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export const PlaceBid = ({
   highestBid,
@@ -30,45 +50,74 @@ export const PlaceBid = ({
   hidden: boolean;
   onNewBid: () => Promise<void>;
 }) => {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { data: baseBalance } = useBalance({
+    address,
+    chainId: BASE_CHAIN_ID,
+    enabled: isConnected && Boolean(address),
+    watch: true,
+  });
   const [bid, setBid] = useState("");
+  const [bidComment, setBidComment] = useState("");
   const debouncedBid = useDebounce(bid, 500);
 
   const { openConnectModal } = useConnectModal();
+  const bidCommentDataSuffix = getBidCommentDataSuffix(bidComment);
+  const parsedBid = useMemo(() => parseBidAmount(debouncedBid), [debouncedBid]);
+  const finalBidCalldata = useMemo(() => {
+    if (!tokenId) return undefined;
 
-  const { config, error } = usePrepareContractWrite({
-    address: auction as Address,
-    abi: auctionAbi,
-    functionName: "createBidWithReferral",
-    args: [
-      BigNumber.from(tokenId || 1),
-      "0x1C937764e433878c6eB1820bC5a1A42c6f25dA81",
-    ],
-    overrides: {
-      value: utils.parseEther(debouncedBid || "0"),
-    },
-    enabled: !!auction && !!debouncedBid,
+    const baseCalldata = auctionInterface.encodeFunctionData(
+      "createBidWithReferral",
+      [BigNumber.from(tokenId || 1), COLLECTIVE_NOUNS_TREASURY]
+    );
+
+    return appendBidCommentDataSuffix(
+      baseCalldata,
+      bidCommentDataSuffix
+    ) as `0x${string}`;
+  }, [bidCommentDataSuffix, tokenId]);
+  const highestBidBN = BigNumber.from(highestBid);
+  const amountIncrease = highestBidBN.div("10");
+  const nextBidAmount = highestBidBN.add(amountIncrease);
+  const commentLength = getBidCommentByteLength(bidComment);
+  const commentError = bidComment.trim()
+    ? validateBidCommentText(bidComment) || ""
+    : "";
+
+  const { config, error } = usePrepareSendTransaction({
+    chainId: BASE_CHAIN_ID,
+    request:
+      auction && finalBidCalldata && parsedBid
+        ? {
+            to: auction as Address,
+            data: finalBidCalldata,
+            value: parsedBid,
+          }
+        : undefined,
+    enabled:
+      Boolean(auction && finalBidCalldata && parsedBid && debouncedBid) &&
+      !commentError,
   });
-  const { write, data } = useContractWrite(config);
+  const { sendTransaction: write, data } = useSendTransaction(config);
   const { isLoading } = useWaitForTransaction({
     hash: data?.hash,
     onError: () => {
       track("placeBidError");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setBid("");
+      setBidComment("");
+
       track("placeBidSuccess");
-      onNewBid();
+      await onNewBid();
     },
   });
 
-  const highestBidBN = BigNumber.from(highestBid);
-  const amountIncrease = highestBidBN.div("10");
-  const nextBidAmount = highestBidBN.add(amountIncrease);
-
   const getError = () => {
     const minNextBid = utils.formatEther(nextBidAmount);
-    if (bid != "" && bid < minNextBid) {
+    const bidAmount = parseBidAmount(bid);
+    if (bid && (!bidAmount || bidAmount.lt(nextBidAmount))) {
       return `Bid must be at least ${minNextBid}`;
     }
 
@@ -78,26 +127,31 @@ export const PlaceBid = ({
     if (reason.includes("insufficient funds"))
       return "Error insufficient funds for bid";
 
-    if (debouncedBid && debouncedBid < utils.formatEther(nextBidAmount))
+    if (parsedBid && parsedBid.lt(nextBidAmount))
       return "Error invalid bid";
   };
+  const showBridgeToBase =
+    isConnected && baseBalance?.value && baseBalance.value.isZero();
 
   return (
-    <div className={clsx("flex flex-col gap-6", hidden && "hidden")}>
-      <ExternalLink href="https://bridge.base.org/deposit">
-        <div className="flex flex-row gap-2">
-          <Image src="/info-circle.svg" width={20} height={20} alt="" />
-          <span className="font-bold">Bridge to Base</span>
-        </div>
-      </ExternalLink>
-      <div className={clsx("flex flex-row flex-wrap gap-4 items-start ")}>
-        <div className="shrink flex flex-col gap-1">
+    <div
+      className={clsx(
+        "yc-auction-focus-area flex flex-col gap-6",
+        hidden && "hidden"
+      )}
+    >
+      <div
+        className={clsx(
+          "flex w-full flex-row flex-wrap items-start gap-3"
+        )}
+      >
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <input
             value={bid}
             type="number"
             onChange={(e) => setBid(e.target.value)}
             className={clsx(
-              "bg-primary h-[59px] rounded-[18px] px-6 py-4 focus:border-accent border-2 outline-none",
+              "h-[59px] w-full min-w-0 rounded-[18px] border-2 border-accent bg-primary px-4 py-4 outline-none focus:border-accent sm:px-6",
               getError() != undefined && getError() != "" && "border-negative"
             )}
             placeholder={
@@ -108,12 +162,14 @@ export const PlaceBid = ({
           />
           {error && <p className="caption text-negative">{getError()}</p>}
         </div>
-        <div className="flex flex-col gap-1 justify-center items-center">
+        <div className="flex flex-col items-center justify-center gap-1">
           <Button
-            disabled={(!write || isLoading) && isConnected}
+            className="yc-dark-yellow-button h-[59px] min-w-[112px] px-3 py-0 text-sm sm:min-w-[140px]"
+            disabled={((!write || isLoading) && isConnected) || !!commentError}
             onClick={(e) => {
               e.preventDefault();
               if (isConnected) {
+                if (commentError) return;
                 track("placeBidTriggered");
                 write?.();
               } else {
@@ -128,6 +184,48 @@ export const PlaceBid = ({
             )}
           </Button>
         </div>
+        {showBridgeToBase && (
+          <ExternalLink href="https://bridge.base.org/deposit">
+            <div className="flex h-[59px] flex-row items-center gap-2">
+              <Image src="/info-circle.svg" width={20} height={20} alt="" />
+              <span className="font-bold">Bridge to Base</span>
+            </div>
+          </ExternalLink>
+        )}
+        <label className="flex w-full max-w-[420px] flex-col gap-2">
+          <div className="flex items-end justify-between gap-3">
+            <span className="font-bold">Add a comment</span>
+            <span
+              className={clsx(
+                "caption text-primary/60",
+                commentError && "text-negative"
+              )}
+            >
+              {commentLength}/{MAX_BID_COMMENT_LENGTH}
+            </span>
+          </div>
+          <textarea
+            value={bidComment}
+            onChange={(e) =>
+              setBidComment(truncateBidCommentToByteLimit(e.target.value))
+            }
+            className={clsx(
+              "min-h-[92px] w-full resize-none rounded-[18px] border-2 border-accent bg-primary px-5 py-4 outline-none focus:border-accent",
+              commentError && "border-negative"
+            )}
+            maxLength={MAX_BID_COMMENT_LENGTH}
+            placeholder="Say something about your bid..."
+          />
+          <p
+            className={clsx(
+              "caption text-primary/60",
+              commentError && "text-negative"
+            )}
+          >
+            {commentError ||
+              "Optional. Publicly shown with your bid on Yellow and nouns.build."}
+          </p>
+        </label>
       </div>
     </div>
   );

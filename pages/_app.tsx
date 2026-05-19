@@ -8,17 +8,22 @@ import { useInitTheme } from "@/hooks/useInitTheme";
 import localFont from "next/font/local";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
+import MiniAppReady from "@/components/MiniApp/MiniAppReady";
+import PWARegister from "@/components/PWARegister";
+import {
+  LEGACY_FRAME_EMBED_JSON,
+  MINI_APP_EMBED_JSON,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_SHORT_NAME,
+  SITE_THEME_COLOR,
+  getAbsoluteUrl,
+} from "@/utils/site";
 
 export const pally = localFont({
   src: "../styles/Pally-Variable.ttf",
   display: "swap",
   variable: "--font-pally",
-});
-
-export const nns = localFont({
-  src: "../styles/LondrinaSolid-NNS.ttf",
-  display: "swap",
-  variable: "--font-nns",
 });
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
@@ -34,20 +39,45 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains}>
           <Head>
-            <meta property="og:title" content="Yellow Collective" />
+            <title>{SITE_NAME}</title>
             <meta
-              property="og:description"
-              content="A club on the BASE Ethereum L2 network, designed to support and empower artists and creatives in the Nouns and Superchain ecosystems"
+              name="viewport"
+              content="width=device-width, initial-scale=1, viewport-fit=cover"
             />
+            <meta name="description" content={SITE_DESCRIPTION} />
+            <meta name="application-name" content={SITE_NAME} />
+            <meta name="theme-color" content={SITE_THEME_COLOR} />
+            <meta name="mobile-web-app-capable" content="yes" />
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+            <meta name="apple-mobile-web-app-title" content={SITE_SHORT_NAME} />
+            <meta
+              name="apple-mobile-web-app-status-bar-style"
+              content="default"
+            />
+            <link rel="manifest" href="/manifest.webmanifest" />
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+            <meta property="og:title" content={SITE_NAME} />
+            <meta property="og:description" content={SITE_DESCRIPTION} />
             <meta property="og:type" content="website" />
-            <meta property="og:url" content="https://yellowcollective.xyz" />
+            <meta property="og:url" content={getAbsoluteUrl("/")} />
             <meta
               property="og:image"
-              content={`https://${process.env.NEXT_PUBLIC_VERCEL_URL}/og-image.png`}
+              content={getAbsoluteUrl("/og-image.png")}
             />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={SITE_NAME} />
+            <meta name="twitter:description" content={SITE_DESCRIPTION} />
+            <meta
+              name="twitter:image"
+              content={getAbsoluteUrl("/og-image.png")}
+            />
+            <meta name="fc:miniapp" content={MINI_APP_EMBED_JSON} />
+            <meta name="fc:frame" content={LEGACY_FRAME_EMBED_JSON} />
           </Head>
 
-          <main className={`${nns.variable} ${pally.variable}`}>
+          <main className={pally.variable}>
+            <MiniAppReady />
+            <PWARegister />
             <Component {...pageProps} />
             <Analytics />
           </main>

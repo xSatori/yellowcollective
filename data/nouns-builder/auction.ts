@@ -14,6 +14,7 @@ export type Bid = {
   bidder: Address;
   bidAmount: string;
   transactionHash: string;
+  comment?: string;
 };
 
 export type AuctionInfo = {
@@ -96,7 +97,16 @@ export const getPreviousAuction = async ({
 
 export async function getBidHistory({ tokenId }: { tokenId: BigNumber }) {
   const query: TypedDocumentNode<
-    { auction?: { bids: { id: string; bidder: string; amount: string }[] } },
+    {
+      auction?: {
+        bids: {
+          id: string;
+          bidder: string;
+          amount: string;
+          comment?: string | null;
+        }[];
+      };
+    },
     { id: string }
   > = parse(gql`
     query auctionBids($id: ID!) {
@@ -105,6 +115,7 @@ export async function getBidHistory({ tokenId }: { tokenId: BigNumber }) {
           id
           bidder
           amount
+          comment
         }
       }
     }
@@ -115,13 +126,15 @@ export async function getBidHistory({ tokenId }: { tokenId: BigNumber }) {
   const resp = await client.request({ document: query, variables: { id } });
 
   return (
-    resp.auction?.bids.map(
-      (entry) =>
-        ({
-          bidder: entry.bidder,
-          bidAmount: entry.amount,
-          transactionHash: entry.id.split(":")[0],
-        }) as Bid
-    ) ?? []
+    resp.auction?.bids.map((entry) => {
+      const comment = entry.comment?.trim();
+
+      return {
+        bidder: entry.bidder,
+        bidAmount: entry.amount,
+        transactionHash: entry.id.split(":")[0],
+        ...(comment ? { comment } : {}),
+      } as Bid;
+    }) ?? []
   );
 }

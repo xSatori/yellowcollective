@@ -12,9 +12,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent-blue text-white hover:bg-[#319CFF] shadow-[0px_4.02px_0px_0px_#0464BC] active:translate-y-1",
+          "bg-accent-blue text-white hover:bg-[rgb(var(--color-action-hover))] shadow-[0px_4.02px_0px_0px_rgb(var(--color-action-shadow))] active:translate-y-1",
         secondary:
-          "bg-primary text-primary hover:bg-secondary shadow-[0px_4.02px_0px_0px_#BBB] active:translate-y-1",
+          "bg-primary text-primary hover:bg-secondary shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1",
         negative:
           "bg-negative text-white hover:bg-negative/80 shadow-[0px_4.02px_0px_0px_#bd1c11] active:translate-y-1",
         outline:
@@ -23,7 +23,7 @@ const buttonVariants = cva(
       size: {
         default: "px-6 py-[15px] rounded-[18px]",
         tight: "p-4 rounded-[18px]",
-        icon: "px-[10px] py-[6px] rounded-[18px]",
+        icon: "h-11 w-11 p-0 rounded-[18px]",
         rounded: "p-[12px] rounded-full",
       },
     },

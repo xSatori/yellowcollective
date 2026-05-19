@@ -5,7 +5,7 @@ import Header from "./Header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-skin-backdrop text-skin-base min-h-screen flex flex-col items-center justify-start w-screen">
+    <div className="flex min-h-dvh w-full flex-col items-center justify-start bg-skin-backdrop text-skin-base">
       <Banner />
       <Header />
       <div className="max-w-[1400px] w-full flex flex-col items-center justify-around">

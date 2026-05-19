@@ -1,29 +1,38 @@
-import { useTheme } from "@/hooks/useTheme";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Button from "./Button";
-import { Address, useAccount } from "wagmi";
-import Image from "next/image";
+import { Address, useDisconnect } from "wagmi";
 import clsx from "clsx";
-import { zeroAddress } from "viem";
+import Link from "next/link";
 import WalletInfo from "./WalletInfo";
+import { useEffect, useRef, useState } from "react";
 
 export type CustomConnectButtonProps = {
   className: string;
 };
 
 const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
-  const { address } = useAccount();
+  const { disconnect } = useDisconnect();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const connectButtonClassName = clsx("yc-connect-wallet-button", className);
+
+  useEffect(() => {
+    const closeMenu = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeMenu);
+
+    return () => {
+      document.removeEventListener("mousedown", closeMenu);
+    };
+  }, []);
 
   return (
     <ConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        mounted,
-      }) => {
+      {({ account, chain, openChainModal, openConnectModal, mounted }) => {
         return (
           <div
             {...(!mounted && {
@@ -38,7 +47,11 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
             {(() => {
               if (!mounted || !account || !chain) {
                 return (
-                  <Button variant="secondary" onClick={openConnectModal}>
+                  <Button
+                    variant="secondary"
+                    onClick={openConnectModal}
+                    className={connectButtonClassName}
+                  >
                     Connect
                   </Button>
                 );
@@ -46,19 +59,59 @@ const CustomConnectButton = ({ className }: CustomConnectButtonProps) => {
 
               if (chain.unsupported) {
                 return (
-                  <Button variant="negative" onClick={openChainModal}>
+                  <Button
+                    variant="negative"
+                    onClick={openChainModal}
+                    className={className}
+                  >
                     Wrong network
                   </Button>
                 );
               }
               return (
-                <Button
-                  variant="secondary"
-                  onClick={openAccountModal}
-                  className="flex flex-row gap-2 "
-                >
-                  <WalletInfo address={account.address as Address} size="sm" />
-                </Button>
+                <div className="group relative" ref={menuRef}>
+                  <Button
+                    variant="secondary"
+                    className={clsx(
+                      "flex flex-row gap-2",
+                      connectButtonClassName
+                    )}
+                    aria-haspopup="menu"
+                    aria-expanded={isMenuOpen}
+                    onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
+                  >
+                    <WalletInfo
+                      address={account.address as Address}
+                      size="sm"
+                    />
+                  </Button>
+                  <div
+                    className={clsx(
+                      "absolute right-0 top-full z-50 flex min-w-[190px] translate-y-2 flex-col rounded-2xl border border-skin-stroke bg-skin-muted p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100",
+                      isMenuOpen
+                        ? "visible translate-y-0 opacity-100"
+                        : "invisible"
+                    )}
+                  >
+                    <Link
+                      href={`/profile/${account.address}`}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="header-dropdown-item rounded-xl px-4 py-3 font-bold text-primary transition hover:bg-[#fff7bf]"
+                    >
+                      <h6>View profile</h6>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        disconnect();
+                        setIsMenuOpen(false);
+                      }}
+                      className="rounded-xl px-4 py-3 text-left font-bold text-negative transition hover:bg-negative hover:text-white"
+                    >
+                      <h6>Disconnect wallet</h6>
+                    </button>
+                  </div>
+                </div>
               );
             })()}
           </div>

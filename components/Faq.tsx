@@ -1,5 +1,4 @@
 import FaqElement from "@/components/FaqElement";
-import Image from "next/image";
 import ExternalLink from "./ExternalLink";
 
 interface FaqItem {
@@ -170,8 +169,8 @@ const faqItems: FaqItem[] = [
 export default function Faq() {
   return (
     <div className="flex flex-col w-full">
-      <div className="bg-white w-full flex justify-center py-8 flex-col items-center">
-        <div className="max-w-[754px] px-6 w-full flex flex-col gap-8 [&>p]:text-secondary bg-white">
+      <div className="flex w-full flex-col items-center justify-center bg-primary py-8">
+        <div className="flex w-full max-w-[754px] flex-col gap-8 bg-primary px-6 [&>p]:text-secondary">
           <h2 className="md:px-4 pt-8">More Info:</h2>
           <div className="flex flex-col gap-8 md:gap-4 w-full">
             {faqItems.map((item, i) => (
@@ -182,8 +181,11 @@ export default function Faq() {
           </div>
         </div>
       </div>
-      <div className="w-full h-[68px] relative -translate-y-1">
-        <Image src="/white-drip-2.png" fill={true} alt="" />
+      <div className="relative h-[68px] w-full -translate-y-1">
+        <div
+          aria-hidden="true"
+          className="theme-surface-drip-mask theme-surface-drip-mask-bottom h-full w-full"
+        />
       </div>
     </div>
   );

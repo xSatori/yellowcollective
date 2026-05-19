@@ -1,0 +1,24 @@
+{
+  "slug": "yellow-ep",
+  "title": "Yellow EP",
+  "description": "A community driven music project featuring 5 songs inspired by The Yellow Collective.",
+  "details": [
+    "Yellow EP is a community-driven music project by Leo Pastel in partnership with The Yellow Collective, bringing together musicians for a 3-day overnight songwriting camp at Legacy Soundworks in Cincinnati to create five songs inspired by traits from The Yellow Collective’s NFT collection. Rooted in vintage soul, Laurel Canyon soft pop, classic Southwest Ohio soul, and electro-funk, the EP expands on Leo’s prior Yellow Collective collaboration, “Snail,” which was minted 2,000 times by 1,800 collectors during Onchain Summer. Throughout the process, DAO members will help guide creative decisions through tokenized voting, while behind-the-scenes content is shared across Farcaster and social platforms. The final songs, artwork, and video assets will be released as cc0 works, distributed across streaming and NFT platforms, and minted with a 50/50 split between Leo and The Yellow Collective DAO."
+  ],
+  "artist": "Leo Pastel",
+  "category": "Media",
+  "date": "October 2024",
+  "href": "http://yellowcollective.art/proposals/0xc0e9754b18150c9ebe924f584e3899337f3b7bfcb86426ff46e2a38b44ac00d2",
+  "image": "https://i.postimg.cc/fb9LvvqP/Yellow-EP-1-Page-01.jpg",
+  "galleryImages": [],
+  "links": [
+    {
+      "title": "Alligator - Track 1",
+      "href": "https://zora.co/collect/base:0xe7e40ce99febffebd81a011b1644d9ccbc1b61e9/2"
+    },
+    {
+      "title": "Yellow Zorb - Track 2",
+      "href": "https://zora.co/coin/base:0x74dc410e5a5e16e58cc66c61100ee0cddf44ac69"
+    }
+  ]
+}

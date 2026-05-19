@@ -55,15 +55,18 @@ export default function Hero() {
   };
 
   return (
-    <div className="bg-transparent max-w-[374px] md:max-w-[500px] lg:max-w-6xl lg:w-[1100px] flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-start py-[48px] md:py-[64px] gap-8 md:gap-16 px-4 md:px-10">
-      <div className="h-[342px] w-[342px] md:w-[420px] md:h-[420px] relative shrink-0 rounded-[48px] md:rounded-[64px] border-[3px] border-transparent/10 overflow-hidden  flex justify-center items-center">
+    <div className="bg-transparent flex w-full max-w-[374px] flex-col items-center justify-center gap-8 px-4 py-[48px] md:max-w-[500px] md:gap-16 md:px-10 md:py-[64px] lg:w-[1100px] lg:max-w-6xl lg:flex-row lg:items-start lg:justify-start">
+      <div className="relative flex aspect-square w-full max-w-[342px] shrink-0 items-center justify-center overflow-hidden rounded-[48px] border-[3px] border-transparent/10 md:h-[420px] md:w-[420px] md:max-w-none md:rounded-[64px]">
         {tokenInfo && (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={tokenInfo?.image}
             onLoad={() => setImageLoaded(true)}
-            fill={true}
             alt=""
-            className={clsx(imageLoaded ? "visible" : "invisible")}
+            className={clsx(
+              "h-full w-full object-cover",
+              imageLoaded ? "visible" : "invisible"
+            )}
           />
         )}
         <Image
@@ -76,27 +79,43 @@ export default function Hero() {
           )}
         />
       </div>
-      <div className="flex flex-col gap-6 max-w-full overflow-hidden">
+      <div className="flex w-full min-w-0 flex-col gap-6 overflow-hidden">
         <div className="flex items-center mb-4 gap-4">
           <Button
             variant="secondary"
             size="icon"
+            className="yc-dark-yellow-button !bg-white !text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] hover:!bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] disabled:!border disabled:!border-skin-stroke disabled:!bg-white disabled:!text-[#212529] disabled:!opacity-60"
             onClick={pageBack}
             disabled={tokenId == "0x00"}
           >
-            <Image src="/arrow-left.svg" width={24} height={24} alt="back" />
+            <Image
+              src="/arrow-left.svg"
+              width={24}
+              height={24}
+              alt="back"
+              className="brightness-0"
+            />
           </Button>
           <Button
             variant="secondary"
             size="icon"
+            className="yc-dark-yellow-button !bg-white !text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] hover:!bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] disabled:!border disabled:!border-skin-stroke disabled:!bg-white disabled:!text-[#212529] disabled:!opacity-60"
             onClick={pageForward}
             disabled={tokenId == currentTokenId}
           >
-            <Image src="/arrow-right.svg" width={24} height={24} alt="back" />
+            <Image
+              src="/arrow-right.svg"
+              width={24}
+              height={24}
+              alt="back"
+              className="brightness-0"
+            />
           </Button>
         </div>
 
-        <h1>Collective Noun #{parseInt(tokenId, 16)}</h1>
+        <h1 className="text-[42px] leading-[46px] min-[360px]:text-[48px] min-[360px]:leading-[56px] md:text-[56px] md:leading-[64px]">
+          Collective Noun #{parseInt(tokenId, 16)}
+        </h1>
 
         <CurrentAuction
           auctionInfo={auctionInfo}
@@ -138,6 +157,14 @@ const EndedAuction = ({
   const { data: auctionData } = usePreviousAuction({
     tokenId,
   });
+  const featuredBidComment = auctionData?.bids?.find(
+    (bid) =>
+      bid.comment?.trim() &&
+      compareAddress(bid.bidder, auctionData.winner) &&
+      BigNumber.from(bid.bidAmount || "0").eq(
+        BigNumber.from(auctionData.amount || "0")
+      )
+  )?.comment;
 
   return (
     <div className="flex flex-col items-start">
@@ -151,7 +178,7 @@ const EndedAuction = ({
           <div className="font-light">Winning Bid</div>
           <h3>
             {auctionData
-              ? `Ξ ${formatNumber(utils.formatEther(auctionData.amount || "0"), 3)}`
+              ? `Ξ ${formatNumber(utils.formatEther(auctionData.amount || "0"), 4)}`
               : "n/a"}
           </h3>
         </div>
@@ -163,6 +190,11 @@ const EndedAuction = ({
           />
         </div>
       </div>
+      {!hidden && featuredBidComment && (
+        <p className="mb-3 line-clamp-3 w-full max-w-[420px] rounded-[14px] bg-white px-4 py-3 text-sm leading-5 text-black">
+          &ldquo;{featuredBidComment}&rdquo;
+        </p>
+      )}
       {auctionData?.amount != undefined && (
         <BidHistory
           tokenId={tokenId}
@@ -209,18 +241,18 @@ const CurrentAuction = ({
     <div
       className={clsx("flex flex-col w-full gap-6 pb-3", hidden && "hidden")}
     >
-      <div className="flex flex-row flex-wrap md:justify-start w-full gap-4 ">
-        <div className="flex flex-col gap-2 md:pr-6 shrink-0 min-w-[165px]">
+      <div className="grid w-full grid-cols-2 gap-3 md:flex md:flex-row md:flex-wrap md:justify-start md:gap-4">
+        <div className="flex min-w-0 flex-col gap-2 md:min-w-[165px] md:shrink-0 md:pr-6">
           <div className="font-light">
             {auctionOver ? "Winning Bid" : "Current Bid"}
           </div>
-          <h3>
+          <h3 className="text-[24px] leading-[30px] min-[360px]:text-[32px] min-[360px]:leading-[40px] md:text-[36px] md:leading-[44px]">
             Ξ{" "}
-            {formatNumber(utils.formatEther(auctionInfo?.highestBid || "0"), 3)}
+            {formatNumber(utils.formatEther(auctionInfo?.highestBid || "0"), 4)}
           </h3>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <div className="font-light">
             {auctionOver ? "Winner" : "Auction ends in"}
           </div>
@@ -230,7 +262,10 @@ const CurrentAuction = ({
               size="lg"
             />
           ) : (
-            <CountdownDisplay to={auctionInfo?.endTime || "0"} />
+            <CountdownDisplay
+              to={auctionInfo?.endTime || "0"}
+              className="text-[24px] leading-[30px] min-[360px]:text-[32px] min-[360px]:leading-[40px] md:text-[36px] md:leading-[44px]"
+            />
           )}
         </div>
       </div>
@@ -261,6 +296,12 @@ const CurrentAuction = ({
               bids={auctionInfo?.bids}
               numToShow={3}
               title="View all bids"
+              shouldShowPreviewComment={(bid) =>
+                compareAddress(bid.bidder, auctionInfo.highestBidder) &&
+                BigNumber.from(bid.bidAmount || "0").eq(
+                  BigNumber.from(auctionInfo.highestBid || "0")
+                )
+              }
             />
           </>
         )}

@@ -1,4 +1,4 @@
-import { GetEnsNameReturnType } from "@/services/ens";
+import type { GetEnsNameReturnType } from "data/ens";
 import useSWR from "swr";
 import { Address } from "viem";
 

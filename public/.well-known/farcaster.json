@@ -1,0 +1,28 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEzODcwLCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4OGZiMThkNkVBREFjMjM1NjhjODNERkYyMzE3OWI5OUQ0M2I0NjQ1MCJ9",
+    "payload": "eyJkb21haW4iOiJ5ZWxsb3djb2xsZWN0aXZlLmFydCJ9",
+    "signature": "i0ZrftcJg2mIkBk/JI300AAU8mMI8sqQJ8osLObVkFQ4y7Z2OclR6CdisuIT87QqeCPA+0H0GhMm64lK8YCiKBs="
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Yellow Collective",
+    "homeUrl": "https://yellowcollective.art",
+    "iconUrl": "https://yellowcollective.art/miniapp-icon.png",
+    "imageUrl": "https://yellowcollective.art/miniapp-embed.png",
+    "buttonTitle": "Explore Yellow",
+    "splashImageUrl": "https://yellowcollective.art/miniapp-splash.png",
+    "splashBackgroundColor": "#FCD100",
+    "subtitle": "Collective of creatives",
+    "description": "A club supporting artists and creatives in the Nouns and Farcaster ecosystems.",
+    "tagline": "Empowering onchain creatives",
+    "primaryCategory": "art-creativity",
+    "tags": ["nouns", "creative", "yellow", "art", "dao"],
+    "heroImageUrl": "https://yellowcollective.art/miniapp-hero.png",
+    "ogTitle": "Yellow Collective",
+    "ogDescription": "An onchain Collective supporting artists and creatives.",
+    "ogImageUrl": "https://yellowcollective.art/miniapp-hero.png",
+    "canonicalDomain": "yellowcollective.art",
+    "requiredChains": ["eip155:8453"]
+  }
+}

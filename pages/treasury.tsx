@@ -1,17 +1,14 @@
+import AddressLink from "@/components/AddressLink";
 import Layout from "@/components/Layout";
 import DefaultProvider from "@/utils/DefaultProvider";
-import { shortenAddress } from "@/utils/shortenAddress";
 import { TOKEN_CONTRACT } from "constants/addresses";
-import { ETHERSCAN_BASEURL, SUBGRAPH_ENDPOINT } from "constants/urls";
+import { SUBGRAPH_ENDPOINT } from "constants/urls";
 import { YELLOW_COLLECTIVE_CONTRACTS } from "data/contracts";
 import { BigNumber, Contract, utils } from "ethers";
 import { GraphQLClient, gql } from "graphql-request";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
-import {
-  ArrowTopRightOnSquareIcon,
-  ClipboardDocumentIcon,
-} from "@heroicons/react/24/outline";
+import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 
 type TreasuryToken = {
   name: string;
@@ -118,26 +115,31 @@ const getTrackedTokens = async (
   treasuryAddress: string,
   zoraPriceUsd: number | null
 ) => {
-  const zora = new Contract(ZORA_TOKEN_ADDRESS, erc20Abi, DefaultProvider);
-  const [rawBalance, decimals, name, symbol] = await Promise.all([
-    zora.balanceOf(treasuryAddress),
-    zora.decimals(),
-    zora.name(),
-    zora.symbol(),
-  ]);
-  const balance = Number(utils.formatUnits(rawBalance, decimals));
+  try {
+    const zora = new Contract(ZORA_TOKEN_ADDRESS, erc20Abi, DefaultProvider);
+    const [rawBalance, decimals, name, symbol] = await Promise.all([
+      zora.balanceOf(treasuryAddress),
+      zora.decimals(),
+      zora.name(),
+      zora.symbol(),
+    ]);
+    const balance = Number(utils.formatUnits(rawBalance, decimals));
 
-  if (balance <= 0) return [];
+    if (balance <= 0) return [];
 
-  return [
-    {
-      name,
-      symbol,
-      balance: balance.toString(),
-      balanceLabel: `${formatTokenBalance(balance)} ${symbol}`,
-      valueUsd: zoraPriceUsd ? balance * zoraPriceUsd : 0,
-    },
-  ] as TreasuryToken[];
+    return [
+      {
+        name,
+        symbol,
+        balance: balance.toString(),
+        balanceLabel: `${formatTokenBalance(balance)} ${symbol}`,
+        valueUsd: zoraPriceUsd ? balance * zoraPriceUsd : 0,
+      },
+    ] as TreasuryToken[];
+  } catch (error) {
+    console.warn("Unable to load tracked treasury tokens", error);
+    return [];
+  }
 };
 
 export const getStaticProps = async (): Promise<
@@ -202,20 +204,17 @@ export default function TreasuryPage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-10 pb-12">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <h1 className="text-[36px] leading-none md:text-[44px]">Treasury</h1>
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
+          <h1 className="text-[30px] leading-none sm:text-[36px] md:text-[44px]">
+            Treasury
+          </h1>
 
-          <div className="flex items-center gap-4 rounded-2xl border border-skin-stroke bg-skin-muted px-5 py-4 text-base shadow-sm md:text-lg">
-            <span>{shortenAddress(treasuryAddress, 8)}</span>
-            <a
-              href={`${ETHERSCAN_BASEURL}/address/${treasuryAddress}`}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Open treasury on explorer"
-              className="text-secondary transition hover:text-skin-base"
-            >
-              <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-            </a>
+          <div className="flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-skin-stroke bg-skin-muted px-4 py-3 text-sm shadow-sm sm:w-auto sm:justify-start md:px-5 md:py-4 md:text-lg">
+            <AddressLink
+              address={treasuryAddress}
+              fallbackAmount={8}
+              link={false}
+            />
             <button
               type="button"
               onClick={copyTreasuryAddress}
@@ -255,7 +254,7 @@ export default function TreasuryPage({
         </section>
 
         <section className="flex flex-col gap-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
             <h2 className="font-heading text-4xl leading-none">Tokens</h2>
             <div className="font-heading text-4xl leading-none">
               {formatUsd(tokenTotalUsd)}
@@ -295,7 +294,9 @@ export default function TreasuryPage({
         </section>
 
         <section className="flex flex-col gap-6">
-          <h2 className="font-heading text-4xl leading-none">NFTs</h2>
+          <h2 className="text-center font-heading text-4xl leading-none sm:text-left">
+            NFTs
+          </h2>
           <div className="rounded-2xl border border-skin-stroke bg-skin-muted p-12 text-center text-base text-secondary shadow-sm md:text-lg">
             No NFTs Found
           </div>

@@ -1,10 +1,14 @@
 import Layout from "@/components/Layout";
+import ProjectMemberSelector from "@/components/community/ProjectMemberSelector";
 import { ArrowLeftIcon } from "@heroicons/react/20/solid";
+import type { CommunityProject } from "data/community";
+import type { DaoMemberSummary } from "data/members";
 import Head from "next/head";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-
-const repoUrl = "https://github.com/xSatori/yellow-collective";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
+import { useAccount } from "wagmi";
+import { areSameWalletAddress } from "@/utils/profile/identity";
 
 const slugify = (value: string) =>
   value
@@ -26,8 +30,36 @@ const initialValues = {
   links: [{ title: "", href: "" }],
 };
 
+type UploadedImage = {
+  name: string;
+  type: string;
+  dataUrl: string;
+};
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) throw new Error(data.error || "Unable to load data.");
+  return data;
+};
+
 export default function SubmitCommunityProjectPage() {
+  const { address: connectedAddress } = useAccount();
+  const { data: membersData, error: membersError } = useSWR<{
+    members: DaoMemberSummary[];
+  }>("/api/members", fetcher);
+  const members = useMemo(() => membersData?.members || [], [membersData]);
   const [values, setValues] = useState(initialValues);
+  const [memberAddresses, setMemberAddresses] = useState<string[]>([]);
+  const [defaultedAddress, setDefaultedAddress] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
+    null
+  );
+  const [submissionError, setSubmissionError] = useState("");
+  const [submissionMessage, setSubmissionMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const slug = slugify(values.title);
   const details = values.details
     .split("\n")
@@ -39,50 +71,45 @@ export default function SubmitCommunityProjectPage() {
   const links = values.links
     .map((link) => ({ title: link.title.trim(), href: link.href.trim() }))
     .filter((link) => link.title && link.href);
-  const projectJson = useMemo(
-    () =>
-      JSON.stringify(
-        {
-          slug,
-          title: values.title,
-          description: values.description,
-          details,
-          artist: values.artist,
-          category: values.category,
-          date: values.date,
-          href: values.href,
-          image: values.image,
-          galleryImages,
-          links,
-        },
-        null,
-        2
-      ),
-    [details, galleryImages, links, slug, values]
+  const imageValue = uploadedImage?.dataUrl || values.image.trim();
+  const projectData: CommunityProject = {
+    slug,
+    title: values.title.trim(),
+    description: values.description.trim(),
+    details,
+    artist: values.artist.trim(),
+    memberAddresses,
+    category: values.category.trim(),
+    date: values.date.trim(),
+    href: values.href.trim(),
+    image: imageValue,
+    galleryImages,
+    links,
+  };
+  const isResolvingConnectedMember = Boolean(
+    connectedAddress && !membersData && !membersError
   );
   const canSubmit = Boolean(
     slug &&
-      values.title &&
-      values.description &&
+      projectData.title &&
+      projectData.description &&
       details.length &&
-      values.artist &&
-      values.category &&
-      values.date &&
-      values.href &&
-      values.image
+      projectData.artist &&
+      projectData.category &&
+      projectData.date &&
+      projectData.href &&
+      projectData.image &&
+      !isResolvingConnectedMember
   );
-  const githubUrl = `${repoUrl}/new/main/data/community-projects?filename=${encodeURIComponent(
-    `${slug || "project-slug"}.json`
-  )}&value=${encodeURIComponent(projectJson)}&message=${encodeURIComponent(
-    `Add community project: ${values.title || "Project title"}`
-  )}&description=${encodeURIComponent(
-    `Adds ${values.title || "a community project"} to the Yellow Collective community gallery.`
-  )}&quick_pull=1`;
 
   const updateValue = (field: keyof typeof values, value: string) => {
+    setSubmissionError("");
+    setSubmissionMessage("");
     setValues((currentValues) => ({ ...currentValues, [field]: value }));
   };
   const updateGalleryImage = (index: number, value: string) => {
+    setSubmissionError("");
+    setSubmissionMessage("");
     setValues((currentValues) => {
       const nextImages = [...currentValues.galleryImages];
       nextImages[index] = value;
@@ -100,6 +127,8 @@ export default function SubmitCommunityProjectPage() {
     field: keyof (typeof initialValues.links)[number],
     value: string
   ) => {
+    setSubmissionError("");
+    setSubmissionMessage("");
     setValues((currentValues) => {
       const nextLinks = [...currentValues.links];
       nextLinks[index] = { ...nextLinks[index], [field]: value };
@@ -112,6 +141,103 @@ export default function SubmitCommunityProjectPage() {
       links: [...currentValues.links, { title: "", href: "" }],
     }));
   };
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSubmissionError("");
+    setSubmissionMessage("");
+
+    if (!file) {
+      setUploadedImage(null);
+      return;
+    }
+
+    if (
+      !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
+        file.type
+      )
+    ) {
+      setSubmissionError("Upload a PNG, JPG, WEBP, or GIF image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setSubmissionError("Image uploads must be smaller than 5MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUploadedImage({
+        name: file.name,
+        type: file.type,
+        dataUrl: String(reader.result),
+      });
+    };
+    reader.onerror = () => setSubmissionError("Unable to read image file.");
+    reader.readAsDataURL(file);
+  };
+  const resetForm = () => {
+    setValues(initialValues);
+    setMemberAddresses([]);
+    setDefaultedAddress(null);
+    setUploadedImage(null);
+  };
+
+  useEffect(() => {
+    if (!connectedAddress || defaultedAddress === connectedAddress) return;
+
+    const connectedMember = members.find((member) =>
+      areSameWalletAddress(member.address, connectedAddress)
+    );
+
+    if (!connectedMember) return;
+
+    setMemberAddresses((currentAddresses) =>
+      currentAddresses.some((address) =>
+        areSameWalletAddress(address, connectedMember.address)
+      )
+        ? currentAddresses
+        : [...currentAddresses, connectedMember.address]
+    );
+    setDefaultedAddress(connectedAddress);
+  }, [connectedAddress, defaultedAddress, members]);
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+
+    setIsSubmitting(true);
+    setSubmissionError("");
+    setSubmissionMessage("");
+
+    try {
+      const response = await fetch("/api/community/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project: projectData,
+          image: uploadedImage,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Submission failed.");
+      }
+
+      setSubmissionMessage(
+        "Submission received. An admin will review it before it appears in the gallery."
+      );
+      resetForm();
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error ? error.message : "Submission failed."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Layout>
@@ -121,26 +247,26 @@ export default function SubmitCommunityProjectPage() {
 
       <div className="mx-auto flex w-full max-w-[980px] flex-col gap-7 pb-12">
         <Link
-          href="/community"
+          href="/projects"
           className="flex w-fit items-center gap-2 font-heading text-lg text-skin-base transition hover:opacity-80"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none">
+          <span className="yc-dark-yellow-button flex h-10 w-10 items-center justify-center rounded-full border border-skin-stroke bg-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none">
             <ArrowLeftIcon className="h-4 text-skin-base" />
           </span>
-          Community
+          Projects
         </Link>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <h1 className="font-heading text-[34px] leading-none md:text-[42px]">
             Submit a project
           </h1>
           <p className="mt-4 text-base leading-snug text-secondary md:text-lg">
-            Fill out the project template below. The submit button opens GitHub
-            with a prefilled JSON file so you can create a PR for review.
+            Submissions are stored for admin review. Approved projects appear
+            in the projects gallery.
           </p>
         </section>
 
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+        <section className="yc-dark-yellow-form-surface rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
           <div className="grid gap-5 md:grid-cols-2">
             <FormField
               label="Project title"
@@ -154,6 +280,19 @@ export default function SubmitCommunityProjectPage() {
               onChange={(value) => updateValue("artist", value)}
               placeholder="Artist or creator name"
             />
+            <div className="md:col-span-2">
+              <ProjectMemberSelector
+                members={members}
+                selectedAddresses={memberAddresses}
+                onChange={setMemberAddresses}
+                isLoading={!membersData && !membersError}
+                error={
+                  membersError
+                    ? "Members could not be loaded. You can still submit without linked members."
+                    : undefined
+                }
+              />
+            </div>
             <div>
               <label className="font-heading text-base text-skin-base">
                 Category
@@ -182,7 +321,7 @@ export default function SubmitCommunityProjectPage() {
               label="Source link"
               value={values.href}
               onChange={(value) => updateValue("href", value)}
-              placeholder="https://example.com"
+              placeholder="example.com"
             />
           </div>
 
@@ -206,7 +345,7 @@ export default function SubmitCommunityProjectPage() {
                     onChange={(event) =>
                       updateLink(index, "href", event.target.value)
                     }
-                    placeholder="https://example.com/context"
+                    placeholder="example.com/context"
                     className="w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
                   />
                 </div>
@@ -247,9 +386,35 @@ export default function SubmitCommunityProjectPage() {
             label="Banner image URL"
             value={values.image}
             onChange={(value) => updateValue("image", value)}
-            placeholder="https://example.com/banner.png"
+            placeholder="example.com/banner.png"
             className="mt-5"
           />
+
+          <div className="mt-5 rounded-xl border border-skin-stroke bg-skin-muted p-4">
+            <label className="block font-heading text-base text-skin-base">
+              Or upload banner image
+            </label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleImageUpload}
+              className="mt-2 block w-full text-base text-skin-base file:mr-4 file:rounded-xl file:border-0 file:bg-accent file:px-4 file:py-2 file:font-heading file:text-skin-base"
+            />
+            {uploadedImage && (
+              <div className="mt-3 flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={uploadedImage.dataUrl}
+                  alt="Uploaded banner preview"
+                  className="h-20 w-20 rounded-xl border border-skin-stroke object-cover"
+                />
+                <div className="text-sm text-secondary">
+                  This image will be stored with the submitted project for
+                  admin review.
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="mt-5">
             <label className="block font-heading text-base text-skin-base">
@@ -263,7 +428,7 @@ export default function SubmitCommunityProjectPage() {
                   onChange={(event) =>
                     updateGalleryImage(index, event.target.value)
                   }
-                  placeholder="https://example.com/gallery-image.png"
+                  placeholder="example.com/gallery-image.png"
                   className="w-full rounded-xl border border-skin-stroke bg-skin-muted px-4 py-3 text-base text-skin-base placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
                 />
               ))}
@@ -278,42 +443,40 @@ export default function SubmitCommunityProjectPage() {
           </div>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row">
-            <a
-              href={canSubmit ? githubUrl : undefined}
-              target="_blank"
-              rel="noreferrer"
-              aria-disabled={!canSubmit}
-              className={`flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
-                canSubmit
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit || isSubmitting}
+              className={`yc-dark-submit-blue flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
+                canSubmit && !isSubmitting
                   ? "bg-accent text-skin-base hover:bg-[#ffd84d]"
-                  : "pointer-events-none bg-skin-button-muted text-skin-inverted opacity-70"
+                  : "bg-skin-button-muted text-skin-inverted opacity-70"
               }`}
             >
-              Open prefilled PR
-            </a>
-            <a
-              href={`${repoUrl}/tree/main/data/community-projects`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none"
+              {isSubmitting
+                ? "Submitting..."
+                : isResolvingConnectedMember
+                  ? "Loading members..."
+                  : "Submit for review"}
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
             >
-              View submissions folder
-            </a>
+              Reset
+            </button>
           </div>
-        </section>
-
-        <section className="rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
-          <h2 className="font-heading text-2xl leading-none">Generated file</h2>
-          <p className="mt-3 text-base leading-snug text-secondary">
-            This will create{" "}
-            <span className="font-mono">
-              data/community-projects/{slug || "project-title"}.json
-            </span>
-            .
-          </p>
-          <pre className="mt-5 overflow-auto rounded-xl border border-skin-stroke bg-skin-muted p-4 text-sm leading-relaxed text-skin-base">
-            <code>{projectJson}</code>
-          </pre>
+          {submissionError && (
+            <p className="mt-4 rounded-xl border border-skin-proposal-danger bg-skin-proposal-danger bg-opacity-10 p-3 text-sm text-skin-proposal-danger">
+              {submissionError}
+            </p>
+          )}
+          {submissionMessage && (
+            <p className="mt-4 rounded-xl border border-skin-proposal-success bg-skin-proposal-success bg-opacity-10 p-3 text-sm text-skin-proposal-success">
+              {submissionMessage}
+            </p>
+          )}
         </section>
       </div>
     </Layout>

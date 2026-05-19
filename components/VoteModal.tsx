@@ -144,9 +144,9 @@ export default function VoteModal({
           type="button"
           onClick={() => write?.()}
           disabled={!canSubmit || writeLoading || txLoading || txSuccess}
-          className={`h-12 flex-1 rounded-[18px] px-4 font-heading text-base font-bold shadow-[0px_4.02px_0px_0px_#3f3f3f] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#3f3f3f] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none ${
+          className={`h-12 flex-1 rounded-[18px] px-4 font-heading text-base font-bold shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none ${
             canSubmit && !writeLoading && !txLoading && !txSuccess
-              ? "bg-skin-button-accent text-skin-inverted hover:bg-skin-button-accent-hover"
+              ? "bg-accent text-[#212529] hover:bg-[#ffd84d]"
               : "bg-skin-button-muted text-skin-inverted"
           }`}
         >

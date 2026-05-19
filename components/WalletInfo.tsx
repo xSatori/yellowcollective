@@ -1,20 +1,20 @@
-import useEnsWalletInfo from "@/hooks/fetch/useEnsName";
 import { shortenAddress } from "@/utils/shortenAddress";
 import { ethers } from "ethers";
 import { Address } from "wagmi";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { getAddress, zeroAddress } from "viem";
-import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import useEnsName from "@/hooks/fetch/useEnsName";
 import useEnsAvatar from "@/hooks/fetch/useEnsAvatar";
-import clsx from "clsx";
+import { getProfilePath } from "@/utils/profile/identity";
 
 interface WalletInfoProps {
   address?: Address;
   hideAvatar?: boolean;
   hideAddress?: boolean;
   disableEns?: boolean;
+  link?: boolean;
   size: "sm" | "lg";
 }
 
@@ -23,6 +23,7 @@ export default function WalletInfo({
   hideAvatar,
   hideAddress,
   disableEns,
+  link = true,
   size,
 }: WalletInfoProps) {
   const { data: ensNameResp } = useEnsName(address);
@@ -35,39 +36,21 @@ export default function WalletInfo({
 
   const name = useMemo(() => {
     if (!disableEns && ensNameResp?.ensName) {
-      const name = ensNameResp.ensName;
-      if (name.includes("⌐◨-◨")) {
-        // NNS
-        const split = name.split(".");
-        return (
-          <>
-            {split[0]}.
-            <span
-              className={clsx(
-                "font-nns",
-                size == "sm" ? " text-[14px]" : "text-[24px]"
-              )}
-            >
-              {split[1]}
-            </span>
-          </>
-        );
-      } else {
-        return name;
-      }
+      return ensNameResp.ensName;
     } else {
       return shortenAddress(
         address ? getAddress(address) : ethers.constants.AddressZero,
         4
       );
     }
-  }, [address, ensNameResp, size]);
+  }, [address, disableEns, ensNameResp]);
 
-  return (
+  const content = (
     <div className="flex flex-row gap-2 items-center">
       {!hideAvatar &&
         (!disableEns && ensAvatarResp?.ensAvatar && !ensImgError ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={ensAvatarResp.ensAvatar}
             alt="avatar"
             height={size == "sm" ? 24 : 44}
@@ -83,5 +66,19 @@ export default function WalletInfo({
         ))}
       {!hideAddress && (size == "sm" ? <h6>{name}</h6> : <h3>{name}</h3>)}
     </div>
+  );
+
+  if (!link || !address) return content;
+
+  return (
+    <Link
+      href={getProfilePath({
+        address,
+        ensName: !disableEns ? ensNameResp?.ensName : undefined,
+      })}
+      className="transition hover:opacity-80"
+    >
+      {content}
+    </Link>
   );
 }

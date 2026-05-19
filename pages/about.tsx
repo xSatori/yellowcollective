@@ -14,15 +14,17 @@ import {
 } from "data/nouns-builder/token";
 import { getEnsName } from "data/ens";
 import { TOKEN_CONTRACT, TOKEN_NETWORK } from "constants/addresses";
-import { ETHERSCAN_BASEURL } from "constants/urls";
 import { YELLOW_COLLECTIVE_CONTRACTS } from "data/contracts";
 import { BigNumber } from "ethers";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import type { GetStaticPropsResult, InferGetStaticPropsType } from "next";
 import Head from "next/head";
+import Image from "next/image";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getProfilePath } from "@/utils/profile/identity";
 import { useMemo } from "react";
+import { isAddress } from "viem";
 
 type Delegate = {
   address: string;
@@ -51,6 +53,16 @@ const getFallbackAddresses = (): DAOAddresses => ({
   auction: YELLOW_COLLECTIVE_CONTRACTS.auctionHouse.address,
   treasury: YELLOW_COLLECTIVE_CONTRACTS.treasury.address,
   governor: YELLOW_COLLECTIVE_CONTRACTS.governor.address,
+});
+
+const getFallbackContract = (): ContractInfo => ({
+  name: "Yellow Collective",
+  description:
+    "The Yellow Collective is an onchain club on the Base Ethereum L2 network, designed to support and empower artists and creatives in the Nouns and Superchain ecosystems.",
+  image: "",
+  external_url: "https://yellowcollective.art",
+  total_supply: "0",
+  auction: YELLOW_COLLECTIVE_CONTRACTS.auctionHouse.address,
 });
 
 const getNumber = (value: unknown): number => {
@@ -116,10 +128,19 @@ const normalizeMembers = (
       const explicitVotePercent = getNumber(
         item.votePercent || item.votePct || item.percent
       );
+      const displayName = [
+        item.displayName,
+        item.ensName,
+        item.ens,
+        item.name,
+        item.username,
+        item.handle,
+      ].find((value) => typeof value === "string" && value.trim());
 
       return {
         address,
-        displayName: null,
+        displayName:
+          typeof displayName === "string" ? displayName.trim() : null,
         votes,
         votePercent:
           explicitVotePercent ||
@@ -127,7 +148,7 @@ const normalizeMembers = (
         joined: getJoinedDate(item.joined || item.joinedAt || item.createdAt),
       };
     })
-    .filter((delegate) => delegate.address.startsWith("0x"))
+    .filter((delegate) => isAddress(delegate.address))
     .sort((a, b) => b.votes - a.votes);
 };
 
@@ -160,7 +181,11 @@ const getTotalSupply = (contract: ContractInfo) => {
 const resolveEnsNames = async (addresses: string[]) => {
   const names = new Map<string, string>();
   const uniqueAddresses = Array.from(
-    new Set(addresses.map((address) => address.toLowerCase()))
+    new Set(
+      addresses
+        .filter((address) => isAddress(address))
+        .map((address) => address.toLowerCase())
+    )
   );
 
   for (let i = 0; i < uniqueAddresses.length; i += 16) {
@@ -189,7 +214,12 @@ export const getStaticProps = async (): Promise<
   GetStaticPropsResult<AboutPageProps>
 > => {
   const tokenContract = TOKEN_CONTRACT as `0x${string}`;
-  const contract = await getContractInfo({ address: tokenContract });
+  let contract = getFallbackContract();
+  try {
+    contract = await getContractInfo({ address: tokenContract });
+  } catch (error) {
+    console.warn("Unable to load contract info", error);
+  }
   const totalSupply = getTotalSupply(contract);
 
   const [addressesResult, foundersResult, delegates] = await Promise.allSettled(
@@ -221,7 +251,9 @@ export const getStaticProps = async (): Promise<
       ? delegates.value.map((delegate) => ({
           ...delegate,
           displayName:
-            resolvedNames.get(delegate.address.toLowerCase()) ?? null,
+            delegate.displayName ||
+            resolvedNames.get(delegate.address.toLowerCase()) ||
+            null,
         }))
       : [];
 
@@ -266,16 +298,14 @@ export default function AboutPage({
   }, [treasuryBalance]);
   const stats = [
     { label: "Treasury", value: formattedTreasuryBalance },
-    { label: "Owners", value: delegates.length || "--" },
-    { label: "Total supply", value: totalSupply || "--" },
     { label: "Chain", value: "Base", isChain: true },
+    { label: "Total supply", value: totalSupply || "--" },
+    { label: "Owners", value: delegates.length || "--" },
   ];
 
   const description =
     contract.description ||
     "No DAO description was found in the token metadata.";
-  const externalUrl =
-    contract.external_url || `${ETHERSCAN_BASEURL}/address/${TOKEN_CONTRACT}`;
 
   const exportDelegates = () => {
     const rows = [
@@ -327,39 +357,25 @@ export default function AboutPage({
             </h1>
           </div>
 
-          <a
-            href={externalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-skin-muted font-heading text-2xl text-skin-base shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
-            aria-label="Open DAO website"
-          >
-            <ArrowTopRightOnSquareIcon className="h-7 w-7" />
-          </a>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm"
+              className="rounded-2xl border border-skin-stroke bg-skin-muted p-4 shadow-sm sm:p-5"
             >
               <div className="text-base text-secondary">{stat.label}</div>
-              <div className="mt-3 flex items-center gap-3 font-heading text-3xl leading-none text-skin-base">
+              <div className="mt-3 flex items-center gap-2 font-heading text-2xl leading-none text-skin-base sm:gap-3 sm:text-3xl">
                 {stat.isChain && (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0052ff]">
-                    <svg
-                      viewBox="0 0 32 32"
-                      className="h-8 w-8"
-                      aria-hidden="true"
-                    >
-                      <circle cx="16" cy="16" r="16" fill="#0052ff" />
-                      <path
-                        d="M16.25 25.25c4.28 0 7.86-2.98 8.78-6.98h-11.6v-4.54h11.6c-.92-4-4.5-6.98-8.78-6.98a9.25 9.25 0 1 0 0 18.5Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </span>
+                  <Image
+                    src="/chains/base.svg"
+                    alt=""
+                    width={32}
+                    height={32}
+                    aria-hidden="true"
+                    className="h-8 w-8"
+                  />
                 )}
                 {stat.value}
               </div>
@@ -398,12 +414,13 @@ export default function AboutPage({
           {founders.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               {founders.map((founder, index) => (
-                <a
+                <Link
                   key={founder.wallet}
-                  href={`${ETHERSCAN_BASEURL}/address/${founder.wallet}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
+                  href={getProfilePath({
+                    address: founder.wallet,
+                    ensName: founder.displayName,
+                  })}
+                  className="yc-dark-yellow-hover-black flex items-center justify-between gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     <span
@@ -420,7 +437,7 @@ export default function AboutPage({
                   <span className="font-heading text-xl">
                     {founder.ownershipPct}%
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
           ) : (
@@ -437,7 +454,7 @@ export default function AboutPage({
               type="button"
               onClick={exportDelegates}
               disabled={delegates.length === 0}
-              className="rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#BBB] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_#BBB] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+              className="yc-dark-yellow-button rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
               Export CSV
             </button>
@@ -454,12 +471,13 @@ export default function AboutPage({
 
               {delegates.length > 0 ? (
                 delegates.map((delegate, index) => (
-                  <a
+                  <Link
                     key={delegate.address}
-                    href={`${ETHERSCAN_BASEURL}/address/${delegate.address}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-6 p-5 text-base transition hover:bg-[#fff7bf] md:text-lg"
+                    href={getProfilePath({
+                      address: delegate.address,
+                      ensName: delegate.displayName,
+                    })}
+                    className="yc-dark-yellow-hover-black grid min-w-[760px] grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-6 p-5 text-base transition hover:bg-[#fff7bf] md:text-lg"
                   >
                     <div className="flex min-w-0 items-center gap-4">
                       <span
@@ -479,7 +497,7 @@ export default function AboutPage({
                     <div>{delegate.votes} Tokens</div>
                     <div>{delegate.votePercent.toFixed(2)}%</div>
                     <div>{delegate.joined || "--"}</div>
-                  </a>
+                  </Link>
                 ))
               ) : (
                 <div className="p-6 text-base text-secondary md:text-lg">

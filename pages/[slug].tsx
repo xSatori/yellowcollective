@@ -14,15 +14,37 @@ const RESERVED_PAGE_SLUGS = new Set([
   "community",
   "contracts",
   "create-proposal",
+  "projects",
   "proposals",
   "treasury",
 ]);
 
+const templateDirectory = path.join(process.cwd(), "templates");
+
+const isMissingFileError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as NodeJS.ErrnoException).code === "ENOENT";
+
 export const getStaticPaths = async () => {
-  const templateDirectory = path.join(process.cwd(), "templates");
-  const files = await fs.readdir(templateDirectory, { withFileTypes: true });
+  let files: Awaited<ReturnType<typeof fs.readdir>>;
+
+  try {
+    files = await fs.readdir(templateDirectory, { withFileTypes: true });
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return {
+        paths: [],
+        fallback: false,
+      };
+    }
+
+    throw error;
+  }
+
   const paths = files
-    .filter((dirent) => dirent.isFile())
+    .filter((dirent) => dirent.isFile() && dirent.name.endsWith(".md"))
     .map((file) => file.name.replace(/\.md?$/, ""))
     .filter((slug) => !RESERVED_PAGE_SLUGS.has(slug))
     .map((slug) => ({ params: { slug } }));
@@ -41,8 +63,23 @@ export const getStaticProps = async (
   }>
 > => {
   const { slug } = ctx.params!;
-  const templateDirectory = path.join(process.cwd(), "templates");
-  const source = await fs.readFile(`${templateDirectory}/${slug}.md`, "utf8");
+  let source: string;
+
+  try {
+    source = await fs.readFile(
+      path.join(templateDirectory, `${slug}.md`),
+      "utf8"
+    );
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return {
+        notFound: true,
+      };
+    }
+
+    throw error;
+  }
+
   const mdxSource = await serialize(source, { parseFrontmatter: true });
 
   return {
