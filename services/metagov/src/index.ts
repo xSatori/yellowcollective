@@ -1,0 +1,262 @@
+import { config } from "./config";
+import { fetchNewProposals, fetchProposalById } from "./listeners/nouns-proposals";
+import {
+  cancelSnapshotProposal,
+  createSnapshotProposal,
+  formatVoteReason,
+  getActiveSnapshotProposals,
+  getClosedSnapshotProposals,
+  getExistingProposalIds,
+  getSnapshotResults,
+  getSnapshotScores,
+  getSnapshotUrl,
+} from "./services/snapshot";
+import {
+  executeVoteThroughSafe,
+  hasAlreadyVoted,
+} from "./services/safe-voting";
+import { StateStore } from "./services/state-store";
+import { startHttpServer } from "./server/http-server";
+import { TrackedProposal } from "./types";
+import { getWalletAddress } from "./utils/wallet";
+import { validateRuntime } from "./validation";
+
+const store = new StateStore();
+const processedProposals = new Set<string>();
+const pendingVotes = new Map<string, string>();
+const submittedVotes = new Set<string>();
+let lastCheckedTimestamp =
+  Math.floor(Date.now() / 1000) - config.lookbackDays * 24 * 60 * 60;
+let isExecutingVotes = false;
+
+const shouldSkipNounsProposal = (status: string) =>
+  ["CANCELLED", "VETOED", "EXECUTED"].includes(status);
+
+const buildTrackedProposal = (
+  nounsProposalId: string,
+  nounsTitle: string,
+  snapshotId: string,
+  snapshotIpfs?: string
+): TrackedProposal => ({
+  nounsProposalId,
+  nounsTitle,
+  snapshotId,
+  snapshotIpfs,
+  snapshotTitle: `${nounsProposalId}: ${nounsTitle}`,
+  snapshotUrl: getSnapshotUrl(snapshotId),
+  status: "created",
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+const loadStateIntoMemory = async () => {
+  const state = store.load();
+  for (const proposal of Object.values(state.proposals)) {
+    processedProposals.add(proposal.nounsProposalId);
+    if (!["executed", "skipped", "failed", "cancelled"].includes(proposal.status)) {
+      pendingVotes.set(proposal.snapshotId, proposal.nounsProposalId);
+    }
+  }
+
+  for (const execution of state.executedVotes) {
+    submittedVotes.add(execution.snapshotId);
+  }
+
+  const activeProposals = await getActiveSnapshotProposals();
+  for (const proposal of activeProposals) {
+    if (!submittedVotes.has(proposal.snapshotId)) {
+      pendingVotes.set(proposal.snapshotId, proposal.nounsId);
+    }
+  }
+
+  const closedProposals = await getClosedSnapshotProposals();
+  for (const proposal of closedProposals) {
+    if (
+      Number(proposal.nounsId) >= config.minProposalId &&
+      !submittedVotes.has(proposal.snapshotId)
+    ) {
+      pendingVotes.set(proposal.snapshotId, proposal.nounsId);
+    }
+  }
+};
+
+const checkForNewProposals = async () => {
+  const existingSnapshotIds = await getExistingProposalIds();
+  const proposals = await fetchNewProposals(lastCheckedTimestamp);
+  const state = store.load();
+
+  for (const proposal of proposals) {
+    const proposalNumber = Number(proposal.id);
+    if (
+      proposalNumber < config.minProposalId ||
+      processedProposals.has(proposal.id) ||
+      existingSnapshotIds.has(proposal.id) ||
+      state.proposals[proposal.id]
+    ) {
+      continue;
+    }
+
+    if (shouldSkipNounsProposal(proposal.status)) {
+      processedProposals.add(proposal.id);
+      continue;
+    }
+
+    console.log(`Creating Snapshot vote for Nouns #${proposal.id}`);
+    const receipt = await createSnapshotProposal(proposal);
+    const trackedProposal = buildTrackedProposal(
+      proposal.id,
+      proposal.title,
+      receipt.id,
+      receipt.ipfs
+    );
+    store.upsertProposal(trackedProposal);
+    processedProposals.add(proposal.id);
+    pendingVotes.set(receipt.id, proposal.id);
+
+    const createdTimestamp = Number(proposal.createdTimestamp);
+    if (createdTimestamp > lastCheckedTimestamp) {
+      lastCheckedTimestamp = createdTimestamp;
+    }
+  }
+};
+
+const checkForClosedVotes = async () => {
+  if (isExecutingVotes) return;
+  isExecutingVotes = true;
+
+  try {
+    for (const [snapshotId, nounsId] of Array.from(pendingVotes.entries())) {
+      if (submittedVotes.has(snapshotId)) continue;
+
+      if (await hasAlreadyVoted(nounsId)) {
+        store.markProposal(nounsId, "skipped", {
+          failureReason: "Safe already voted on this Nouns proposal.",
+        });
+        submittedVotes.add(snapshotId);
+        pendingVotes.delete(snapshotId);
+        continue;
+      }
+
+      const result = await getSnapshotResults(snapshotId);
+      if (!result) continue;
+
+      const { scores, scoresTotal } = await getSnapshotScores(snapshotId);
+      store.markWinningChoice(nounsId, result, scores, scoresTotal);
+
+      if (result === "NO_VOTES" && config.noVotesAction === "skip") {
+        store.markProposal(nounsId, "skipped", {
+          failureReason: "No Snapshot votes were cast.",
+        });
+        submittedVotes.add(snapshotId);
+        pendingVotes.delete(snapshotId);
+        continue;
+      }
+
+      const voteData =
+        result === "NO_VOTES"
+          ? {
+              choice: "ABSTAIN" as const,
+              reason:
+                "**FOR 0 VOTES**\n\n**AGAINST 0 VOTES**\n\n**ABSTAIN 0 VOTES**",
+            }
+          : await formatVoteReason(snapshotId);
+
+      if (!voteData) continue;
+
+      const execution = await executeVoteThroughSafe(
+        nounsId,
+        voteData.choice,
+        voteData.reason
+      );
+
+      if (!execution) {
+        store.markProposal(nounsId, "failed", {
+          failureReason: "Safe execution did not complete; will retry.",
+        });
+        continue;
+      }
+
+      store.appendExecution({
+        nounsProposalId: nounsId,
+        snapshotId,
+        choice: voteData.choice,
+        safeTxHash: execution.safeTxHash,
+        executionTxHash: execution.executionTxHash,
+        blockNumber: execution.blockNumber,
+        gasUsed: execution.gasUsed,
+        executedAt: new Date().toISOString(),
+      });
+      submittedVotes.add(snapshotId);
+      pendingVotes.delete(snapshotId);
+    }
+  } finally {
+    isExecutingVotes = false;
+  }
+};
+
+const checkForCancelledProposals = async () => {
+  const activeProposals = await getActiveSnapshotProposals();
+
+  for (const proposal of activeProposals) {
+    const onchainProposal = await fetchProposalById(proposal.nounsId);
+    if (!onchainProposal) continue;
+
+    if (["CANCELLED", "VETOED"].includes(onchainProposal.status)) {
+      const cancelled = await cancelSnapshotProposal(proposal.snapshotId);
+      if (cancelled) {
+        store.markProposal(proposal.nounsId, "cancelled");
+        pendingVotes.delete(proposal.snapshotId);
+      }
+    }
+  }
+};
+
+const logStatus = () => {
+  console.log(
+    `[${new Date().toISOString()}] processed=${processedProposals.size} pending=${pendingVotes.size} submitted=${submittedVotes.size}`
+  );
+};
+
+const runCycle = async () => {
+  await checkForNewProposals();
+  await checkForClosedVotes();
+  await checkForCancelledProposals();
+  logStatus();
+};
+
+const main = async () => {
+  console.log("Yellow metagov bot starting");
+  await validateRuntime();
+  startHttpServer(store);
+  await loadStateIntoMemory();
+
+  console.log(`Wallet: ${await getWalletAddress()}`);
+  console.log(`Safe: ${config.safeAddress}`);
+  console.log(`Snapshot space: ${config.snapshotSpaceId}`);
+  console.log(`Dry run: ${config.dryRun}`);
+  console.log(`State: ${store.path}`);
+
+  await runCycle();
+
+  setInterval(
+    () => checkForNewProposals().catch(console.error),
+    config.proposalPollMinutes * 60 * 1000
+  );
+  setInterval(
+    () =>
+      Promise.resolve()
+        .then(checkForClosedVotes)
+        .then(checkForCancelledProposals)
+        .then(logStatus)
+        .catch(console.error),
+    config.votePollMinutes * 60 * 1000
+  );
+};
+
+process.on("SIGINT", () => process.exit(0));
+process.on("SIGTERM", () => process.exit(0));
+
+main().catch((error) => {
+  console.error("Fatal metagov error", error);
+  process.exit(1);
+});

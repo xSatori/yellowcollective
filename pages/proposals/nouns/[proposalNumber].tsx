@@ -1,9 +1,14 @@
 import WalletIdentityLink from "@/components/WalletIdentityLink";
 import Layout from "@/components/Layout";
+<<<<<<< Updated upstream
 import ProposalTabs from "@/components/ProposalTabs";
 import ProposalTransactions from "@/components/ProposalTransactions";
 import ProposalVoteList, { ProposalVote } from "@/components/ProposalVoteList";
 import ProposalVoteSummary from "@/components/ProposalVoteSummary";
+=======
+import NounsSnapshotVoteCard from "@/components/NounsSnapshotVoteCard";
+import { shortenAddress } from "@/utils/shortenAddress";
+>>>>>>> Stashed changes
 import {
   getNounsDaoProposalByNumber,
   getNounsDaoProposals,
@@ -236,6 +241,7 @@ export default function NounsProposalDetailPage({
                     </ReactMarkdown>
                   </section>
 
+<<<<<<< Updated upstream
                   <ProposalTransactions
                     className="mt-6"
                     transactions={proposal.targets.map((target, index) => ({
@@ -246,6 +252,32 @@ export default function NounsProposalDetailPage({
                     }))}
                   />
                 </>
+=======
+          <div className="w-full bg-white border border-skin-stroke rounded-xl p-6 flex justify-between items-center sm:items-baseline">
+            <div className="font-heading text-xl text-skin-muted">Snapshot</div>
+            <div className="text-right">
+              <div className="text-skin-muted">Block</div>
+              <div className="font-semibold">{proposal.voteStartBlock}</div>
+            </div>
+          </div>
+        </div>
+
+        <NounsSnapshotVoteCard proposalNumber={proposal.proposalNumber} />
+
+        <section className="mt-6 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+          <div className="text-2xl font-heading text-skin-base font-bold">
+            Description
+          </div>
+
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            className="prose prose-skin mt-4 max-w-none break-words prose-headings:font-heading prose-p:text-base prose-p:leading-snug prose-a:text-accent-blue prose-a:underline md:prose-p:text-lg"
+            components={{
+              a: ({ href, children }) => (
+                <a href={href} target="_blank" rel="noreferrer">
+                  {children}
+                </a>
+>>>>>>> Stashed changes
               ),
             },
             {
