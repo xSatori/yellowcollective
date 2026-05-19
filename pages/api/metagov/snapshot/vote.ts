@@ -1,10 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ethers } from "ethers";
 import { getSnapshotProposalForNouns } from "data/snapshot";
-import {
-  SNAPSHOT_SEQUENCER_URL,
-  SNAPSHOT_SPACE_ID,
-} from "constants/metagov";
+import { SNAPSHOT_SEQUENCER_URL, SNAPSHOT_SPACE_ID } from "constants/metagov";
 
 const snapshotVoteTypes = {
   Vote: [
@@ -103,11 +100,15 @@ export default async function handler(
     if (!snapshotProposal || snapshotProposal.id !== message.proposal) {
       return res
         .status(400)
-        .json({ error: "Snapshot proposal does not match this Nouns proposal." });
+        .json({
+          error: "Snapshot proposal does not match this Nouns proposal.",
+        });
     }
 
     if (snapshotProposal.state !== "active") {
-      return res.status(400).json({ error: "Snapshot proposal is not active." });
+      return res
+        .status(400)
+        .json({ error: "Snapshot proposal is not active." });
     }
 
     const snapshotResponse = await fetch(SNAPSHOT_SEQUENCER_URL, {

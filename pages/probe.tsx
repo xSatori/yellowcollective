@@ -398,19 +398,21 @@ const TokenModal = ({
   onClose: () => void;
 }) => (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+    className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-3 pb-[calc(0.75rem_+_env(safe-area-inset-bottom)_+_var(--miniapp-safe-area-bottom))] pt-[calc(3.5rem_+_env(safe-area-inset-top)_+_var(--miniapp-safe-area-top))] sm:items-center sm:p-4"
     onClick={onClose}
     role="presentation"
   >
     <div
-      className="yc-dark-yellow-surface grid w-full max-w-4xl gap-5 rounded-2xl border border-skin-stroke bg-white p-5 shadow-xl md:grid-cols-[360px_1fr]"
+      className="yc-dark-yellow-surface grid max-h-[calc(100dvh_-_5rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom)_-_var(--miniapp-safe-area-top)_-_var(--miniapp-safe-area-bottom))] w-full max-w-4xl gap-4 overflow-y-auto rounded-t-2xl border border-skin-stroke bg-white p-4 shadow-xl sm:rounded-2xl sm:p-5 md:grid-cols-[360px_1fr] md:gap-5"
       onClick={(event) => event.stopPropagation()}
     >
-      <TokenImage token={token} />
-      <div>
+      <div className="mx-auto w-full max-w-[280px] overflow-hidden rounded-2xl md:max-w-none">
+        <TokenImage token={token} />
+      </div>
+      <div className="min-w-0">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-heading text-[38px] leading-none text-skin-base">
+          <div className="min-w-0">
+            <h2 className="font-heading text-[34px] leading-none text-skin-base sm:text-[38px]">
               #{token.id}
             </h2>
             <p className="mt-2 text-base leading-snug text-secondary">
@@ -420,9 +422,10 @@ const TokenModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-skin-stroke px-3 py-1 font-heading text-base text-skin-base transition hover:bg-[#fff7bf]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-skin-stroke bg-white font-heading text-2xl leading-none text-skin-base shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:bg-[#fff7bf] active:translate-y-1 active:shadow-none"
+            aria-label="Close Collective Noun details"
           >
-            Close
+            ×
           </button>
         </div>
 
@@ -432,14 +435,17 @@ const TokenModal = ({
               address: token.owner,
               ensName: ensNames[token.owner.toLowerCase()],
             })}
-            className="mt-5 block rounded-xl border border-skin-stroke bg-skin-muted p-3 text-sm text-secondary transition hover:bg-[#fff7bf]"
+            className="mt-5 block min-w-0 rounded-xl border border-skin-stroke bg-skin-muted p-3 text-sm text-secondary transition hover:bg-[#fff7bf]"
           >
-            Owner{" "}
+            <span className="block text-sm leading-tight text-secondary">
+              Owner
+            </span>
             <WalletIdentityLink
               address={token.owner}
               ensName={ensNames[token.owner.toLowerCase()]}
               fallback="full"
               link={false}
+              className="mt-1 block break-all font-heading text-lg leading-tight text-skin-base sm:text-xl"
             />
           </Link>
         )}

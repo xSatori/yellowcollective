@@ -4,7 +4,7 @@ import Safe from "@safe-global/protocol-kit";
 import { ethers } from "ethers";
 import { config, validateConfig } from "./config";
 import { graphqlRequest } from "./utils/http";
-import { getBotWallet, getProvider } from "./utils/wallet";
+import { getBotWallet, getProvider, validateRpcEndpoint } from "./utils/wallet";
 
 const SPACE_QUERY = `
   query Space($id: String!) {
@@ -29,7 +29,8 @@ export const validateRuntime = async () => {
 
   const wallet = getBotWallet();
   const provider = getProvider();
-  await provider.getBlockNumber();
+  const blockNumber = await validateRpcEndpoint();
+  console.log(`Connected to Ethereum mainnet RPC at block ${blockNumber}`);
 
   const protocolKit = await Safe.init({
     provider: config.ethereumRpcUrl,

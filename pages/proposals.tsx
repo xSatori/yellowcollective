@@ -3,9 +3,34 @@ import ProposalStatus from "@/components/ProposalStatus";
 import { getProposalName } from "@/utils/getProposalName";
 import { Proposal } from "@/services/nouns-builder/governor";
 import { TOKEN_CONTRACT } from "constants/addresses";
+import { getNounsMetagovEnabled } from "data/nouns-metagov";
+import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useDAOAddresses, useGetAllProposals } from "hooks";
+
+type ProposalsPageProps = {
+  nounsMetagovEnabled: boolean;
+};
+
+export const getServerSideProps: GetServerSideProps<
+  ProposalsPageProps
+> = async () => {
+  try {
+    return {
+      props: {
+        nounsMetagovEnabled: await getNounsMetagovEnabled(),
+      },
+    };
+  } catch (error) {
+    console.error("Unable to load Nouns metagov settings", error);
+    return {
+      props: {
+        nounsMetagovEnabled: true,
+      },
+    };
+  }
+};
 
 const formatDate = (timestamp: number) => {
   if (!timestamp) return "";
@@ -47,7 +72,9 @@ const getTimingLabel = (proposal: Proposal) => {
   return "";
 };
 
-export default function ProposalsPage() {
+export default function ProposalsPage({
+  nounsMetagovEnabled,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: addresses } = useDAOAddresses({
     tokenContract: TOKEN_CONTRACT,
   });
@@ -72,20 +99,22 @@ export default function ProposalsPage() {
               <h1 className="text-[36px] leading-none md:text-[44px]">
                 Proposals
               </h1>
-              <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_rgb(var(--color-selector-stroke))] md:w-fit md:max-w-none md:gap-1.5 md:shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))]">
-                <Link
-                  href="/proposals"
-                  className="proposal-tab-button flex min-h-11 flex-1 translate-y-[-1px] items-center justify-center rounded-lg bg-accent px-3 py-2 text-center font-heading text-sm leading-tight shadow-[0px_2px_0px_0px_#b89400] transition md:flex-none md:px-5 md:py-3 md:text-base md:shadow-[0px_3px_0px_0px_#b89400]"
-                >
-                  Yellow Collective
-                </Link>
-                <Link
-                  href="/proposals/nouns"
-                  className="proposal-tab-button flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-heading text-sm leading-tight transition hover:bg-[#fff7bf] md:flex-none md:px-5 md:py-3 md:text-base"
-                >
-                  Nouns DAO
-                </Link>
-              </div>
+              {nounsMetagovEnabled && (
+                <div className="flex w-full max-w-[248px] gap-1 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_3px_0px_0px_rgb(var(--color-selector-stroke))] md:w-fit md:max-w-none md:gap-1.5 md:shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))]">
+                  <Link
+                    href="/proposals"
+                    className="proposal-tab-button flex min-h-11 flex-1 translate-y-[-1px] items-center justify-center rounded-lg bg-accent px-3 py-2 text-center font-heading text-sm leading-tight shadow-[0px_2px_0px_0px_#b89400] transition md:flex-none md:px-5 md:py-3 md:text-base md:shadow-[0px_3px_0px_0px_#b89400]"
+                  >
+                    Yellow Collective
+                  </Link>
+                  <Link
+                    href="/proposals/nouns"
+                    className="proposal-tab-button flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-heading text-sm leading-tight transition hover:bg-[#fff7bf] md:flex-none md:px-5 md:py-3 md:text-base"
+                  >
+                    Nouns DAO
+                  </Link>
+                </div>
+              )}
             </div>
             <Link
               href="/create-proposal"

@@ -27,7 +27,12 @@ function BidRow({
       <div className="flex w-full flex-row items-center justify-between gap-3">
         <WalletInfo address={bid.bidder} size="sm" />
         <ExternalLink href={`${ETHERSCAN_BASEURL}/tx/${bid.transactionHash}`}>
-          <div className="flex flex-row gap-2 items-center hover:opacity-70 transition-opacity">
+          <div
+            className={twMerge(
+              "flex flex-row gap-2 items-center hover:opacity-70 transition-opacity",
+              tight && "yc-bid-history-external-link"
+            )}
+          >
             <h6 className="text-primary/70">
               Ξ {formatNumber(utils.formatEther(bid.bidAmount || "0"), 4)}
             </h6>
@@ -36,7 +41,7 @@ function BidRow({
               width={24}
               height={24}
               alt="view"
-              className=" "
+              className={tight ? "yc-bid-history-popout-icon" : ""}
             />
           </div>
         </ExternalLink>
@@ -84,7 +89,7 @@ export default function BidHistory({
               {title}
             </h6>
           </DialogTrigger>
-          <DialogContent className="flex flex-col max-h-[90vh] md:max-h-[70vh]">
+          <DialogContent className="yc-bid-history-dialog flex flex-col max-h-[90vh] md:max-h-[70vh]">
             <DialogHeader>
               <div className="flex flex-row gap-4 items-center border-b-2 p-6">
                 {tokenImage && (

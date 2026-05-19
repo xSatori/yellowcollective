@@ -150,7 +150,8 @@ export default function NounsSnapshotVoteCard({
           </div>
           <div className="mt-2 text-base text-secondary">
             Create or publish a Snapshot proposal in {data.space} with a title
-            like "{proposalNumber}: Proposal title" before users can vote here.
+            like &quot;{proposalNumber}: Proposal title&quot; before users can
+            vote here.
           </div>
           <Link
             href={data.spaceUrl || SNAPSHOT_SPACE_URL}

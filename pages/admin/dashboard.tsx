@@ -25,7 +25,7 @@ import { useEffect, useMemo, useState } from "react";
 import useSWR, { type Fetcher, type KeyedMutator } from "swr";
 import { useAccount, useSignMessage } from "wagmi";
 
-type AdminSection = "community" | "noundry" | "gallery" | "rounds";
+type AdminSection = "community" | "noundry" | "gallery" | "rounds" | "nouns";
 type CommunityListMode = "queue" | "existing";
 type ProjectEditorMode = "edit" | "preview";
 type RoundListMode = "draft" | "published" | "archived";
@@ -51,6 +51,10 @@ const adminSections: { id: AdminSection; label: string }[] = [
   {
     id: "rounds",
     label: "Rounds",
+  },
+  {
+    id: "nouns",
+    label: "Nouns + Metagov",
   },
 ];
 
@@ -170,6 +174,10 @@ const roundsSettingsFetcher = createAdminFetcher<{
 
 const testingSettingsFetcher = createAdminFetcher<{
   dummyContentEnabled: boolean;
+}>();
+
+const nounsSettingsFetcher = createAdminFetcher<{
+  nounsMetagovEnabled: boolean;
 }>();
 
 const roundSubmissionsFetcher = createAdminFetcher<{
@@ -302,7 +310,9 @@ export default function AdminDashboardPage() {
         ? "gallery"
         : router.query.section === "rounds"
           ? "rounds"
-          : "community";
+          : router.query.section === "nouns"
+            ? "nouns"
+            : "community";
 
   const communityKey = adminAuth
     ? (["/api/admin/community-projects", adminAuth] as const)
@@ -321,6 +331,9 @@ export default function AdminDashboardPage() {
     : null;
   const testingSettingsKey = adminAuth
     ? (["/api/admin/testing/settings", adminAuth] as const)
+    : null;
+  const nounsSettingsKey = adminAuth
+    ? (["/api/admin/nouns/settings", adminAuth] as const)
     : null;
   const roundRequestsKey = adminAuth
     ? (["/api/admin/rounds/requests", adminAuth] as const)
@@ -375,6 +388,14 @@ export default function AdminDashboardPage() {
   } = useSWR<{ dummyContentEnabled: boolean }, Error, AdminSWRKey | null>(
     testingSettingsKey,
     testingSettingsFetcher
+  );
+  const {
+    data: nounsSettingsData,
+    error: nounsSettingsError,
+    mutate: mutateNounsSettings,
+  } = useSWR<{ nounsMetagovEnabled: boolean }, Error, AdminSWRKey | null>(
+    nounsSettingsKey,
+    nounsSettingsFetcher
   );
   const {
     data: roundRequestsData,
@@ -458,7 +479,7 @@ export default function AdminDashboardPage() {
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-snug text-secondary">
                 Review database submissions, approve community projects, and
-                manage Gallery, Noundry, and rounds.
+                manage Gallery, Noundry, rounds, and Nouns metagov access.
               </p>
             </div>
             {isAdmin && (
@@ -494,7 +515,7 @@ export default function AdminDashboardPage() {
         {isAdmin && !adminAuth && !isCheckingSession && (
           <AdminNotice title="Signature required">
             Unlock admin requests once to manage community projects, Noundry,
-            and rounds.
+            rounds, and Nouns metagov access.
           </AdminNotice>
         )}
 
@@ -557,6 +578,16 @@ export default function AdminDashboardPage() {
                     error={galleryError?.message}
                     isLoading={!galleryData && !galleryError}
                     mutate={mutateGallery}
+                  />
+                ) : activeSection === "nouns" ? (
+                  <NounsMetagovAdminPanel
+                    adminAuth={adminAuth}
+                    nounsMetagovEnabled={
+                      nounsSettingsData?.nounsMetagovEnabled ?? true
+                    }
+                    error={nounsSettingsError?.message}
+                    isLoading={!nounsSettingsData && !nounsSettingsError}
+                    mutate={mutateNounsSettings}
                   />
                 ) : (
                   <RoundsAdminPanel
@@ -661,6 +692,73 @@ const TestingSettingsPanel = ({
         enabled={dummyContentEnabled}
         isUpdating={isUpdating || isLoading}
         onChange={updateDummyContent}
+      />
+    </section>
+  );
+};
+
+const NounsMetagovAdminPanel = ({
+  adminAuth,
+  nounsMetagovEnabled,
+  error,
+  isLoading,
+  mutate,
+}: {
+  adminAuth: AdminAuth;
+  nounsMetagovEnabled: boolean;
+  error?: string;
+  isLoading: boolean;
+  mutate: KeyedMutator<{ nounsMetagovEnabled: boolean }>;
+}) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const updateNounsMetagov = async (enabled: boolean) => {
+    try {
+      setIsUpdating(true);
+      await sendAdminRequest("/api/admin/nouns/settings", adminAuth, "PATCH", {
+        nounsMetagovEnabled: enabled,
+      });
+      await mutate();
+    } catch (nounsError) {
+      window.alert(
+        nounsError instanceof Error
+          ? nounsError.message
+          : "Unable to update Nouns metagov access."
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <section className="yc-dark-yellow-form-surface flex flex-col gap-5 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:flex-row md:items-start md:justify-between">
+      <div>
+        <h2 className="font-heading text-3xl leading-none text-skin-base">
+          Nouns proposals and metagov
+        </h2>
+        <p className="mt-3 max-w-3xl text-base leading-snug text-secondary">
+          Turning this off hides the Yellow/Nouns proposal selector and blocks
+          public access to Nouns proposal pages and Snapshot metagov actions.
+          Connected admin wallets can still access the Nouns proposal pages.
+        </p>
+        {error && (
+          <p className="mt-3 text-sm font-semibold text-skin-proposal-danger">
+            {error}
+          </p>
+        )}
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href="/proposals/nouns" className={secondaryButtonClass}>
+            Open Nouns proposals
+          </Link>
+          <Link href="/proposals" className={secondaryButtonClass}>
+            Open Yellow proposals
+          </Link>
+        </div>
+      </div>
+      <RoundsVisibilitySwitch
+        enabled={nounsMetagovEnabled}
+        isUpdating={isUpdating || isLoading}
+        onChange={updateNounsMetagov}
       />
     </section>
   );

@@ -33,17 +33,15 @@ export default async function handler(
   }
 
   try {
-    const proposal = await getSnapshotProposalForNouns(proposalNumber);
     const voter = isAddress(req.query.voter)
       ? (req.query.voter as string)
       : undefined;
+
+    const proposal = await getSnapshotProposalForNouns(proposalNumber);
     const votes =
       proposal && voter ? await getSnapshotVotes(proposal.id, voter) : [];
 
-    res.setHeader(
-      "Cache-Control",
-      "s-maxage=30, stale-while-revalidate=300"
-    );
+    res.setHeader("Cache-Control", "s-maxage=30, stale-while-revalidate=300");
     return res.status(200).json({
       space: SNAPSHOT_SPACE_ID,
       spaceUrl: SNAPSHOT_SPACE_URL,
