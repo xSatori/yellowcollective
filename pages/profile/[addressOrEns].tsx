@@ -49,7 +49,7 @@ import {
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import useSWR from "swr";
 import { useAccount, useSignMessage } from "wagmi";
@@ -96,6 +96,38 @@ type ProfileFeedItem = {
 
 const toSerializableProfile = (profile: PublicProfileData) =>
   JSON.parse(JSON.stringify(profile)) as PublicProfileData;
+
+const getNumericTokenId = (tokenId: string | number) => {
+  const numericId = Number(tokenId);
+  return Number.isFinite(numericId) ? numericId : Number.MAX_SAFE_INTEGER;
+};
+
+const getFirstOwnedCollectiveNounAvatar = (profile: PublicProfileData) => {
+  const firstAuctionWin = [...profile.auctionWins]
+    .filter((win) => win.tokenImage)
+    .sort((first, second) => {
+      const firstTime = first.createdAt
+        ? new Date(first.createdAt).getTime()
+        : Number.NaN;
+      const secondTime = second.createdAt
+        ? new Date(second.createdAt).getTime()
+        : Number.NaN;
+
+      if (Number.isFinite(firstTime) && Number.isFinite(secondTime)) {
+        return firstTime - secondTime;
+      }
+
+      return getNumericTokenId(first.tokenId) - getNumericTokenId(second.tokenId);
+    })[0];
+
+  if (firstAuctionWin?.tokenImage) return firstAuctionWin.tokenImage;
+
+  return (
+    [...profile.ownedTokens]
+      .filter((token) => token.image)
+      .sort((first, second) => first.id - second.id)[0]?.image || ""
+  );
+};
 
 const fetcher = async (url: string) => {
   const response = await fetch(url);
@@ -307,6 +339,7 @@ export default function ProfilePage({
     shortenWalletAddress(profile.address);
   const showEnsPill = Boolean(customDisplayName && profile.ensName);
   const avatarUrl = metadata?.avatarUrl || profile.ensAvatar || "";
+  const profileFallbackAvatarUrl = getFirstOwnedCollectiveNounAvatar(profile);
   const explorerLinks = [
     ["Etherscan", `${MAINNET_ETHERSCAN_URL}/address/${profile.address}`],
     ["Basescan", `${BASESCAN_URL}/address/${profile.address}`],
@@ -354,13 +387,14 @@ export default function ProfilePage({
       </Head>
 
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7 pb-12">
-        <section className="yc-dark-surface overflow-hidden rounded-2xl border border-skin-stroke bg-white shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))]">
+        <section className="yc-dark-surface overflow-hidden rounded-2xl border border-skin-stroke bg-white">
           <div className="grid gap-0">
             <div className="flex flex-col gap-6 p-5 sm:p-6 md:p-8">
               <div className="flex flex-row items-start gap-4 sm:gap-5">
                 <ProfileAvatar
                   address={profile.address}
                   avatar={avatarUrl}
+                  fallbackAvatar={profileFallbackAvatarUrl}
                   label={displayName}
                   artwork={artwork}
                 />
@@ -497,7 +531,9 @@ export default function ProfilePage({
             <ProfileAvatarUpload
               address={profile.address}
               value={formState.avatarUrl}
-              fallbackAvatar={profile.ensAvatar}
+              fallbackAvatar={
+                profile.ensAvatar || getFirstOwnedCollectiveNounAvatar(profile)
+              }
               label={displayName}
               artwork={artwork}
               onChange={(avatarUrl) =>
@@ -582,21 +618,48 @@ export default function ProfilePage({
 const ProfileAvatar = ({
   address,
   avatar,
+  fallbackAvatar,
   label,
   artwork,
 }: {
   address: string;
   avatar?: string;
+  fallbackAvatar?: string;
   label: string;
   artwork?: PlaygroundArtwork;
 }) => {
   const normalizedAddress = address || zeroAddress;
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [fallbackAvatarFailed, setFallbackAvatarFailed] = useState(false);
+  const [randomFallbackSeed, setRandomFallbackSeed] = useState(
+    normalizedAddress.toLowerCase()
+  );
+  const visibleAvatar =
+    !avatarFailed && avatar
+      ? avatar
+      : !fallbackAvatarFailed && fallbackAvatar
+        ? fallbackAvatar
+        : "";
+
+  useEffect(() => {
+    setAvatarFailed(false);
+    setFallbackAvatarFailed(false);
+  }, [avatar, fallbackAvatar]);
+
+  useEffect(() => {
+    if (visibleAvatar) return;
+
+    setRandomFallbackSeed(
+      `${normalizedAddress.toLowerCase()}-${Date.now()}-${Math.random()}`
+    );
+  }, [normalizedAddress, visibleAvatar]);
+
   const fallbackTraits = useMemo(
     () =>
       artwork
-        ? buildRandomTraits(artwork, normalizedAddress.toLowerCase())
+        ? buildRandomTraits(artwork, randomFallbackSeed)
         : {},
-    [artwork, normalizedAddress]
+    [artwork, randomFallbackSeed]
   );
   const fallbackSubmission = useMemo<NoundrySubmission>(
     () => ({
@@ -616,9 +679,21 @@ const ProfileAvatar = ({
 
   return (
     <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-skin-stroke bg-[#ffcc00] shadow-[0px_5px_0px_0px_#b89400] sm:h-28 sm:w-28">
-      {avatar ? (
+      {visibleAvatar ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={avatar} alt={label} className="h-full w-full object-cover" />
+        <img
+          src={visibleAvatar}
+          alt={label}
+          className="h-full w-full object-cover"
+          onError={() => {
+            if (visibleAvatar === avatar) {
+              setAvatarFailed(true);
+              return;
+            }
+
+            setFallbackAvatarFailed(true);
+          }}
+        />
       ) : artwork ? (
         <NounPreviewTile
           artwork={artwork}
@@ -836,9 +911,9 @@ const ContentCoinsSection = ({
   coins: PublicProfileData["contentCoins"];
 }) => (
   <ProfileSection
-    title="Content Coins"
-    emptyTitle="No content coins yet"
-    emptyBody="Content coins owned by this wallet will appear here."
+    title="$YELLOW Posts"
+    emptyTitle="No Content Posts yet"
+    emptyBody="Content posts owned by this wallet will appear here."
     isEmpty={coins.length === 0}
   >
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

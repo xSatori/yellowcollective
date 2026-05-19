@@ -130,7 +130,7 @@ export default function MembersPage({
               </label>
               <button
                 type="button"
-                className="yc-members-count-button h-12 w-fit whitespace-nowrap rounded-[18px] bg-accent px-5 font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_#b89400] transition active:translate-y-1 active:shadow-none"
+                className="yc-members-count-button h-12 w-fit whitespace-nowrap rounded-[18px] bg-accent px-5 font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_#454a4e] transition active:translate-y-1 active:shadow-none"
               >
                 {members.length} {members.length === 1 ? "member" : "members"}
               </button>
