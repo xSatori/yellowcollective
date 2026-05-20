@@ -267,7 +267,7 @@ export default function ProfilePage({
         ? ([["Content coins", profile.contentCoins.length]] as const)
         : []),
       ...(showRoundsActivity
-        ? ([["Round art", profile.roundSubmissions.length]] as const)
+        ? ([["Round submissions", profile.roundSubmissions.length]] as const)
         : []),
       ["DAO tokens", profile.ownedTokens.length],
       ["Proposals", profile.submittedProposals.length],
