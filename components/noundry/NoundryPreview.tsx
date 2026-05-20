@@ -117,22 +117,26 @@ export const PixelPreview = ({
 }: {
   submission: NoundrySubmission;
 }) => (
-  <div
-    className="grid h-full w-full"
-    style={{
-      gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-    }}
+  <svg
+    viewBox={`0 0 ${GRID_SIZE} ${GRID_SIZE}`}
+    className="block h-full w-full"
+    preserveAspectRatio="none"
+    shapeRendering="crispEdges"
+    aria-hidden="true"
   >
-    {submission.pixels.map((color, index) => (
-      <div
-        key={index}
-        className="aspect-square"
-        style={{
-          backgroundColor: color === EMPTY_PIXEL ? "transparent" : color,
-        }}
-      />
-    ))}
-  </div>
+    {submission.pixels.map((color, index) =>
+      color === EMPTY_PIXEL ? null : (
+        <rect
+          key={index}
+          x={index % GRID_SIZE}
+          y={Math.floor(index / GRID_SIZE)}
+          width="1"
+          height="1"
+          fill={color}
+        />
+      )
+    )}
+  </svg>
 );
 
 export const FullCharacterPreview = ({

@@ -59,6 +59,19 @@ type SubmitDraft = {
   pixels: string[];
   selectedTraits: Record<string, string>;
 };
+type PreviewLayer =
+  | {
+      id: string;
+      trait: string;
+      kind: "image";
+      image: PlaygroundImage;
+    }
+  | {
+      id: string;
+      trait: string;
+      kind: "pixels";
+      pixels: string[];
+    };
 type SelectionBounds = {
   type: "rect" | "circle";
   left: number;
@@ -194,15 +207,53 @@ const getArtworkRenderTraits = (artwork: PlaygroundArtwork) => [
     .filter((trait) => !artwork.renderLayers.includes(trait)),
 ];
 
-const getCollectionLayers = (
-  artwork: PlaygroundArtwork,
-  traits: Record<string, string>,
-  visibleTraits?: Record<string, boolean>
-) =>
+const getPreviewLayers = ({
+  artwork,
+  traits,
+  visibleTraits,
+  activeTrait,
+  activePixels,
+  customTraitPixels,
+}: {
+  artwork: PlaygroundArtwork;
+  traits: Record<string, string>;
+  visibleTraits: Record<string, boolean>;
+  activeTrait: string;
+  activePixels: string[];
+  customTraitPixels: Record<string, string[]>;
+}) =>
   getArtworkRenderTraits(artwork)
-    .filter((trait) => visibleTraits?.[trait] !== false)
-    .map((trait) => getTraitImage(artwork.images, trait, traits[trait]))
-    .filter((image): image is PlaygroundImage => Boolean(image));
+    .filter((trait) => visibleTraits[trait] !== false)
+    .map((trait): PreviewLayer | null => {
+      if (trait === activeTrait) {
+        return {
+          id: `${trait}-active-pixels`,
+          trait,
+          kind: "pixels",
+          pixels: activePixels,
+        };
+      }
+
+      if (traits[trait] === CUSTOM_TRAIT_NAME && customTraitPixels[trait]) {
+        return {
+          id: `${trait}-custom-pixels`,
+          trait,
+          kind: "pixels",
+          pixels: customTraitPixels[trait],
+        };
+      }
+
+      const image = getTraitImage(artwork.images, trait, traits[trait]);
+      if (!image) return null;
+
+      return {
+        id: `${trait}-${image.name}`,
+        trait,
+        kind: "image",
+        image,
+      };
+    })
+    .filter((layer): layer is PreviewLayer => Boolean(layer));
 
 const getSubmissionPreviewTraits = (submission: NoundrySubmission) =>
   Object.keys(submission.previewTraits || {}).length > 0
@@ -267,10 +318,24 @@ const imageToPixels = async (src: string) => {
   });
 };
 
-const collectPreviewColors = async (
-  collectionLayers: PlaygroundImage[],
-  pixels: string[]
+const drawPixelsToContext = (
+  context: CanvasRenderingContext2D,
+  pixels: string[],
+  scale: number
 ) => {
+  pixels.forEach((color, index) => {
+    if (color === EMPTY_PIXEL) return;
+    context.fillStyle = color;
+    context.fillRect(
+      (index % GRID_SIZE) * scale,
+      Math.floor(index / GRID_SIZE) * scale,
+      scale,
+      scale
+    );
+  });
+};
+
+const collectPreviewColors = async (previewLayers: PreviewLayer[]) => {
   const canvas = document.createElement("canvas");
   canvas.width = GRID_SIZE;
   canvas.height = GRID_SIZE;
@@ -279,20 +344,18 @@ const collectPreviewColors = async (
 
   context.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
 
-  for (const layer of collectionLayers) {
-    try {
-      const image = await loadHtmlImage(layer.uri);
-      context.drawImage(image, 0, 0, GRID_SIZE, GRID_SIZE);
-    } catch (error) {
-      console.error("Unable to read preview layer colors", error);
+  for (const layer of previewLayers) {
+    if (layer.kind === "pixels") {
+      drawPixelsToContext(context, layer.pixels, 1);
+    } else {
+      try {
+        const image = await loadHtmlImage(layer.image.uri);
+        context.drawImage(image, 0, 0, GRID_SIZE, GRID_SIZE);
+      } catch (error) {
+        console.error("Unable to read preview layer colors", error);
+      }
     }
   }
-
-  pixels.forEach((color, index) => {
-    if (color === EMPTY_PIXEL) return;
-    context.fillStyle = color;
-    context.fillRect(index % GRID_SIZE, Math.floor(index / GRID_SIZE), 1, 1);
-  });
 
   const imageData = context.getImageData(0, 0, GRID_SIZE, GRID_SIZE).data;
   const colorCounts = new Map<string, number>();
@@ -315,20 +378,18 @@ const collectPreviewColors = async (
 
 const downloadCanvas = async ({
   fileName,
-  collectionLayers = [],
+  previewLayers = [],
   pixels = [],
   scale = 1,
   includePreviewBackground = false,
-  showEditedTrait = true,
   circleCrop = false,
   checkerboard = false,
 }: {
   fileName: string;
-  collectionLayers?: PlaygroundImage[];
+  previewLayers?: PreviewLayer[];
   pixels?: string[];
   scale?: number;
   includePreviewBackground?: boolean;
-  showEditedTrait?: boolean;
   circleCrop?: boolean;
   checkerboard?: boolean;
 }) => {
@@ -366,34 +427,17 @@ const downloadCanvas = async ({
     }
   }
 
-  const glassesLayers = collectionLayers.filter(
-    (image) => image.trait === "glasses"
-  );
-  const baseLayers = collectionLayers.filter(
-    (image) => image.trait !== "glasses"
-  );
-
-  for (const layer of baseLayers) {
-    const image = await loadHtmlImage(layer.uri);
-    context.drawImage(image, 0, 0, canvasSize, canvasSize);
-  }
-
-  if (showEditedTrait) {
-    pixels.forEach((color, index) => {
-      if (color === EMPTY_PIXEL) return;
-      context.fillStyle = color;
-      context.fillRect(
-        (index % GRID_SIZE) * exportScale,
-        Math.floor(index / GRID_SIZE) * exportScale,
-        exportScale,
-        exportScale
-      );
-    });
-  }
-
-  for (const layer of glassesLayers) {
-    const image = await loadHtmlImage(layer.uri);
-    context.drawImage(image, 0, 0, canvasSize, canvasSize);
+  if (previewLayers.length > 0) {
+    for (const layer of previewLayers) {
+      if (layer.kind === "pixels") {
+        drawPixelsToContext(context, layer.pixels, exportScale);
+      } else {
+        const image = await loadHtmlImage(layer.image.uri);
+        context.drawImage(image, 0, 0, canvasSize, canvasSize);
+      }
+    }
+  } else {
+    drawPixelsToContext(context, pixels, exportScale);
   }
 
   if (circleCrop) context.restore();
@@ -428,6 +472,9 @@ export default function NoundryPage() {
   const [brushSize, setBrushSize] = useState(2);
   const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
   const [pixels, setPixels] = useState(createBlankPixels);
+  const [customTraitPixels, setCustomTraitPixelsState] = useState<
+    Record<string, string[]>
+  >({});
   const [isPainting, setIsPainting] = useState(false);
   const [shapeStart, setShapeStart] = useState<number | null>(null);
   const [undoStack, setUndoStack] = useState<string[][]>([]);
@@ -450,6 +497,7 @@ export default function NoundryPage() {
   const layerFileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingLayerLoadTraitRef = useRef<string | null>(null);
   const uploadedLayerLoadTraitRef = useRef<string | null>(null);
+  const customTraitPixelsRef = useRef<Record<string, string[]>>({});
   const activeTouchPointersRef = useRef<Map<number, TouchPointer>>(new Map());
   const viewportGestureRef = useRef<ViewportGesture | null>(null);
   const activeTouchPointerIdRef = useRef<number | null>(null);
@@ -459,6 +507,18 @@ export default function NoundryPage() {
   const selectedTraitName = selectedTraits[traitType];
   const submissions = submissionData?.submissions || [];
   const isAdmin = isAdminAddress(address);
+  const setCustomTraitPixels = (trait: string, nextPixels: string[]) => {
+    const nextCustomTraitPixels = {
+      ...customTraitPixelsRef.current,
+      [trait]: nextPixels,
+    };
+    customTraitPixelsRef.current = nextCustomTraitPixels;
+    setCustomTraitPixelsState(nextCustomTraitPixels);
+  };
+  const persistActiveCustomPixels = (nextPixels: string[]) => {
+    if (selectedTraits[traitType] !== CUSTOM_TRAIT_NAME) return;
+    setCustomTraitPixels(traitType, nextPixels);
+  };
 
   const editableLayers = useMemo(
     () =>
@@ -536,6 +596,15 @@ export default function NoundryPage() {
         return;
       }
 
+      if (selectedTraitName === CUSTOM_TRAIT_NAME) {
+        setPixels(
+          customTraitPixelsRef.current[traitType] || createBlankPixels()
+        );
+        setUndoStack([]);
+        setRedoStack([]);
+        return;
+      }
+
       const selectedImage = getTraitImage(
         artwork.images,
         traitType,
@@ -563,15 +632,29 @@ export default function NoundryPage() {
     () => (previewColors.length ? previewColors : starterPalette.slice(0, 8)),
     [previewColors]
   );
-  const selectedCollectionLayers = useMemo(() => {
+  const previewLayers = useMemo(() => {
     if (!artwork) return [];
 
-    return getCollectionLayers(artwork, selectedTraits, visibleTraits);
-  }, [artwork, selectedTraits, visibleTraits]);
+    return getPreviewLayers({
+      artwork,
+      traits: selectedTraits,
+      visibleTraits,
+      activeTrait: traitType,
+      activePixels: pixels,
+      customTraitPixels,
+    });
+  }, [
+    artwork,
+    customTraitPixels,
+    pixels,
+    selectedTraits,
+    traitType,
+    visibleTraits,
+  ]);
   useEffect(() => {
     let isCurrent = true;
 
-    collectPreviewColors(selectedCollectionLayers, pixels)
+    collectPreviewColors(previewLayers)
       .then((colors) => {
         if (isCurrent) setPreviewColors(colors);
       })
@@ -589,7 +672,7 @@ export default function NoundryPage() {
     return () => {
       isCurrent = false;
     };
-  }, [pixels, selectedCollectionLayers]);
+  }, [previewLayers, pixels]);
   const workingSubmission = useMemo<NoundrySubmission>(
     () => ({
       id: "draft",
@@ -626,6 +709,7 @@ export default function NoundryPage() {
   const commitPixels = (nextPixels: string[]) => {
     setUndoStack((currentStack) => [...currentStack.slice(-24), pixels]);
     setRedoStack([]);
+    persistActiveCustomPixels(nextPixels);
     setPixels(nextPixels);
   };
 
@@ -671,7 +755,11 @@ export default function NoundryPage() {
 
   const continuePixelAction = (index: number) => {
     if (!isPainting || isShapeTool(tool) || tool === "eyedropper") return;
-    setPixels((currentPixels) => applyDrawingTool(currentPixels, index));
+    setPixels((currentPixels) => {
+      const nextPixels = applyDrawingTool(currentPixels, index);
+      persistActiveCustomPixels(nextPixels);
+      return nextPixels;
+    });
   };
 
   const endPixelAction = (index: number) => {
@@ -708,6 +796,7 @@ export default function NoundryPage() {
     if (!previousPixels) return;
 
     setRedoStack((currentStack) => [...currentStack, pixels]);
+    persistActiveCustomPixels(previousPixels);
     setPixels(previousPixels);
     setUndoStack((currentStack) => currentStack.slice(0, -1));
   };
@@ -717,6 +806,7 @@ export default function NoundryPage() {
     if (!nextPixels) return;
 
     setUndoStack((currentStack) => [...currentStack, pixels]);
+    persistActiveCustomPixels(nextPixels);
     setPixels(nextPixels);
     setRedoStack((currentStack) => currentStack.slice(0, -1));
   };
@@ -743,14 +833,18 @@ export default function NoundryPage() {
     const exportedTraitName = selectedTraits[trait] || "draft";
 
     if (trait !== traitType && artwork) {
-      const selectedImage = getTraitImage(
-        artwork.images,
-        trait,
-        selectedTraits[trait]
-      );
-      exportPixels = selectedImage
-        ? await imageToPixels(selectedImage.uri)
-        : createBlankPixels();
+      if (selectedTraits[trait] === CUSTOM_TRAIT_NAME) {
+        exportPixels = customTraitPixels[trait] || createBlankPixels();
+      } else {
+        const selectedImage = getTraitImage(
+          artwork.images,
+          trait,
+          selectedTraits[trait]
+        );
+        exportPixels = selectedImage
+          ? await imageToPixels(selectedImage.uri)
+          : createBlankPixels();
+      }
     }
 
     downloadCanvas({
@@ -766,11 +860,9 @@ export default function NoundryPage() {
 
     downloadCanvas({
       fileName: "yellow-collective-noundry-preview.png",
-      collectionLayers: selectedCollectionLayers,
-      pixels,
+      previewLayers,
       scale,
       includePreviewBackground: true,
-      showEditedTrait: visibleTraits[traitType] !== false,
       circleCrop: isCircleCropEnabled,
       checkerboard: visibleTraits.backgrounds === false,
     }).catch((error) => console.error("Unable to export preview", error));
@@ -833,6 +925,7 @@ export default function NoundryPage() {
     try {
       const nextPixels = await imageToPixels(objectUrl);
       uploadedLayerLoadTraitRef.current = trait;
+      setCustomTraitPixels(trait, nextPixels);
       setTraitType(trait);
       setSelectedTraits((currentTraits) => ({
         ...currentTraits,
@@ -889,6 +982,7 @@ export default function NoundryPage() {
 
   const loadSubmission = (submission: NoundrySubmission) => {
     setTitle(`Remix: ${submission.title}`);
+    setCustomTraitPixels(submission.traitType, submission.pixels);
     setTraitType(submission.traitType);
     setPixels(submission.pixels);
     setSelectedTraits(getSubmissionPreviewTraits(submission));
@@ -987,6 +1081,7 @@ export default function NoundryPage() {
     const snapshot = touchStrokeSnapshotRef.current;
     if (!snapshot) return;
 
+    persistActiveCustomPixels(snapshot.pixels);
     setPixels(snapshot.pixels);
     setUndoStack(snapshot.undoStack);
     setRedoStack(snapshot.redoStack);
@@ -1179,8 +1274,8 @@ export default function NoundryPage() {
                 Noundry
               </h1>
               <p className="mt-4 max-w-3xl text-base leading-snug text-[#212529] md:text-lg">
-                Create fresh Yellow Collective traits, remix
-                submissions, and assemble them against the live collection.
+                Create fresh Yellow Collective traits, remix submissions, and
+                assemble them against the live collection.
               </p>
             </div>
             <div className="flex w-full gap-1.5 rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-[#f1f1f1] p-1 shadow-[0px_4px_0px_0px_rgb(var(--color-selector-stroke))] lg:w-fit">
@@ -1349,9 +1444,8 @@ export default function NoundryPage() {
                 }}
               >
                 <FullCharacterPreview
-                  collectionLayers={selectedCollectionLayers}
-                  submission={workingSubmission}
-                  showEditedTrait={visibleTraits[traitType] !== false}
+                  layers={previewLayers}
+                  fallbackSubmission={workingSubmission}
                 />
               </div>
               <PreviewActionBar
@@ -2233,67 +2327,56 @@ const EyeGlyph = ({ isVisible }: { isVisible: boolean }) => (
 );
 
 const FullCharacterPreview = ({
-  collectionLayers,
-  submission,
-  showEditedTrait,
+  layers,
+  fallbackSubmission,
 }: {
-  collectionLayers: PlaygroundImage[];
-  submission: NoundrySubmission;
-  showEditedTrait: boolean;
-}) => {
-  const glassesLayers = collectionLayers.filter(
-    (image) => image.trait === "glasses"
-  );
-  const baseLayers = collectionLayers.filter(
-    (image) => image.trait !== "glasses"
-  );
-
-  return (
-    <div className="relative h-full w-full">
-      {baseLayers.map((image) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={`${image.trait}-${image.name}`}
-          src={image.uri}
-          alt={`${image.trait} ${image.name}`}
-          className="absolute inset-0 h-full w-full object-contain"
-        />
-      ))}
-      {showEditedTrait && (
-        <div className="absolute inset-0">
-          <PixelPreview submission={submission} />
-        </div>
-      )}
-      {glassesLayers.map((image) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={`${image.trait}-${image.name}`}
-          src={image.uri}
-          alt={`${image.trait} ${image.name}`}
-          className="absolute inset-0 h-full w-full object-contain"
-        />
-      ))}
-    </div>
-  );
-};
-
-const PixelPreview = ({ submission }: { submission: NoundrySubmission }) => (
-  <div
-    className="grid h-full w-full"
-    style={{
-      gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-    }}
-  >
-    {submission.pixels.map((color, index) => (
-      <div
-        key={index}
-        className="aspect-square"
-        style={{
-          backgroundColor: color === EMPTY_PIXEL ? "transparent" : color,
-        }}
-      />
-    ))}
+  layers: PreviewLayer[];
+  fallbackSubmission: NoundrySubmission;
+}) => (
+  <div className="relative h-full w-full">
+    {layers.length > 0 ? (
+      layers.map((layer) =>
+        layer.kind === "pixels" ? (
+          <div key={layer.id} className="absolute inset-0">
+            <PixelPreview pixels={layer.pixels} />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={layer.id}
+            src={layer.image.uri}
+            alt={`${layer.image.trait} ${layer.image.name}`}
+            className="absolute inset-0 h-full w-full object-contain [image-rendering:pixelated]"
+          />
+        )
+      )
+    ) : (
+      <PixelPreview pixels={fallbackSubmission.pixels} />
+    )}
   </div>
+);
+
+const PixelPreview = ({ pixels }: { pixels: string[] }) => (
+  <svg
+    viewBox={`0 0 ${GRID_SIZE} ${GRID_SIZE}`}
+    className="block h-full w-full"
+    preserveAspectRatio="none"
+    shapeRendering="crispEdges"
+    aria-hidden="true"
+  >
+    {pixels.map((color, index) =>
+      color === EMPTY_PIXEL ? null : (
+        <rect
+          key={index}
+          x={index % GRID_SIZE}
+          y={Math.floor(index / GRID_SIZE)}
+          width="1"
+          height="1"
+          fill={color}
+        />
+      )
+    )}
+  </svg>
 );
 
 const layerPartIconSrc: Record<string, string> = {
@@ -2625,14 +2708,14 @@ const GalleryView = ({
                   <button
                     type="button"
                     onClick={() => onRemix(submission)}
-                    className="yc-dark-force-white mt-4 w-full rounded-xl border border-[#0f5f99] bg-[#1d9bf0] px-3 py-2 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] active:translate-y-1 active:shadow-none"
+                    className="yc-dark-force-white mt-4 w-full rounded-xl border border-[rgb(var(--color-selector-stroke))] bg-accent px-3 py-2 font-heading text-sm text-skin-base !shadow-[0px_3px_0px_0px_rgb(var(--color-selector-stroke))] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:!shadow-none"
                   >
                     Remix
                   </button>
                   {isAdmin && (
                     <Link
                       href={`/admin/dashboard?section=noundry&submission=${submission.id}`}
-                      className="mt-3 flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-accent px-3 py-2 font-heading text-sm text-skin-base shadow-[0px_3px_0px_0px_#a98700] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] active:translate-y-1 active:shadow-none"
+                      className="mt-3 flex w-full items-center justify-center rounded-xl border border-[#a90f0c] bg-skin-proposal-danger px-3 py-2 font-heading text-sm text-white shadow-[0px_3px_0px_0px_#a90f0c] transition hover:-translate-y-0.5 hover:bg-[#f43a35] active:translate-y-1 active:shadow-none"
                     >
                       Admin edit
                     </Link>
@@ -2657,7 +2740,7 @@ const GalleryView = ({
               >
                 <div className="aspect-square rounded-xl bg-[#ffcc00] p-3">
                   {latestSubmission && (
-                    <PixelPreview submission={latestSubmission} />
+                    <PixelPreview pixels={latestSubmission.pixels} />
                   )}
                 </div>
                 <div className="min-w-0 self-center">

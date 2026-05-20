@@ -3,6 +3,7 @@ import { submitSnapshotVote } from "@/utils/snapshot-vote";
 import { TOKEN_CONTRACT } from "constants/addresses";
 import { SNAPSHOT_SPACE_ID, SNAPSHOT_SPACE_URL } from "constants/metagov";
 import { ethers } from "ethers";
+import { CheckIcon, MinusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
@@ -48,6 +49,8 @@ type VoteChoice = {
   buttonClassName: string;
   barClassName: string;
   shadowColor: string;
+  selectedIcon: JSX.Element;
+  selectedIconClassName: string;
 };
 
 export default function NounsSnapshotVoteCard({
@@ -273,42 +276,63 @@ export default function NounsSnapshotVoteCard({
             open={modalOpen}
             setOpen={setModalOpen}
           >
-            <div className="rounded-2xl bg-skin-backdrop p-1 text-skin-base">
-              <div className="font-heading text-2xl font-bold leading-none">
-                Submit vote
-              </div>
-              <div className="mt-2 font-heading text-sm font-bold text-secondary">
-                Nouns Proposal {proposalNumber}
+            <div className="relative rounded-2xl bg-skin-backdrop p-1 text-skin-base">
+              <div className="absolute top-0 right-0">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="rounded-full p-1 transition hover:bg-[#fff7bf]"
+                  aria-label="Close vote modal"
+                >
+                  <XMarkIcon className="h-5" />
+                </button>
               </div>
 
-              <div className="mt-6 flex flex-col gap-3">
-                {voteChoices.map((option) => (
-                  <button
-                    key={option.snapshotChoice}
-                    type="button"
-                    onClick={() => setChoice(option)}
-                    className={`rounded-[22px] border-0 px-5 py-5 text-left font-heading font-bold shadow-[0px_6px_0px_0px_var(--vote-shadow)] transition hover:-translate-y-0.5 hover:shadow-[0px_8px_0px_0px_var(--vote-shadow)] active:translate-y-1 active:shadow-[0px_2px_0px_0px_var(--vote-shadow)] ${option.buttonClassName}`}
-                    style={
-                      {
-                        "--vote-shadow": option.shadowColor,
-                      } as React.CSSProperties
-                    }
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="font-heading text-2xl font-bold leading-none text-white">
-                        {option.label}
-                      </span>
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-white font-heading text-xl leading-none shadow-sm">
-                        {choice?.snapshotChoice === option.snapshotChoice
-                          ? "+"
-                          : ""}
-                      </span>
-                    </div>
-                    <div className="mt-3 font-heading text-base font-bold leading-snug text-white/90">
-                      {option.description}
-                    </div>
-                  </button>
-                ))}
+              <div className="pr-8">
+                <div className="font-heading text-2xl font-bold leading-none">
+                  Submit vote
+                </div>
+                <div className="mt-2 font-heading text-sm font-bold text-secondary">
+                  Nouns Proposal {proposalNumber}
+                </div>
+              </div>
+
+              <div className="yc-vote-options-panel mt-6 rounded-xl border border-skin-stroke bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3">
+                  {voteChoices.map((option) => (
+                    <button
+                      key={option.snapshotChoice}
+                      type="button"
+                      onClick={() => setChoice(option)}
+                      className={`rounded-[22px] border-0 px-5 py-5 text-left font-heading font-bold shadow-[0px_6px_0px_0px_var(--vote-shadow)] transition hover:-translate-y-0.5 hover:shadow-[0px_8px_0px_0px_var(--vote-shadow)] active:translate-y-1 active:shadow-[0px_2px_0px_0px_var(--vote-shadow)] ${option.buttonClassName}`}
+                      style={
+                        {
+                          "--vote-shadow": option.shadowColor,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-heading text-2xl font-bold leading-none text-white">
+                          {option.label}
+                        </span>
+                        <span
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border-2 bg-white font-heading text-xl leading-none shadow-sm ${
+                            choice?.snapshotChoice === option.snapshotChoice
+                              ? `border-white ${option.selectedIconClassName}`
+                              : "border-skin-stroke bg-white"
+                          }`}
+                        >
+                          {choice?.snapshotChoice === option.snapshotChoice
+                            ? option.selectedIcon
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="mt-3 font-heading text-base font-bold leading-snug text-white/90">
+                        {option.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <label className="mt-5 block font-heading text-sm font-bold text-skin-base">
@@ -332,7 +356,7 @@ export default function NounsSnapshotVoteCard({
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="h-12 flex-1 rounded-xl border border-skin-stroke bg-white font-heading text-base font-bold text-skin-base transition hover:bg-[#fff7bf]"
+                  className="yc-force-white-yellow-hover h-12 flex-1 rounded-xl border border-skin-stroke bg-white font-heading text-base font-bold text-[#212529] transition hover:bg-[#fff7bf]"
                 >
                   Cancel
                 </button>
@@ -342,8 +366,8 @@ export default function NounsSnapshotVoteCard({
                   disabled={!choice || !signer || submitting}
                   className={`h-12 flex-1 rounded-[18px] px-4 font-heading text-base font-bold shadow-[0px_4.02px_0px_0px_#3f3f3f] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#3f3f3f] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none ${
                     choice && signer && !submitting
-                      ? "bg-skin-button-accent text-skin-inverted hover:bg-skin-button-accent-hover"
-                      : "bg-skin-button-muted text-skin-inverted"
+                      ? "yc-dark-submit-blue bg-[#1d9bf0] text-white shadow-[0px_4.02px_0px_0px_#0f5f99] hover:bg-[#45adf5] enabled:hover:shadow-[0px_6px_0px_0px_#0f5f99]"
+                      : "bg-skin-button-muted text-[#212529]"
                   }`}
                 >
                   {submitting ? (
@@ -378,6 +402,8 @@ const voteChoices: VoteChoice[] = [
     buttonClassName: "bg-skin-proposal-success hover:bg-[#13bf62]",
     barClassName: "bg-[#16a34a]",
     shadowColor: "#087a3f",
+    selectedIcon: <CheckIcon className="h-5 w-5" />,
+    selectedIconClassName: "text-skin-proposal-success",
   },
   {
     snapshotChoice: 2,
@@ -386,6 +412,8 @@ const voteChoices: VoteChoice[] = [
     buttonClassName: "bg-skin-proposal-danger hover:bg-[#f43a35]",
     barClassName: "bg-[#dc2626]",
     shadowColor: "#a90f0c",
+    selectedIcon: <XMarkIcon className="h-5 w-5" />,
+    selectedIconClassName: "text-skin-proposal-danger",
   },
   {
     snapshotChoice: 3,
@@ -394,5 +422,7 @@ const voteChoices: VoteChoice[] = [
     buttonClassName: "bg-skin-proposal-muted hover:bg-[#8a8a8a]",
     barClassName: "bg-[#737373]",
     shadowColor: "#4f4f4f",
+    selectedIcon: <MinusIcon className="h-5 w-5" />,
+    selectedIconClassName: "text-skin-proposal-muted",
   },
 ];

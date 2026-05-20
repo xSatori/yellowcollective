@@ -273,7 +273,7 @@ const VoteButton = ({
         />
       </ModalWrapper>
       <button
-        className={`w-full rounded-[18px] bg-accent px-4 py-3 font-heading text-base text-[#212529] shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] transition hover:-translate-y-0.5 hover:bg-[#ffd84d] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] active:translate-y-1 active:shadow-none sm:w-auto ${className}`}
+        className={`yc-dark-submit-blue w-full rounded-[18px] bg-[#1d9bf0] px-4 py-3 font-heading text-base text-white shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:bg-[#45adf5] hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none sm:w-auto ${className}`}
         onClick={() => setModalOpen(true)}
       >
         Submit vote

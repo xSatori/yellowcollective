@@ -13,7 +13,7 @@ import { GovernorABI } from "@buildersdk/sdk";
 import { BigNumber } from "ethers";
 import { useState } from "react";
 import Image from "next/image";
-import { XMarkIcon } from "@heroicons/react/20/solid";
+import { CheckIcon, MinusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { getProposalName } from "@/utils/getProposalName";
 
 export default function VoteModal({
@@ -85,7 +85,7 @@ export default function VoteModal({
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-skin-stroke bg-white p-4 shadow-sm">
+      <div className="yc-vote-options-panel mt-6 rounded-xl border border-skin-stroke bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3">
           {voteOptions.map((option) => (
             <button
@@ -136,7 +136,7 @@ export default function VoteModal({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="h-12 flex-1 rounded-xl border border-skin-stroke bg-white font-heading text-base font-bold text-skin-base transition hover:bg-[#fff7bf]"
+          className="yc-force-white-yellow-hover h-12 flex-1 rounded-xl border border-skin-stroke bg-white font-heading text-base font-bold text-[#212529] transition hover:bg-[#fff7bf]"
         >
           Cancel
         </button>
@@ -146,8 +146,8 @@ export default function VoteModal({
           disabled={!canSubmit || writeLoading || txLoading || txSuccess}
           className={`h-12 flex-1 rounded-[18px] px-4 font-heading text-base font-bold shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-accent))] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none ${
             canSubmit && !writeLoading && !txLoading && !txSuccess
-              ? "bg-accent text-[#212529] hover:bg-[#ffd84d]"
-              : "bg-skin-button-muted text-skin-inverted"
+              ? "yc-dark-submit-blue bg-[#1d9bf0] text-white shadow-[0px_4.02px_0px_0px_#0f5f99] hover:bg-[#45adf5] enabled:hover:shadow-[0px_6px_0px_0px_#0f5f99]"
+              : "bg-skin-button-muted text-[#212529]"
           }`}
         >
           {isPreviewProposal ? (
@@ -184,7 +184,7 @@ const voteOptions: Array<{
   description: string;
   buttonClassName: string;
   shadowColor: string;
-  selectedIcon: string;
+  selectedIcon: JSX.Element;
   selectedIconClassName: string;
 }> = [
   {
@@ -193,7 +193,7 @@ const voteOptions: Array<{
     description: "Support this proposal.",
     buttonClassName: "bg-skin-proposal-success hover:bg-[#13bf62]",
     shadowColor: "#087a3f",
-    selectedIcon: "✓",
+    selectedIcon: <CheckIcon className="h-5 w-5" />,
     selectedIconClassName: "text-skin-proposal-success",
   },
   {
@@ -202,7 +202,7 @@ const voteOptions: Array<{
     description: "Vote against this proposal.",
     buttonClassName: "bg-skin-proposal-danger hover:bg-[#f43a35]",
     shadowColor: "#a90f0c",
-    selectedIcon: "×",
+    selectedIcon: <XMarkIcon className="h-5 w-5" />,
     selectedIconClassName: "text-skin-proposal-danger",
   },
   {
@@ -211,7 +211,7 @@ const voteOptions: Array<{
     description: "Participate without voting for or against.",
     buttonClassName: "bg-skin-proposal-muted hover:bg-[#8a8a8a]",
     shadowColor: "#4f4f4f",
-    selectedIcon: "–",
+    selectedIcon: <MinusIcon className="h-5 w-5" />,
     selectedIconClassName: "text-skin-proposal-muted",
   },
 ];
