@@ -447,7 +447,7 @@ export default function ProfilePage({
                       </div>
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-secondary">
                         {showEnsPill && (
-                          <span className="rounded-full bg-[#fff7bf] px-3 py-1 font-heading text-sm text-skin-base">
+                          <span className="yc-profile-ens-pill rounded-full bg-[#fff7bf] px-3 py-1 font-heading text-sm text-skin-base">
                             {profile.ensName}
                           </span>
                         )}
@@ -545,7 +545,7 @@ export default function ProfilePage({
       </div>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-h-[90vh] max-w-[620px] overflow-y-auto bg-white p-0">
+        <DialogContent className="yc-dark-yellow-surface max-h-[90vh] max-w-[620px] overflow-y-auto border-skin-stroke bg-white p-0 text-skin-base">
           <DialogHeader className="border-b border-skin-stroke p-6 pr-16">
             <DialogTitle className="font-heading text-3xl leading-none">
               Edit profile

@@ -929,6 +929,10 @@
     stroke: #000 !important;
   }
 
+  [data-theme="dark"] .yc-profile-ens-pill {
+    color: #212529 !important;
+  }
+
   [data-theme="dark"] .bg-white {
     background-color: rgb(var(--color-surface));
   }
