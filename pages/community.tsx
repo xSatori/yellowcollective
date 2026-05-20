@@ -90,7 +90,7 @@ export default function CommunityPage({
                     <div className="border-t border-skin-stroke bg-white p-3">
                       <Link
                         href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
-                        className="yc-force-white flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-[#212529] shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[rgb(var(--color-accent-hover))] active:translate-y-1 active:shadow-none"
+                        className="yc-project-admin-edit-button flex w-full items-center justify-center rounded-xl border border-skin-stroke bg-white px-3 py-2 font-heading text-sm text-white shadow-[0px_3px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none"
                       >
                         Admin edit
                       </Link>

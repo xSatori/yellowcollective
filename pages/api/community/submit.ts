@@ -19,6 +19,7 @@ type UploadedImagePayload = {
 type SubmitCommunityProjectBody = {
   project?: Partial<CommunityProject>;
   image?: UploadedImagePayload | null;
+  galleryImageUploads?: UploadedImagePayload[] | null;
 };
 
 const ACCEPTED_IMAGE_TYPES = new Set([
@@ -28,11 +29,12 @@ const ACCEPTED_IMAGE_TYPES = new Set([
   "image/gif",
 ]);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_GALLERY_UPLOADS = 6;
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "8mb",
+      sizeLimit: "40mb",
     },
   },
 };
@@ -55,6 +57,24 @@ const validateUploadedImage = (image?: UploadedImagePayload | null) => {
   }
 
   return image.dataUrl;
+};
+
+const validateUploadedImages = (
+  images?: UploadedImagePayload[] | null
+): string[] => {
+  if (!images) return [];
+
+  if (!Array.isArray(images)) {
+    throw new Error("Invalid gallery image uploads.");
+  }
+
+  if (images.length > MAX_GALLERY_UPLOADS) {
+    throw new Error(`Upload ${MAX_GALLERY_UPLOADS} gallery images or fewer.`);
+  }
+
+  return images
+    .map((image) => validateUploadedImage(image))
+    .filter((image): image is string => Boolean(image));
 };
 
 export default async function handler(
@@ -90,9 +110,16 @@ export default async function handler(
 
     const project = normalizeCommunityProjectInput(body.project || {});
     const uploadedImage = validateUploadedImage(body.image);
+    const uploadedGalleryImages = validateUploadedImages(
+      body.galleryImageUploads
+    );
     const submission = {
       ...project,
       image: uploadedImage || project.image,
+      galleryImages: [
+        ...(project.galleryImages || []),
+        ...uploadedGalleryImages,
+      ],
     };
     const submissionValidationError = validateCommunityProjectInput(submission);
 

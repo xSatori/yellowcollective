@@ -36,6 +36,8 @@ type UploadedImage = {
   dataUrl: string;
 };
 
+const MAX_GALLERY_UPLOADS = 6;
+
 const fetcher = async (url: string) => {
   const response = await fetch(url);
   const data = await response.json();
@@ -56,6 +58,9 @@ export default function SubmitCommunityProjectPage() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
     null
   );
+  const [uploadedGalleryImages, setUploadedGalleryImages] = useState<
+    UploadedImage[]
+  >([]);
   const [submissionError, setSubmissionError] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,6 +73,9 @@ export default function SubmitCommunityProjectPage() {
   const galleryImages = values.galleryImages
     .map((image) => image.trim())
     .filter(Boolean);
+  const galleryImageUploads = uploadedGalleryImages.map(
+    (image) => image.dataUrl
+  );
   const links = values.links
     .map((link) => ({ title: link.title.trim(), href: link.href.trim() }))
     .filter((link) => link.title && link.href);
@@ -83,7 +91,7 @@ export default function SubmitCommunityProjectPage() {
     date: values.date.trim(),
     href: values.href.trim(),
     image: imageValue,
-    galleryImages,
+    galleryImages: [...galleryImages, ...galleryImageUploads],
     links,
   };
   const isResolvingConnectedMember = Boolean(
@@ -141,7 +149,35 @@ export default function SubmitCommunityProjectPage() {
       links: [...currentValues.links, { title: "", href: "" }],
     }));
   };
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const validateImageFile = (file: File) => {
+    if (
+      !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
+        file.type
+      )
+    ) {
+      throw new Error("Upload a PNG, JPG, WEBP, or GIF image.");
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("Image uploads must be smaller than 5MB.");
+    }
+  };
+  const readImageFile = (file: File) =>
+    new Promise<UploadedImage>((resolve, reject) => {
+      validateImageFile(file);
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          name: file.name,
+          type: file.type,
+          dataUrl: String(reader.result),
+        });
+      };
+      reader.onerror = () => reject(new Error("Unable to read image file."));
+      reader.readAsDataURL(file);
+    });
+  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setSubmissionError("");
     setSubmissionMessage("");
@@ -151,38 +187,59 @@ export default function SubmitCommunityProjectPage() {
       return;
     }
 
-    if (
-      !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
-        file.type
-      )
-    ) {
-      setSubmissionError("Upload a PNG, JPG, WEBP, or GIF image.");
+    try {
+      setUploadedImage(await readImageFile(file));
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error ? error.message : "Unable to read image file."
+      );
+      event.target.value = "";
+    }
+  };
+  const handleGalleryImageUpload = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(event.target.files || []);
+    setSubmissionError("");
+    setSubmissionMessage("");
+
+    if (!files.length) return;
+
+    if (uploadedGalleryImages.length + files.length > MAX_GALLERY_UPLOADS) {
+      setSubmissionError(
+        `Upload ${MAX_GALLERY_UPLOADS} additional images or fewer.`
+      );
       event.target.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setSubmissionError("Image uploads must be smaller than 5MB.");
+    try {
+      const uploadedImages = await Promise.all(files.map(readImageFile));
+      setUploadedGalleryImages((currentImages) => [
+        ...currentImages,
+        ...uploadedImages,
+      ]);
       event.target.value = "";
-      return;
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error ? error.message : "Unable to read image files."
+      );
+      event.target.value = "";
     }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setUploadedImage({
-        name: file.name,
-        type: file.type,
-        dataUrl: String(reader.result),
-      });
-    };
-    reader.onerror = () => setSubmissionError("Unable to read image file.");
-    reader.readAsDataURL(file);
+  };
+  const removeUploadedGalleryImage = (index: number) => {
+    setSubmissionError("");
+    setSubmissionMessage("");
+    setUploadedGalleryImages((currentImages) =>
+      currentImages.filter((_, imageIndex) => imageIndex !== index)
+    );
   };
   const resetForm = () => {
     setValues(initialValues);
     setMemberAddresses([]);
     setDefaultedAddress(null);
     setUploadedImage(null);
+    setUploadedGalleryImages([]);
   };
 
   useEffect(() => {
@@ -216,8 +273,12 @@ export default function SubmitCommunityProjectPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          project: projectData,
+          project: {
+            ...projectData,
+            galleryImages,
+          },
           image: uploadedImage,
+          galleryImageUploads: uploadedGalleryImages,
         }),
       });
       const result = await response.json();
@@ -418,8 +479,11 @@ export default function SubmitCommunityProjectPage() {
 
           <div className="mt-5">
             <label className="block font-heading text-base text-skin-base">
-              Additional image URLs
+              Additional images
             </label>
+            <p className="mt-1 text-sm text-secondary">
+              Add image URLs, upload image files, or use both.
+            </p>
             <div className="mt-2 flex flex-col gap-3">
               {values.galleryImages.map((image, index) => (
                 <input
@@ -440,6 +504,47 @@ export default function SubmitCommunityProjectPage() {
             >
               Add another image URL
             </button>
+            <div className="mt-4 rounded-xl border border-skin-stroke bg-skin-muted p-4">
+              <label className="block font-heading text-base text-skin-base">
+                Upload additional images
+              </label>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                multiple
+                onChange={handleGalleryImageUpload}
+                className="mt-2 block w-full text-base text-skin-base file:mr-4 file:rounded-xl file:border-0 file:bg-accent file:px-4 file:py-2 file:font-heading file:text-skin-base"
+              />
+              {uploadedGalleryImages.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {uploadedGalleryImages.map((image, index) => (
+                    <div
+                      key={`${image.name}-${index}`}
+                      className="rounded-xl border border-skin-stroke bg-white p-2"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={image.dataUrl}
+                        alt={`${image.name} preview`}
+                        className="aspect-square w-full rounded-lg object-cover"
+                      />
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <span className="min-w-0 truncate text-xs text-secondary">
+                          {image.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeUploadedGalleryImage(index)}
+                          className="shrink-0 font-heading text-xs text-skin-base underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row">
@@ -447,7 +552,7 @@ export default function SubmitCommunityProjectPage() {
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}
-              className={`yc-dark-submit-blue flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#b89400] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#b89400] active:translate-y-1 active:shadow-none ${
+              className={`yc-dark-submit-blue yc-project-submit-button flex items-center justify-center rounded-[18px] px-5 py-3 font-heading text-lg shadow-[0px_4.02px_0px_0px_#0f5f99] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#0f5f99] active:translate-y-1 active:shadow-none ${
                 canSubmit && !isSubmitting
                   ? "bg-accent text-skin-base hover:bg-[#ffd84d]"
                   : "bg-skin-button-muted text-skin-inverted opacity-70"
@@ -462,7 +567,7 @@ export default function SubmitCommunityProjectPage() {
             <button
               type="button"
               onClick={resetForm}
-              className="yc-dark-reset-red flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+              className="yc-project-submit-reset-button flex items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_#7f1d1d] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_#7f1d1d] active:translate-y-1 active:shadow-none"
             >
               Reset
             </button>
@@ -473,7 +578,7 @@ export default function SubmitCommunityProjectPage() {
             </p>
           )}
           {submissionMessage && (
-            <p className="mt-4 rounded-xl border border-skin-proposal-success bg-skin-proposal-success bg-opacity-10 p-3 text-sm text-skin-proposal-success">
+            <p className="yc-project-submit-success-alert mt-4 rounded-xl border border-skin-proposal-success bg-skin-proposal-success bg-opacity-10 p-3 text-sm text-skin-proposal-success">
               {submissionMessage}
             </p>
           )}

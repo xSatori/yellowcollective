@@ -2519,6 +2519,7 @@ const ProjectEditor = ({
     galleryImages: fromLines(galleryImages),
     links: parseLinks(links),
   };
+  const isQueuedProject = project.status === "pending";
 
   const submit = async (action?: "approve" | "remove") => {
     try {
@@ -2601,7 +2602,7 @@ const ProjectEditor = ({
             type="button"
             onClick={() => submit()}
             disabled={isSaving}
-            className={saveButtonClass}
+            className={isQueuedProject ? blueButtonClass : saveButtonClass}
           >
             Save changes
           </button>
@@ -2610,7 +2611,9 @@ const ProjectEditor = ({
               type="button"
               onClick={() => submit("approve")}
               disabled={isSaving}
-              className={secondaryButtonClass}
+              className={
+                isQueuedProject ? saveButtonClass : secondaryButtonClass
+              }
             >
               Approve
             </button>

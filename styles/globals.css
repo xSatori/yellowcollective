@@ -322,16 +322,6 @@
     color: #212529 !important;
   }
 
-  [data-theme="dark"] .yc-dark-surface .yc-project-detail-admin-edit {
-    --color-text-base: 251, 203, 7;
-    --color-text-muted: 251, 203, 7;
-    color: rgb(var(--color-accent)) !important;
-  }
-
-  [data-theme="dark"] .yc-dark-surface .yc-project-detail-admin-edit:hover {
-    color: rgb(var(--color-accent-hover)) !important;
-  }
-
   .yc-force-white-yellow-hover,
   [data-theme="dark"] .yc-force-white-yellow-hover {
     --color-text-base: 33, 37, 41;
@@ -467,6 +457,41 @@
 
   [data-theme="dark"] .yc-dark-reset-red.yc-dark-reset-white-hover:hover * {
     color: rgb(127, 29, 29) !important;
+  }
+
+  .yc-project-submit-button,
+  [data-theme="dark"] .yc-project-submit-button {
+    box-shadow: 0px 4.02px 0px 0px #0f5f99 !important;
+  }
+
+  .yc-project-submit-button:hover,
+  [data-theme="dark"] .yc-project-submit-button:hover {
+    box-shadow: 0px 6px 0px 0px #0f5f99 !important;
+  }
+
+  .yc-project-submit-reset-button,
+  [data-theme="dark"] .yc-project-submit-reset-button {
+    background-color: rgb(220, 38, 38) !important;
+    border-color: rgb(127, 29, 29) !important;
+    color: rgb(255, 255, 255) !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(127, 29, 29) !important;
+  }
+
+  .yc-project-submit-reset-button:hover,
+  [data-theme="dark"] .yc-project-submit-reset-button:hover {
+    background-color: rgb(185, 28, 28) !important;
+    color: rgb(255, 255, 255) !important;
+    box-shadow: 0px 6px 0px 0px rgb(127, 29, 29) !important;
+  }
+
+  .yc-project-submit-reset-button *,
+  [data-theme="dark"] .yc-project-submit-reset-button * {
+    color: rgb(255, 255, 255) !important;
+  }
+
+  [data-theme="dark"] .yc-project-submit-success-alert {
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
   }
 
   [data-theme="dark"] .yc-dark-yellow-hover-black:hover {
@@ -626,6 +651,37 @@
   [data-theme="dark"] .yc-project-surface .text-\[\#212529\],
   [data-theme="dark"] .yc-project-surface [class~="text-[#212529]"] {
     color: #212529 !important;
+  }
+
+  .yc-project-admin-edit-button,
+  .yc-project-admin-edit-button:hover,
+  [data-theme="dark"] .yc-project-admin-edit-button,
+  [data-theme="dark"] .yc-project-admin-edit-button:hover,
+  [data-theme="dark"] .yc-dark-surface .yc-project-admin-edit-button,
+  [data-theme="dark"] .yc-dark-surface .yc-project-admin-edit-button:hover,
+  [data-theme="dark"] .yc-project-surface .yc-project-admin-edit-button,
+  [data-theme="dark"] .yc-project-surface .yc-project-admin-edit-button:hover {
+    --color-text-base: 255, 255, 255;
+    --color-text-muted: 255, 255, 255;
+    background-color: rgb(220, 38, 38) !important;
+    border-color: rgb(127, 29, 29) !important;
+    color: rgb(255, 255, 255) !important;
+    box-shadow: 0px 4.02px 0px 0px rgb(127, 29, 29) !important;
+  }
+
+  .yc-project-admin-edit-button:hover,
+  [data-theme="dark"] .yc-project-admin-edit-button:hover,
+  [data-theme="dark"] .yc-dark-surface .yc-project-admin-edit-button:hover,
+  [data-theme="dark"] .yc-project-surface .yc-project-admin-edit-button:hover {
+    background-color: rgb(185, 28, 28) !important;
+    box-shadow: 0px 6px 0px 0px rgb(127, 29, 29) !important;
+  }
+
+  .yc-project-admin-edit-button *,
+  [data-theme="dark"] .yc-project-admin-edit-button *,
+  [data-theme="dark"] .yc-dark-surface .yc-project-admin-edit-button *,
+  [data-theme="dark"] .yc-project-surface .yc-project-admin-edit-button * {
+    color: rgb(255, 255, 255) !important;
   }
 
   [data-theme="dark"] .yc-round-submit-panel,

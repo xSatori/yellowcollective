@@ -224,7 +224,7 @@ export default function CommunityDetailPage({
             {isAdmin && (
               <Link
                 href={`/admin/dashboard?section=community&mode=existing&project=${project.slug}`}
-                className="yc-project-detail-admin-edit mt-3 flex w-full items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+                className="yc-project-admin-edit-button mt-3 flex w-full items-center justify-center rounded-[18px] border border-skin-stroke bg-white px-5 py-3 font-heading text-lg text-white shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
               >
                 Admin edit
               </Link>
@@ -264,7 +264,7 @@ export default function CommunityDetailPage({
             <button
               type="button"
               onClick={() => setSelectedImage(null)}
-              className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
+              className="yc-dark-text-black absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white font-heading text-xl text-skin-base shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-neutral))] transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] active:translate-y-1 active:shadow-none"
               aria-label="Close image"
             >
               X
