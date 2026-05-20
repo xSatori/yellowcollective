@@ -1179,7 +1179,7 @@ export default function NoundryPage() {
                 Noundry
               </h1>
               <p className="mt-4 max-w-3xl text-base leading-snug text-[#212529] md:text-lg">
-                Create fresh Yellow Collective traits, remix community
+                Create fresh Yellow Collective traits, remix
                 submissions, and assemble them against the live collection.
               </p>
             </div>
@@ -1363,7 +1363,7 @@ export default function NoundryPage() {
                 }
                 onExport={exportFullPreview}
               />
-              <div className="mt-5 overflow-hidden rounded-xl border border-[#b89400] bg-accent shadow-[0px_4px_0px_0px_#b89400]">
+              <div className="relative z-10 mt-5 rounded-xl border border-[#b89400] bg-accent shadow-[0px_4px_0px_0px_#b89400]">
                 <input
                   ref={layerFileInputRef}
                   type="file"
@@ -2418,7 +2418,7 @@ const LayerControl = ({
 
   return (
     <div
-      className={`relative border-b border-[#b89400]/50 last:border-b-0 ${
+      className={`relative border-b border-[#b89400]/50 first:rounded-t-xl last:rounded-b-xl last:border-b-0 ${
         isEditing ? "bg-[#fff2a3]" : "bg-[#ffd84d]"
       }`}
     >
@@ -2476,7 +2476,7 @@ const LayerControl = ({
       </div>
 
       {isMenuOpen && (
-        <div className="absolute right-3 top-10 z-20 w-44 rounded-2xl border border-skin-stroke bg-skin-muted p-2 shadow-lg">
+        <div className="absolute right-3 top-10 z-50 w-44 rounded-2xl border border-skin-stroke bg-skin-muted p-2 shadow-lg">
           {[
             ["clear", "Clear", onClear],
             ["folder", "Load", onLoad],
