@@ -27,6 +27,7 @@ import {
   type PublicProfileData,
   type ProfileMetadata,
 } from "data/profile";
+import { getGalleryPublicEnabled } from "data/coins";
 import type { ProfileRoundSubmission, ProfileRoundVote } from "data/rounds";
 import {
   getYellowCollectiveArtwork,
@@ -59,6 +60,7 @@ import { utils as ethersUtils } from "ethers";
 type ProfilePageProps = {
   profile: PublicProfileData | null;
   artwork: PlaygroundArtwork | null;
+  galleryPublicEnabled: boolean;
   lookup: string;
   error?: string;
 };
@@ -152,6 +154,7 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork: null,
+        galleryPublicEnabled: true,
         profile: null,
         error: "Enter a wallet address or ENS name to view a profile.",
       },
@@ -169,6 +172,7 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork: null,
+        galleryPublicEnabled: true,
         profile: null,
         error: lookupIsEnsName
           ? "That ENS name did not resolve to a wallet address."
@@ -187,11 +191,15 @@ export const getServerSideProps = async ({
   }
 
   try {
-    const [profileData, artwork] = await Promise.all([
+    const [profileData, artwork, galleryPublicEnabled] = await Promise.all([
       getPublicProfileData(resolvedAddress),
       getYellowCollectiveArtwork().catch((artworkError) => {
         console.error("Unable to load profile fallback artwork", artworkError);
         return null;
+      }),
+      getGalleryPublicEnabled().catch((settingsError) => {
+        console.error("Unable to load profile gallery settings", settingsError);
+        return true;
       }),
     ]);
 
@@ -199,6 +207,7 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork,
+        galleryPublicEnabled,
         profile: toSerializableProfile(profileData),
       },
     };
@@ -208,6 +217,7 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork: null,
+        galleryPublicEnabled: true,
         profile: null,
         error: "Unable to load this profile right now.",
       },
@@ -218,6 +228,7 @@ export const getServerSideProps = async ({
 export default function ProfilePage({
   profile,
   artwork: initialArtwork,
+  galleryPublicEnabled,
   lookup,
   error,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
@@ -248,6 +259,7 @@ export default function ProfilePage({
     fetcher
   );
   const showRoundsActivity = Boolean(roundsSettings?.roundsPublicEnabled);
+  const showContentCoins = galleryPublicEnabled;
 
   const isOwnProfile = areSameWalletAddress(connectedAddress, profile?.address);
   const stats = useMemo(() => {
@@ -255,13 +267,15 @@ export default function ProfilePage({
 
     return [
       ["Noundry", profile.noundrySubmissions.length],
-      ["Content coins", profile.contentCoins.length],
+      ...(showContentCoins
+        ? ([["Content coins", profile.contentCoins.length]] as const)
+        : []),
       ["Round art", profile.roundSubmissions.length],
       ["DAO tokens", profile.ownedTokens.length],
       ["Proposals", profile.submittedProposals.length],
       ["Votes", profile.daoVotes.length + profile.roundVotes.length],
     ] as const;
-  }, [profile]);
+  }, [profile, showContentCoins]);
 
   const saveProfile = async () => {
     if (!profile || !connectedAddress || !isOwnProfile) return;
@@ -500,7 +514,9 @@ export default function ProfilePage({
         </section>
 
         <CommunityProjectsSection projects={profile.communityProjects} />
-        <ContentCoinsSection coins={profile.contentCoins} />
+        {showContentCoins && (
+          <ContentCoinsSection coins={profile.contentCoins} />
+        )}
         <GalleryTab
           artwork={artwork}
           submissions={profile.noundrySubmissions}
