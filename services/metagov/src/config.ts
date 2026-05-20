@@ -75,7 +75,7 @@ export const validateConfig = () => {
     throw new Error("Missing SNAPSHOT_SPACE_ID.");
   }
 
-  getAddress(config.safeAddress);
+  if (config.safeAddress) getAddress(config.safeAddress);
   getAddress(config.nounsDaoAddress);
   getAddress(config.nounsTokenAddress);
 

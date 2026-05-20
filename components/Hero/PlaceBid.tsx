@@ -164,7 +164,7 @@ export const PlaceBid = ({
         </div>
         <div className="flex flex-col items-center justify-center gap-1">
           <Button
-            className="yc-dark-yellow-button h-[59px] min-w-[112px] px-3 py-0 text-sm sm:min-w-[140px]"
+            className="yc-dark-yellow-button h-[59px] min-w-[112px] px-3 py-0 text-sm hover:-translate-y-0.5 hover:shadow-[0px_6px_0px_0px_rgb(var(--color-action-shadow))] active:translate-y-1 active:shadow-none sm:min-w-[140px]"
             disabled={((!write || isLoading) && isConnected) || !!commentError}
             onClick={(e) => {
               e.preventDefault();

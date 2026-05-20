@@ -12,8 +12,8 @@ import {
   getSnapshotUrl,
 } from "./services/snapshot";
 import {
-  executeVoteThroughSafe,
-  hasAlreadyVoted,
+  executeFinalVote,
+  hasConfiguredVoterAlreadyVoted,
 } from "./services/safe-voting";
 import { StateStore } from "./services/state-store";
 import { startHttpServer } from "./server/http-server";
@@ -128,9 +128,10 @@ const checkForClosedVotes = async () => {
     for (const [snapshotId, nounsId] of Array.from(pendingVotes.entries())) {
       if (submittedVotes.has(snapshotId)) continue;
 
-      if (await hasAlreadyVoted(nounsId)) {
+      if (await hasConfiguredVoterAlreadyVoted(nounsId)) {
         store.markProposal(nounsId, "skipped", {
-          failureReason: "Safe already voted on this Nouns proposal.",
+          failureReason:
+            "Configured metagov voter already voted on this Nouns proposal.",
         });
         submittedVotes.add(snapshotId);
         pendingVotes.delete(snapshotId);
@@ -163,7 +164,7 @@ const checkForClosedVotes = async () => {
 
       if (!voteData) continue;
 
-      const execution = await executeVoteThroughSafe(
+      const execution = await executeFinalVote(
         nounsId,
         voteData.choice,
         voteData.reason
@@ -180,6 +181,8 @@ const checkForClosedVotes = async () => {
         nounsProposalId: nounsId,
         snapshotId,
         choice: voteData.choice,
+        executionMode: execution.executionMode,
+        voterAddress: execution.voterAddress,
         safeTxHash: execution.safeTxHash,
         executionTxHash: execution.executionTxHash,
         blockNumber: execution.blockNumber,
@@ -231,7 +234,8 @@ const main = async () => {
   await loadStateIntoMemory();
 
   console.log(`Wallet: ${await getWalletAddress()}`);
-  console.log(`Safe: ${config.safeAddress}`);
+  console.log(`Safe: ${config.safeAddress || "not configured"}`);
+  console.log("Vote execution: Safe only");
   console.log(`Snapshot space: ${config.snapshotSpaceId}`);
   console.log(`Dry run: ${config.dryRun}`);
   console.log(`State: ${store.path}`);

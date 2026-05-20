@@ -2,11 +2,12 @@ import {
   getNounsDaoIndexerPool,
   getNounsDaoIndexerSchema,
 } from "data/nouns-dao/indexer";
+import { providers, utils } from "ethers";
 
 export type NounsDaoProposalVote = {
   voter: string;
   support: number;
-  weight: number;
+  weight: string;
   reason: string;
   timestamp: number | null;
   blockNumber: number | null;
@@ -68,6 +69,28 @@ const BLOCK_NUMBER_COLUMN_CANDIDATES = [
   "blockNumber",
   "block",
 ];
+const NOUNS_DAO_PROXY = "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d";
+const BLOCK_RANGE = 50000;
+const MAX_RPC_VOTES = 1000;
+const RPC_URLS = [
+  process.env.NEXT_PUBLIC_MAINNET_RPC_URL,
+  "https://ethereum.publicnode.com",
+  "https://eth.llamarpc.com",
+].filter((url, index, urls): url is string =>
+  Boolean(url && urls.indexOf(url) === index)
+);
+
+const nounsDaoVoteInterface = new utils.Interface([
+  "function proposals(uint256 proposalId) view returns (uint256 id,address proposer,uint256 proposalThreshold,uint256 quorumVotes,uint256 eta,uint256 startBlock,uint256 endBlock,uint256 forVotes,uint256 againstVotes,uint256 abstainVotes,bool canceled,bool vetoed,bool executed)",
+  "event VoteCast(address indexed voter,uint256 proposalId,uint8 support,uint256 votes,string reason)",
+  "event VoteCastWithClientId(address indexed voter,uint256 proposalId,uint8 support,uint256 votes,string reason,uint32 clientId)",
+  "event VoteCastWithParams(address indexed voter,uint256 proposalId,uint8 support,uint256 votes,string reason,bytes params)",
+]);
+const VOTE_EVENT_NAMES = [
+  "VoteCast",
+  "VoteCastWithClientId",
+  "VoteCastWithParams",
+] as const;
 
 const quoteIdent = (value: string) => `"${value.replace(/"/g, '""')}"`;
 
@@ -177,7 +200,7 @@ const getVoteTableConfig = async () => {
   return undefined;
 };
 
-export const getNounsDaoProposalVotes = async (
+const getNounsDaoProposalVotesFromIndexer = async (
   proposalNumber: number
 ): Promise<NounsDaoProposalVote[]> => {
   const pool = getNounsDaoIndexerPool();
@@ -223,7 +246,7 @@ export const getNounsDaoProposalVotes = async (
   return rows.map((row) => ({
     voter: String(row.voter || ""),
     support: normalizeSupport(row.support),
-    weight: Number(row.weight || 0),
+    weight: String(row.weight || 0),
     reason: String(row.reason || ""),
     timestamp:
       row.timestamp === null || row.timestamp === undefined
@@ -234,4 +257,157 @@ export const getNounsDaoProposalVotes = async (
         ? null
         : Number(row.blockNumber),
   }));
+};
+
+const getRpcProviders = () =>
+  RPC_URLS.map((rpcUrl) => new providers.JsonRpcProvider(rpcUrl));
+
+const getProposalVoteRange = async (
+  provider: providers.JsonRpcProvider,
+  proposalNumber: number
+) => {
+  const result = await provider.call({
+    to: NOUNS_DAO_PROXY,
+    data: nounsDaoVoteInterface.encodeFunctionData("proposals", [
+      proposalNumber,
+    ]),
+  });
+  const details = nounsDaoVoteInterface.decodeFunctionResult(
+    "proposals",
+    result
+  );
+
+  return {
+    startBlock: Number(details.startBlock.toString()),
+    endBlock: Number(details.endBlock.toString()),
+  };
+};
+
+const getVoteLogsForTopic = async (
+  provider: providers.JsonRpcProvider,
+  topic: string,
+  fromBlock: number,
+  toBlock: number
+) => {
+  const logs: providers.Log[] = [];
+
+  for (let from = fromBlock; from <= toBlock; from += BLOCK_RANGE + 1) {
+    const to = Math.min(from + BLOCK_RANGE, toBlock);
+    const rangeLogs = await provider.getLogs({
+      address: NOUNS_DAO_PROXY,
+      fromBlock: from,
+      toBlock: to,
+      topics: [topic],
+    });
+
+    logs.push(...rangeLogs);
+  }
+
+  return logs;
+};
+
+const getBlockTimestamps = async (
+  provider: providers.JsonRpcProvider,
+  logs: providers.Log[]
+) => {
+  const blockTimestamps = new Map<number, number>();
+  const blockNumbers = Array.from(
+    new Set(logs.map((log) => log.blockNumber))
+  );
+
+  await Promise.all(
+    blockNumbers.map(async (blockNumber) => {
+      const block = await provider.getBlock(blockNumber);
+      if (block) blockTimestamps.set(blockNumber, block.timestamp);
+    })
+  );
+
+  return blockTimestamps;
+};
+
+const getNounsDaoProposalVotesFromRpcProvider = async (
+  proposalNumber: number,
+  provider: providers.JsonRpcProvider
+): Promise<NounsDaoProposalVote[]> => {
+  const [voteRange, latestBlock] = await Promise.all([
+    getProposalVoteRange(provider, proposalNumber),
+    provider.getBlockNumber(),
+  ]);
+
+  if (!voteRange.startBlock || voteRange.startBlock > latestBlock) return [];
+
+  const fromBlock = voteRange.startBlock;
+  const toBlock = Math.min(voteRange.endBlock || latestBlock, latestBlock);
+  const topics = VOTE_EVENT_NAMES.map((eventName) =>
+    nounsDaoVoteInterface.getEventTopic(eventName)
+  );
+  const logs = (
+    await Promise.all(
+      topics.map((topic) =>
+        getVoteLogsForTopic(provider, topic, fromBlock, toBlock)
+      )
+    )
+  )
+    .flat()
+    .sort(
+      (a, b) =>
+        b.blockNumber - a.blockNumber || (b.logIndex || 0) - (a.logIndex || 0)
+    );
+  const matchingLogs = logs
+    .filter((log) => {
+      try {
+        const parsed = nounsDaoVoteInterface.parseLog(log);
+        return parsed.args.proposalId.toString() === String(proposalNumber);
+      } catch {
+        return false;
+      }
+    })
+    .slice(0, MAX_RPC_VOTES);
+  const blockTimestamps = await getBlockTimestamps(provider, matchingLogs);
+
+  return matchingLogs.map((log) => {
+    const parsed = nounsDaoVoteInterface.parseLog(log);
+
+    return {
+      voter: String(parsed.args.voter || ""),
+      support: Number(parsed.args.support || 0),
+      weight: parsed.args.votes?.toString() || "0",
+      reason: String(parsed.args.reason || ""),
+      timestamp: blockTimestamps.get(log.blockNumber) || null,
+      blockNumber: log.blockNumber,
+    };
+  });
+};
+
+const getNounsDaoProposalVotesFromRpc = async (
+  proposalNumber: number
+): Promise<NounsDaoProposalVote[]> => {
+  if (!Number.isFinite(proposalNumber)) return [];
+
+  for (const provider of getRpcProviders()) {
+    try {
+      return await getNounsDaoProposalVotesFromRpcProvider(
+        proposalNumber,
+        provider
+      );
+    } catch (error) {
+      console.warn("Unable to load Nouns DAO proposal votes from RPC", error);
+    }
+  }
+
+  return [];
+};
+
+export const getNounsDaoProposalVotes = async (
+  proposalNumber: number
+): Promise<NounsDaoProposalVote[]> => {
+  try {
+    const indexerVotes =
+      await getNounsDaoProposalVotesFromIndexer(proposalNumber);
+    if (indexerVotes.length > 0) return indexerVotes;
+  } catch (error) {
+    console.warn("Unable to load Nouns DAO proposal votes from indexer", error);
+  }
+
+  return getNounsDaoProposalVotesFromRpc(proposalNumber);
 };

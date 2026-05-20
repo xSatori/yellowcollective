@@ -1,5 +1,6 @@
 import ModalWrapper from "@/components/ModalWrapper";
 import { submitSnapshotVote } from "@/utils/snapshot-vote";
+import { TOKEN_CONTRACT } from "constants/addresses";
 import { SNAPSHOT_SPACE_ID, SNAPSHOT_SPACE_URL } from "constants/metagov";
 import { ethers } from "ethers";
 import Image from "next/image";
@@ -45,6 +46,7 @@ type VoteChoice = {
   label: "For" | "Against" | "Abstain";
   description: string;
   buttonClassName: string;
+  barClassName: string;
   shadowColor: string;
 };
 
@@ -69,9 +71,25 @@ export default function NounsSnapshotVoteCard({
       address ? `?voter=${address}` : ""
     }`
   );
+  const {
+    data: collectiveNounsBalance,
+    error: collectiveNounsBalanceError,
+    isLoading: collectiveNounsBalanceLoading,
+  } = useSWR<number | string>(
+    address ? `/api/token/${TOKEN_CONTRACT}/balance/${address}` : null
+  );
   const proposal = data?.proposal;
   const isActive = proposal?.state === "active";
   const alreadyVoted = Boolean(data?.userVote);
+  const hasCollectiveNoun = Number(collectiveNounsBalance || 0) > 0;
+  const canSubmitVote = Boolean(
+    isConnected &&
+      isActive &&
+      !alreadyVoted &&
+      hasCollectiveNoun &&
+      !collectiveNounsBalanceLoading &&
+      !collectiveNounsBalanceError
+  );
   const selectedChoice = voteChoices.find(
     (option) => option.snapshotChoice === data?.userVote?.choice
   );
@@ -118,7 +136,7 @@ export default function NounsSnapshotVoteCard({
   };
 
   return (
-    <section className="mt-2 rounded-2xl border border-skin-stroke bg-white p-6 shadow-sm md:p-8">
+    <section className="yc-dark-yellow-surface mt-2 rounded-2xl border border-skin-stroke bg-white p-6 shadow-[0px_4.02px_0px_0px_rgb(var(--color-shadow-accent))] md:p-8">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="text-2xl font-heading text-skin-base font-bold">
@@ -157,7 +175,7 @@ export default function NounsSnapshotVoteCard({
             href={data.spaceUrl || SNAPSHOT_SPACE_URL}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex rounded-[18px] bg-skin-button-accent px-4 py-3 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:bg-skin-button-accent-hover hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none"
+            className="yc-dark-force-white mt-4 inline-flex rounded-[18px] bg-skin-button-accent px-4 py-3 font-heading text-base text-skin-inverted shadow-[0px_4.02px_0px_0px_#3f3f3f] transition hover:-translate-y-0.5 hover:bg-skin-button-accent-hover hover:shadow-[0px_6px_0px_0px_#3f3f3f] active:translate-y-1 active:shadow-none"
           >
             Open Snapshot space
           </Link>
@@ -184,9 +202,9 @@ export default function NounsSnapshotVoteCard({
                       {percentage}%
                     </div>
                   </div>
-                  <div className="mt-3 h-3 overflow-hidden rounded-full bg-white">
+                  <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#fff]">
                     <div
-                      className={option.buttonClassName}
+                      className={option.barClassName}
                       style={{ width: `${percentage}%`, height: "100%" }}
                     />
                   </div>
@@ -200,10 +218,20 @@ export default function NounsSnapshotVoteCard({
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-base text-secondary">
-              {alreadyVoted && selectedChoice
-                ? `You voted ${selectedChoice.label}.`
-                : isActive
+              {alreadyVoted
+                ? selectedChoice
+                  ? `You voted ${selectedChoice.label}.`
+                  : "You already submitted a Snapshot vote."
+                : canSubmitVote
                   ? "Vote by signing a gasless Snapshot message."
+                  : isActive && isConnected && collectiveNounsBalanceLoading
+                    ? "Checking your Collective Noun balance..."
+                    : isActive && isConnected && collectiveNounsBalanceError
+                      ? "Unable to verify your Collective Noun balance."
+                      : isActive && isConnected
+                        ? "Only connected Collective Noun holders can submit a Snapshot vote."
+                        : isActive
+                          ? "Connect a wallet holding a Collective Noun to vote."
                   : "Voting is not active for this Snapshot proposal."}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -211,25 +239,31 @@ export default function NounsSnapshotVoteCard({
                 href={proposal.link}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-skin-stroke bg-white px-4 font-heading text-base font-bold text-skin-base transition hover:bg-[#fff7bf]"
+                className="inline-flex h-12 items-center justify-center rounded-[18px] border border-[#a90f0c] bg-skin-proposal-danger px-4 font-heading text-base font-bold text-white shadow-[0px_4.02px_0px_0px_#a90f0c] transition hover:-translate-y-0.5 hover:bg-[#f43a35] hover:shadow-[0px_6px_0px_0px_#a90f0c] active:translate-y-1 active:shadow-none"
               >
                 View on Snapshot
               </Link>
               <button
                 type="button"
-                disabled={!isConnected || !isActive || alreadyVoted}
+                disabled={!canSubmitVote}
                 onClick={() => setModalOpen(true)}
                 className={`h-12 rounded-[18px] px-4 font-heading text-base font-bold shadow-[0px_4.02px_0px_0px_#3f3f3f] transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0px_6px_0px_0px_#3f3f3f] enabled:active:translate-y-1 enabled:active:shadow-none disabled:shadow-none ${
-                  isConnected && isActive && !alreadyVoted
-                    ? "bg-skin-button-accent text-skin-inverted hover:bg-skin-button-accent-hover"
-                    : "bg-skin-button-muted text-skin-inverted"
+                  canSubmitVote
+                    ? "bg-[#1d9bf0] text-white hover:bg-[#45adf5] enabled:shadow-[0px_4.02px_0px_0px_#0f5f99] enabled:hover:shadow-[0px_6px_0px_0px_#0f5f99]"
+                    : "border border-skin-stroke bg-[#fff] text-skin-base"
                 }`}
               >
                 {!isConnected
                   ? "Connect wallet to vote"
                   : alreadyVoted
                     ? "Vote submitted"
-                    : "Vote with Yellow Collective on Snapshot"}
+                  : collectiveNounsBalanceLoading
+                    ? "Checking holder status"
+                    : collectiveNounsBalanceError
+                      ? "Unable to verify holder"
+                      : !hasCollectiveNoun
+                        ? "Collective Noun required"
+                    : "Submit vote"}
               </button>
             </div>
           </div>
@@ -241,7 +275,7 @@ export default function NounsSnapshotVoteCard({
           >
             <div className="rounded-2xl bg-skin-backdrop p-1 text-skin-base">
               <div className="font-heading text-2xl font-bold leading-none">
-                Snapshot vote
+                Submit vote
               </div>
               <div className="mt-2 font-heading text-sm font-bold text-secondary">
                 Nouns Proposal {proposalNumber}
@@ -342,6 +376,7 @@ const voteChoices: VoteChoice[] = [
     label: "For",
     description: "Support this proposal.",
     buttonClassName: "bg-skin-proposal-success hover:bg-[#13bf62]",
+    barClassName: "bg-[#16a34a]",
     shadowColor: "#087a3f",
   },
   {
@@ -349,6 +384,7 @@ const voteChoices: VoteChoice[] = [
     label: "Against",
     description: "Vote against this proposal.",
     buttonClassName: "bg-skin-proposal-danger hover:bg-[#f43a35]",
+    barClassName: "bg-[#dc2626]",
     shadowColor: "#a90f0c",
   },
   {
@@ -356,6 +392,7 @@ const voteChoices: VoteChoice[] = [
     label: "Abstain",
     description: "Participate without voting for or against.",
     buttonClassName: "bg-skin-proposal-muted hover:bg-[#8a8a8a]",
+    barClassName: "bg-[#737373]",
     shadowColor: "#4f4f4f",
   },
 ];

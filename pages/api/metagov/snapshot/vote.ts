@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getCollectiveNounVotingPower } from "@/utils/rounds/getCollectiveNounVotingPower";
 import { ethers } from "ethers";
 import { getSnapshotProposalForNouns } from "data/snapshot";
 import { SNAPSHOT_SEQUENCER_URL, SNAPSHOT_SPACE_ID } from "constants/metagov";
@@ -95,6 +96,15 @@ export default async function handler(
   }
 
   try {
+    const collectiveNounBalance =
+      await getCollectiveNounVotingPower(recoveredAddress);
+
+    if (collectiveNounBalance <= 0) {
+      return res.status(403).json({
+        error: "Only Collective Noun holders can submit Snapshot votes.",
+      });
+    }
+
     const snapshotProposal = await getSnapshotProposalForNouns(proposalNumber);
 
     if (!snapshotProposal || snapshotProposal.id !== message.proposal) {

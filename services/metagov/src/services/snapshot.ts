@@ -150,7 +150,7 @@ export const formatProposalBody = (proposal: NounsProposal) => {
     `**Nouns proposal:** ${nounsLink}`,
     `**Yellow Collective voting page:** ${siteLink}`,
     "",
-    "Vote here to decide how the Yellow Collective Safe should vote on the Nouns DAO proposal.",
+    "Vote here to decide how Yellow Collective should vote on the Nouns DAO proposal.",
   ].join("\n");
 };
 

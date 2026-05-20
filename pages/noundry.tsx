@@ -13,7 +13,11 @@ import type {
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  ChangeEvent,
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+} from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import useSWR from "swr";
@@ -434,6 +438,7 @@ export default function NoundryPage() {
   const [isCircleCropEnabled, setIsCircleCropEnabled] = useState(false);
   const [openTraitPicker, setOpenTraitPicker] = useState<string | null>(null);
   const [openLayerMenu, setOpenLayerMenu] = useState<string | null>(null);
+  const [layerLoadError, setLayerLoadError] = useState<string | null>(null);
   const [exportScaleRequest, setExportScaleRequest] =
     useState<ExportScaleRequest | null>(null);
   const [editorViewport, setEditorViewport] = useState<EditorViewport>(
@@ -441,6 +446,9 @@ export default function NoundryPage() {
   );
   const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
   const editorGridRef = useRef<HTMLDivElement | null>(null);
+  const layerFileInputRef = useRef<HTMLInputElement | null>(null);
+  const pendingLayerLoadTraitRef = useRef<string | null>(null);
+  const uploadedLayerLoadTraitRef = useRef<string | null>(null);
   const activeTouchPointersRef = useRef<Map<number, TouchPointer>>(new Map());
   const viewportGestureRef = useRef<ViewportGesture | null>(null);
   const activeTouchPointerIdRef = useRef<number | null>(null);
@@ -521,6 +529,11 @@ export default function NoundryPage() {
   useEffect(() => {
     const loadSelectedTrait = async () => {
       if (!artwork || !isEditableLayer(traitType)) return;
+
+      if (uploadedLayerLoadTraitRef.current === traitType) {
+        uploadedLayerLoadTraitRef.current = null;
+        return;
+      }
 
       const selectedImage = getTraitImage(
         artwork.images,
@@ -786,6 +799,51 @@ export default function NoundryPage() {
         ])
       )
     );
+  };
+
+  const requestLayerFileLoad = (trait: string) => {
+    pendingLayerLoadTraitRef.current = trait;
+    setLayerLoadError(null);
+    setTraitType(trait);
+    setOpenLayerMenu(null);
+
+    if (layerFileInputRef.current) {
+      layerFileInputRef.current.value = "";
+      layerFileInputRef.current.click();
+    }
+  };
+
+  const handleLayerFileLoad = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    const trait = pendingLayerLoadTraitRef.current;
+    pendingLayerLoadTraitRef.current = null;
+
+    if (!file || !trait) return;
+
+    if (!file.type.startsWith("image/")) {
+      setLayerLoadError("Load an image file for that trait layer.");
+      console.error("Unsupported Noundry layer file type", file.type);
+      event.target.value = "";
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+      const nextPixels = await imageToPixels(objectUrl);
+      uploadedLayerLoadTraitRef.current = trait;
+      setTraitType(trait);
+      setPixels(nextPixels);
+      setUndoStack([]);
+      setRedoStack([]);
+      setLayerLoadError(null);
+    } catch (error) {
+      setLayerLoadError("Unable to load that image into the trait layer.");
+      console.error("Unable to load trait layer file", error);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+      event.target.value = "";
+    }
   };
 
   const loadCollectiveNounById = async () => {
@@ -1301,6 +1359,13 @@ export default function NoundryPage() {
                 onExport={exportFullPreview}
               />
               <div className="mt-5 overflow-hidden rounded-xl border border-[#b89400] bg-accent shadow-[0px_4px_0px_0px_#b89400]">
+                <input
+                  ref={layerFileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                  className="sr-only"
+                  onChange={handleLayerFileLoad}
+                />
                 {editableLayers.map((layer) => (
                   <LayerControl
                     key={layer.trait}
@@ -1337,10 +1402,7 @@ export default function NoundryPage() {
                       setTraitType(layer.trait);
                       clearCanvas();
                     }}
-                    onLoad={() => {
-                      setTraitType(layer.trait);
-                      setOpenLayerMenu(null);
-                    }}
+                    onLoad={() => requestLayerFileLoad(layer.trait)}
                     onExport={() => {
                       setOpenLayerMenu(null);
                       exportEditedTrait(layer.trait);
@@ -1348,6 +1410,11 @@ export default function NoundryPage() {
                   />
                 ))}
               </div>
+              {layerLoadError && (
+                <div className="mt-3 rounded-xl border border-skin-stroke bg-white px-3 py-2 text-sm text-skin-proposal-danger">
+                  {layerLoadError}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={submitToGallery}
@@ -2414,7 +2481,7 @@ const LayerControl = ({
               key={label as string}
               type="button"
               onClick={onClick as () => void}
-              className="grid w-full grid-cols-[32px_1fr] items-center gap-3 rounded-xl px-3 py-2.5 text-left font-heading text-sm text-primary transition hover:bg-[#fff7bf]"
+              className="grid w-full grid-cols-[32px_1fr] items-center gap-3 rounded-xl px-3 py-2.5 text-left font-heading text-sm text-primary transition hover:bg-[#fff7bf] hover:text-[#212529] focus-visible:bg-[#fff7bf] focus-visible:text-[#212529]"
             >
               <ActionIcon kind={kind as string} />
               {label as string}

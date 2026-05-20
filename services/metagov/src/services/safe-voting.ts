@@ -21,6 +21,8 @@ const SUPPORT_VALUES: Record<SnapshotChoice, 0 | 1 | 2> = {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export type ExecutionResult = {
+  executionMode: "safe";
+  voterAddress: string;
   safeTxHash: string;
   executionTxHash: string;
   blockNumber: number;
@@ -41,6 +43,7 @@ const isProposalVoteable = async (proposalId: string) => {
   const endBlock = Number(proposal.endBlock);
 
   return {
+    proposal,
     voteable: currentBlock >= startBlock && currentBlock <= endBlock,
     status:
       currentBlock < startBlock
@@ -51,7 +54,10 @@ const isProposalVoteable = async (proposalId: string) => {
   };
 };
 
-export const hasAlreadyVoted = async (proposalId: string) => {
+export const hasAlreadyVoted = async (
+  proposalId: string,
+  voterAddress: string
+) => {
   try {
     const provider = getProvider();
     const nounsDao = new ethers.Contract(
@@ -59,34 +65,47 @@ export const hasAlreadyVoted = async (proposalId: string) => {
       NOUNS_DAO_ABI,
       provider
     );
-    const receipt = await nounsDao.getReceipt(proposalId, config.safeAddress);
+    const receipt = await nounsDao.getReceipt(proposalId, voterAddress);
     return Boolean(receipt.hasVoted || receipt[0]);
   } catch {
     return false;
   }
 };
 
-export const executeVoteThroughSafe = async (
+export const hasConfiguredVoterAlreadyVoted = async (proposalId: string) => {
+  if (await hasAlreadyVoted(proposalId, config.safeAddress)) {
+    console.log(`${config.safeAddress} already voted on Nouns #${proposalId}`);
+    return true;
+  }
+
+  return false;
+};
+
+export const executeFinalVote = async (
   proposalId: string,
   voteChoice: SnapshotChoice,
   reason: string
 ): Promise<ExecutionResult | null> => {
-  const { voteable, status } = await isProposalVoteable(proposalId);
+  const { proposal, voteable, status } = await isProposalVoteable(proposalId);
   if (!voteable) {
     console.log(`Cannot vote on Nouns #${proposalId}; status is ${status}`);
     return null;
   }
 
-  if (await hasAlreadyVoted(proposalId)) {
-    console.log(`Safe already voted on Nouns #${proposalId}`);
+  if (!proposal) return null;
+
+  if (await hasAlreadyVoted(proposalId, config.safeAddress)) {
+    console.log(`${config.safeAddress} already voted on Nouns #${proposalId}`);
     return null;
   }
 
   if (config.dryRun) {
     console.log(
-      `[DRY RUN] Would vote ${voteChoice} on Nouns #${proposalId} through Safe`
+      `[DRY RUN] Would vote ${voteChoice} on Nouns #${proposalId} through Safe ${config.safeAddress}`
     );
     return {
+      executionMode: "safe",
+      voterAddress: config.safeAddress,
       safeTxHash: `dry-run-safe-${proposalId}`,
       executionTxHash: `dry-run-execution-${proposalId}`,
       blockNumber: 0,
@@ -104,7 +123,7 @@ export const executeVoteThroughSafe = async (
 
   for (let attempt = 0; attempt < config.maxRetries; attempt++) {
     if (attempt > 0) await sleep(attempt === 1 ? 30_000 : 120_000);
-    const result = await attemptExecution(
+    const result = await attemptSafeExecution(
       proposalId,
       voteChoice,
       reason,
@@ -118,7 +137,7 @@ export const executeVoteThroughSafe = async (
   return null;
 };
 
-const attemptExecution = async (
+const attemptSafeExecution = async (
   proposalId: string,
   voteChoice: SnapshotChoice,
   reason: string,
@@ -190,6 +209,8 @@ const attemptExecution = async (
     }
 
     return {
+      executionMode: "safe",
+      voterAddress: config.safeAddress,
       safeTxHash,
       executionTxHash,
       blockNumber: Number(receipt.blockNumber),

@@ -184,7 +184,7 @@ export default function ProposalComponent() {
               label: "Description",
               content: (
                 <>
-                  <section className="yc-dark-surface rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
+                  <section className="yc-dark-surface rounded-b-2xl border border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                     <div className="text-2xl font-heading text-skin-base font-bold">
                       Description
                     </div>
@@ -213,7 +213,7 @@ export default function ProposalComponent() {
               id: "votes",
               label: "Votes",
               content: (
-                <section className="yc-dark-surface rounded-b-2xl border border-t-0 border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
+                <section className="yc-dark-surface rounded-b-2xl border border-skin-stroke bg-white p-6 shadow-sm sm:rounded-t-2xl md:p-8">
                   <div className="text-2xl font-heading text-skin-base font-bold">
                     Votes
                   </div>

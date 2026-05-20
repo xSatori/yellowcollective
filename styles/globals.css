@@ -674,7 +674,7 @@
   [class~="hover:!bg-[#fff7bf]"][class*="hover:shadow-"]:hover,
   [class~="hover:bg-[#ffd84d]"][class*="hover:shadow-"]:hover,
   [class~="hover:bg-[rgb(var(--color-accent-hover))]"][class*="hover:shadow-"]:hover,
-  .yc-dark-yellow-button:hover {
+  [data-theme="dark"] .yc-dark-yellow-button:hover {
     box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
   }
 
@@ -725,6 +725,14 @@
     box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-neutral)) !important;
   }
 
+  [data-theme="dark"] .yc-bid-history-dialog {
+    border-color: rgb(var(--color-accent)) !important;
+  }
+
+  [data-theme="dark"] .yc-bid-history-dialog [class~="border-b-2"] {
+    border-color: rgb(var(--color-accent)) !important;
+  }
+
   [data-theme="dark"] .yc-bid-history-dialog > button {
     background-color: rgb(var(--color-accent)) !important;
     border: 1px solid rgb(var(--color-stroke-strong)) !important;
@@ -744,10 +752,11 @@
   [data-theme="dark"] .yc-bid-history-popout-icon {
     box-sizing: content-box;
     border-radius: 10px;
-    background-color: rgb(var(--color-accent)) !important;
-    box-shadow: 0px 3px 0px 0px rgb(var(--color-shadow-accent)) !important;
-    filter: brightness(0) !important;
-    padding: 4px;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    filter: brightness(0) saturate(100%) invert(78%) sepia(88%)
+      saturate(938%) hue-rotate(358deg) brightness(103%) contrast(97%) !important;
+    padding: 0;
   }
 
   [data-theme="dark"] .yc-theme-toggle {
@@ -838,20 +847,49 @@
     box-shadow: none !important;
   }
 
+  .proposal-detail-tab.proposal-detail-tab-inactive {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .proposal-detail-tab-active::after {
+    background-color: inherit;
+    bottom: -1px;
+    content: "";
+    height: 2px;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    z-index: 1;
+  }
+
   [data-theme="dark"] .proposal-detail-tab {
     border-color: rgb(var(--color-stroke)) !important;
   }
 
   .proposal-hover-row:hover {
+    background-color: rgb(255, 255, 255) !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-neutral)) !important;
+    color: rgb(var(--color-text-base)) !important;
+    transform: translateY(-0.125rem);
+  }
+
+  [data-theme="dark"] .proposal-hover-row {
+    background-color: rgb(var(--color-surface-muted)) !important;
+    border-color: rgb(var(--color-stroke)) !important;
+    color: rgb(var(--color-text-base)) !important;
+  }
+
+  [data-theme="dark"] .proposal-hover-row:hover {
     background-color: rgb(var(--color-accent)) !important;
+    box-shadow: 0px 6px 0px 0px rgb(var(--color-shadow-accent)) !important;
     color: #212529 !important;
   }
 
-  .proposal-hover-row:hover .text-skin-base,
-  .proposal-hover-row:hover .text-secondary,
-  .proposal-hover-row:hover h2,
-  .proposal-hover-row:hover div,
-  .proposal-hover-row:hover span {
+  [data-theme="dark"] .proposal-hover-row:hover .text-skin-base,
+  [data-theme="dark"] .proposal-hover-row:hover .text-secondary,
+  [data-theme="dark"] .proposal-hover-row:hover h2 {
     color: #212529 !important;
   }
 

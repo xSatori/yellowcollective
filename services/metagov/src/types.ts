@@ -47,6 +47,8 @@ export type TrackedProposal = {
   scores?: number[];
   scoresTotal?: number;
   winningChoice?: SnapshotChoice | "NO_VOTES";
+  executionMode?: "safe";
+  voterAddress?: string;
   executionTxHash?: string;
   safeTxHash?: string;
   failureReason?: string;
@@ -56,7 +58,9 @@ export type ExecutionRecord = {
   nounsProposalId: string;
   snapshotId: string;
   choice: SnapshotChoice;
-  safeTxHash: string;
+  executionMode: "safe";
+  voterAddress: string;
+  safeTxHash?: string;
   executionTxHash: string;
   blockNumber: number;
   gasUsed: string;

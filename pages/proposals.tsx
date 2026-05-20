@@ -165,7 +165,7 @@ const ProposalRow = ({
   return (
     <Link
       href={`/proposals/${proposal.proposalId}`}
-      className="proposal-hover-row grid min-h-[96px] grid-cols-[34px_1fr] items-start gap-4 rounded-2xl border border-skin-stroke bg-skin-muted p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff7bf] hover:shadow-md md:grid-cols-[44px_1fr_auto] md:items-center"
+      className="proposal-hover-row grid min-h-[96px] grid-cols-[34px_1fr] items-start gap-4 rounded-2xl border border-skin-stroke bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0px_6px_0px_0px_rgb(var(--color-shadow-neutral))] md:grid-cols-[44px_1fr_auto] md:items-center"
     >
       <div className="font-heading text-xl text-skin-base">
         {proposalNumber}

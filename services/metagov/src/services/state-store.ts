@@ -100,6 +100,8 @@ export class StateStore {
         ...existing,
         status: "executed",
         winningChoice: record.choice,
+        executionMode: record.executionMode,
+        voterAddress: record.voterAddress,
         safeTxHash: record.safeTxHash,
         executionTxHash: record.executionTxHash,
         updatedAt: new Date().toISOString(),

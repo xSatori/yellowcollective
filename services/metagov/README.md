@@ -2,7 +2,7 @@
 
 Standalone Railway service that mirrors Nouns DAO proposals into the
 `yellowcollective.eth` Snapshot space, watches the Snapshot results, and casts
-the final vote through the Yellow Collective Safe.
+the final vote on-chain.
 
 ## Railway setup
 
@@ -48,11 +48,15 @@ MAX_GAS_PRICE_GWEI="100"
 MAX_RETRIES="3"
 ```
 
-## Required Safe setup
+## Final vote execution
 
-- The bot wallet must be an owner of the Safe.
-- The Safe threshold must be `1` for unattended execution.
-- The Safe must have Nouns voting power or delegation when the bot executes.
+- Final Nouns votes always execute through `SAFE_ADDRESS`.
+- `BOT_PRIVATE_KEY` is only used as the Safe owner signer/executor.
+- The bot does not fall back to direct voting from `BOT_PRIVATE_KEY`.
+- Safe owner and threshold checks are required at startup. The bot wallet must
+  be a Safe owner, and the Safe threshold must be `1` for unattended execution.
+- Safe voting power is checked only as a startup warning. A Safe with 0 delegated
+  Nouns votes can still cast a zero-weight on-chain vote.
 - Start with `DRY_RUN=true`; only switch to `false` after the first dry-run
   cycle creates the expected state.
 
