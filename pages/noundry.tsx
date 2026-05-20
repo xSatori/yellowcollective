@@ -96,6 +96,7 @@ type ExportScaleRequest = {
 const GRID_SIZE = 32;
 const DEFAULT_COLOR = "#f8d21c";
 const EMPTY_PIXEL = "transparent";
+const CUSTOM_TRAIT_NAME = "custom";
 const EXPORT_SCALES = [1, 2, 4, 8] as const;
 const EDITABLE_TRAIT_EXCLUSIONS = new Set(["glasses"]);
 const brushSizes = [1, 2, 3, 4, 6, 8];
@@ -833,6 +834,10 @@ export default function NoundryPage() {
       const nextPixels = await imageToPixels(objectUrl);
       uploadedLayerLoadTraitRef.current = trait;
       setTraitType(trait);
+      setSelectedTraits((currentTraits) => ({
+        ...currentTraits,
+        [trait]: CUSTOM_TRAIT_NAME,
+      }));
       setPixels(nextPixels);
       setUndoStack([]);
       setRedoStack([]);
