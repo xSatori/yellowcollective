@@ -27,8 +27,10 @@ import {
   type PublicProfileData,
   type ProfileMetadata,
 } from "data/profile";
-import { getGalleryPublicEnabled } from "data/coins";
-import type { ProfileRoundSubmission, ProfileRoundVote } from "data/rounds";
+import {
+  type ProfileRoundSubmission,
+  type ProfileRoundVote,
+} from "data/rounds";
 import {
   getYellowCollectiveArtwork,
   type PlaygroundArtwork,
@@ -50,7 +52,7 @@ import {
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import useSWR from "swr";
 import { useAccount, useSignMessage } from "wagmi";
@@ -60,7 +62,6 @@ import { utils as ethersUtils } from "ethers";
 type ProfilePageProps = {
   profile: PublicProfileData | null;
   artwork: PlaygroundArtwork | null;
-  galleryPublicEnabled: boolean;
   lookup: string;
   error?: string;
 };
@@ -154,7 +155,6 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork: null,
-        galleryPublicEnabled: true,
         profile: null,
         error: "Enter a wallet address or ENS name to view a profile.",
       },
@@ -172,7 +172,6 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork: null,
-        galleryPublicEnabled: true,
         profile: null,
         error: lookupIsEnsName
           ? "That ENS name did not resolve to a wallet address."
@@ -191,15 +190,11 @@ export const getServerSideProps = async ({
   }
 
   try {
-    const [profileData, artwork, galleryPublicEnabled] = await Promise.all([
+    const [profileData, artwork] = await Promise.all([
       getPublicProfileData(resolvedAddress),
       getYellowCollectiveArtwork().catch((artworkError) => {
         console.error("Unable to load profile fallback artwork", artworkError);
         return null;
-      }),
-      getGalleryPublicEnabled().catch((settingsError) => {
-        console.error("Unable to load profile gallery settings", settingsError);
-        return true;
       }),
     ]);
 
@@ -207,7 +202,6 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork,
-        galleryPublicEnabled,
         profile: toSerializableProfile(profileData),
       },
     };
@@ -217,7 +211,6 @@ export const getServerSideProps = async ({
       props: {
         lookup,
         artwork: null,
-        galleryPublicEnabled: true,
         profile: null,
         error: "Unable to load this profile right now.",
       },
@@ -228,7 +221,6 @@ export const getServerSideProps = async ({
 export default function ProfilePage({
   profile,
   artwork: initialArtwork,
-  galleryPublicEnabled,
   lookup,
   error,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
@@ -258,8 +250,12 @@ export default function ProfilePage({
     "/api/rounds/settings",
     fetcher
   );
-  const showRoundsActivity = Boolean(roundsSettings?.roundsPublicEnabled);
-  const showContentCoins = galleryPublicEnabled;
+  const { data: gallerySettings } = useSWR<{ galleryPublicEnabled: boolean }>(
+    "/api/gallery/settings",
+    fetcher
+  );
+  const showRoundsActivity = roundsSettings?.roundsPublicEnabled === true;
+  const showContentCoins = gallerySettings?.galleryPublicEnabled === true;
 
   const isOwnProfile = areSameWalletAddress(connectedAddress, profile?.address);
   const stats = useMemo(() => {
@@ -270,12 +266,21 @@ export default function ProfilePage({
       ...(showContentCoins
         ? ([["Content coins", profile.contentCoins.length]] as const)
         : []),
-      ["Round art", profile.roundSubmissions.length],
+      ...(showRoundsActivity
+        ? ([["Round art", profile.roundSubmissions.length]] as const)
+        : []),
       ["DAO tokens", profile.ownedTokens.length],
       ["Proposals", profile.submittedProposals.length],
-      ["Votes", profile.daoVotes.length + profile.roundVotes.length],
+      [
+        "Votes",
+        profile.daoVotes.length +
+          (showRoundsActivity ? profile.roundVotes.length : 0),
+      ],
     ] as const;
-  }, [profile, showContentCoins]);
+  }, [profile, showContentCoins, showRoundsActivity]);
+  const profileStatsGridStyle = {
+    "--profile-stat-count": stats.length,
+  } as CSSProperties & Record<"--profile-stat-count", number>;
 
   const saveProfile = async () => {
     if (!profile || !connectedAddress || !isOwnProfile) return;
@@ -495,11 +500,14 @@ export default function ProfilePage({
               )}
             </div>
 
-            <div className="grid grid-cols-2 border-t border-skin-stroke bg-[#f7f7f7] sm:grid-cols-3 lg:grid-cols-[repeat(6,minmax(0,1fr))]">
+            <div
+              className="grid grid-cols-2 border-t border-skin-stroke bg-[#f7f7f7] sm:grid-cols-3 lg:grid-cols-[repeat(var(--profile-stat-count),minmax(0,1fr))]"
+              style={profileStatsGridStyle}
+            >
               {stats.map(([label, value]) => (
                 <div
                   key={label}
-                  className="min-w-0 border-r border-skin-stroke px-1.5 py-3 text-center last:border-r-0 sm:p-5"
+                  className="min-w-0 border-skin-stroke px-1.5 py-3 text-center sm:border-r sm:p-5 last:sm:border-r-0"
                 >
                   <div className="font-heading text-2xl leading-none text-skin-base min-[360px]:text-3xl sm:text-4xl">
                     {value}
