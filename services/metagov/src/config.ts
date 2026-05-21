@@ -41,7 +41,7 @@ export const config = {
   minProposalId: numberFromEnv("MIN_PROPOSAL_ID", 0),
   lookbackDays: numberFromEnv("LOOKBACK_DAYS", 7),
   proposalLinkTemplate:
-    process.env.PROPOSAL_LINK_TEMPLATE || "https://nouns.wtf/vote/{id}",
+    process.env.PROPOSAL_LINK_TEMPLATE || "https://nouns.game/proposals/{id}",
   siteProposalLinkTemplate:
     process.env.SITE_PROPOSAL_LINK_TEMPLATE ||
     "https://yellowcollective.art/proposals/nouns/{id}",

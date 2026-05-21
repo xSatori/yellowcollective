@@ -18,27 +18,14 @@ const faqItems: FaqItem[] = [
           Collective to retire certain traits at these intervals. This way, the
           Collection will always feel fresh and community-curated!
         </p>
-        <p>
-          On a related note, several times per year, the Collective may also
-          take a community poll to choose the TOP TRAIT added to the collection
-          during that period and make a Proposal to have this trait “Graduated”
-          to the OG Nouns collection, pending Nouns governance approval. In this
-          way, artists from our community will have the opportunity, by winning
-          a Yellow Collective Trait contest, to have their art featured not only
-          in the coolest Nounish project on BASE, but also in the most evergreen
-          NFT DAO collection on ETH mainnet- Nouns DAO!
-        </p>
       </>
     ),
   },
   {
-    title: "Collective Nounders: Slow Growth, Careful Leadership",
+    title: "Collective Nounders",
     content: (
       <>
-        <p>
-          The Yellow Collective was founded by the core team behind The Noun
-          Square, the Collective Nounders (alphabetically):
-        </p>
+        <p>The Yellow Collective was founded by (alphabetically):</p>
         <ul className="list-disc list-inside pl-4">
           <li>
             <ExternalLink href="https://x.com/benbodhi?s=21">
@@ -101,24 +88,6 @@ const faqItems: FaqItem[] = [
             </ExternalLink>
           </li>
         </ul>
-        <p>
-          In the experienced opinions of the Collective Nounders, many DAOs and
-          DAO-like organisations have failed in recent years because of a lack
-          of cohesion and guidance in the important early days of their growth.
-          They won{"'"}t let that happen to Yellow. To ensure that TYC embarks
-          on the desired path and remains laser focused on the mission of
-          supporting and empowering artists and creatives in our ecosystem, the
-          Collective Nounders will not hesitate to employ social pressure,
-          governance leadership and, if necessary, Veto Power, to ensure that
-          this early direction is not compromised. They do however envision a
-          near future wherein these responsibilities can be progressively
-          decentralised to the community in due time. Purple DAO is a great
-          example of this in practice.
-        </p>
-        <p>
-          A Collective Noun is not a claim on whatever treasury may accrue, it
-          is a membership in (the coolest) onchain club.
-        </p>
       </>
     ),
   },
@@ -146,20 +115,6 @@ const faqItems: FaqItem[] = [
           Builder, a tool that allows {"'"}Maximum Viable Communities{"'"} like
           TNS to create an onchain club in just a few clicks. What a time to be
           alive!
-        </p>
-        <p>
-          The Yellow Collective is going to produce a LOT of onchain media.
-          Content produced by The Noun Square Media Collective. Entries to our
-          art contests... We want to mint (and encourage our community to mint)
-          all the things to the Superchain. Thanks to Zora{"'"}s ground-breaking
-          Creator Rewards Program, this expected volume of minted Nounish
-          content can and will create revenue over time, and we will split those
-          rewards with artists, and with Nouns.
-        </p>
-        <p className="font-bold">
-          Ten percent of any Creator Rewards earned by any piece minted by The
-          Yellow Collective will be automatically shared with Nouns DAO, as a
-          thank you for its open source infrastructure.
         </p>
       </>
     ),

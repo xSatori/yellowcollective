@@ -308,6 +308,19 @@
     background-color: rgb(var(--color-accent)) !important;
   }
 
+  .yc-vote-reason-textarea,
+  [data-theme="dark"] .yc-vote-reason-textarea {
+    --color-text-base: 33, 37, 41;
+    --color-text-muted: 69, 74, 78;
+    background-color: rgb(255, 255, 255) !important;
+    color: #212529 !important;
+  }
+
+  .yc-vote-reason-textarea::placeholder,
+  [data-theme="dark"] .yc-vote-reason-textarea::placeholder {
+    color: #454a4e !important;
+  }
+
   .yc-force-white,
   [data-theme="dark"] .yc-force-white {
     --color-text-base: 33, 37, 41;

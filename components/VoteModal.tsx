@@ -129,7 +129,7 @@ export default function VoteModal({
         onChange={(event) => setReason(event.target.value)}
         placeholder="Optional reason for your vote"
         rows={4}
-        className="mt-2 w-full resize-none rounded-xl border border-skin-stroke bg-white px-4 py-3 text-base text-skin-base shadow-sm placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
+        className="yc-vote-reason-textarea mt-2 w-full resize-none rounded-xl border border-skin-stroke bg-white px-4 py-3 text-base text-[#212529] shadow-sm placeholder:text-[#454a4e] focus:outline-none focus:ring-2 focus:ring-skin-highlighted"
       />
 
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row">

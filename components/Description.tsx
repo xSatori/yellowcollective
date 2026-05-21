@@ -16,8 +16,8 @@ export default function Description() {
               What is The Yellow Collective and What Are Collective Nouns?
             </h2>
             <p>
-              The Yellow Collective is a new onchain club on the BASE Ethereum
-              L2 network, designed to support and empower artists and creatives
+              The Yellow Collective is an onchain club on Base, designed to
+              support and empower artists and creatives
               in the Nouns and{" "}
               <ExternalLink href="https://www.coingecko.com/learn/optimism-superchain-interoperability-ethereum">
                 Superchain
@@ -26,33 +26,18 @@ export default function Description() {
               day, forever. Auction proceeds will be used to host art contests
               and pay commissions to creatives in our communities.
             </p>
-            <video
-              controls
-              className="rounded-3xl border-[4px] border-secondary"
-            >
-              <source src="/intro.mp4#t=0.001" />
-            </video>
-            <p>
-              Members of The Yellow Collective will coordinate onchain using{" "}
-              <ExternalLink href="https://www.farcaster.xyz">
-                Farcaster
-              </ExternalLink>{" "}
-              and snapshot voting to help decide on contests and other
-              activations to support artists and creators.
-            </p>
             <p className="font-bold">
               Minting a Collective Noun is a signal to your network that you
               love Nouns, that you believe in the power of Ethereum L2s like
-              BASE, Zora and Optimism, and that you are a modern day, onchain,
+              Base, and that you are a modern day, onchain,
               patron of the arts. Plus, they look pretty cool!
             </p>
             <p>
               Oh and, why “Yellow”? Well, because yellow is bright and
               optimistic, it{"'"}s one of the original brand colors of Nouns
-              DAO, as well as the main logo color for The Noun Square, and the
-              name is also an homage to Purple DAO and all the good they have
-              done for the Farcaster ecosystem. And finally, it{"'"}s just a
-              great meme too! 🟡
+              DAO, and the name is also an homage to Purple DAO and all the
+              good they have done for the Farcaster ecosystem. And finally,
+              it{"'"}s just a great meme too! 🟡
             </p>
             <h2 className="pt-4">
               Nouns Made By the Community, For the Community
