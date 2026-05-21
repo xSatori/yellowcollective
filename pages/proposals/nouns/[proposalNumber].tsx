@@ -12,7 +12,7 @@ import {
   getNounsDaoProposals,
   type NounsDaoProposal,
 } from "data/nouns-dao/proposals";
-import { ArrowLeftIcon } from "@heroicons/react/20/solid";
+import ArrowLeftIcon from "@heroicons/react/20/solid/ArrowLeftIcon";
 import type {
   GetStaticPaths,
   GetStaticPropsResult,
@@ -40,13 +40,6 @@ const nounsSettingsFetcher = async (url: string) => {
 
   return data as { nounsMetagovEnabled: boolean };
 };
-
-const formatDate = (timestamp: string) =>
-  new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
 
 const getStatus = (state: number) => {
   switch (state) {
@@ -228,22 +221,6 @@ export default function NounsProposalDetailPage({
                   type: "muted",
                   value: abstainVotes,
                   percentage: getVotePercentage(abstainVotes),
-                },
-              ]}
-              metrics={[
-                {
-                  label: "Threshold",
-                  value: `${proposal.quorumVotes || 1} Quorum`,
-                },
-                {
-                  label: "Ends",
-                  eyebrow: "Block",
-                  value: proposal.voteEndBlock,
-                },
-                {
-                  label: "Snapshot",
-                  eyebrow: "Block",
-                  value: proposal.voteStartBlock,
                 },
               ]}
             />

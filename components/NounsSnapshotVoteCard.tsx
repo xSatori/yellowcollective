@@ -3,10 +3,12 @@ import { submitSnapshotVote } from "@/utils/snapshot-vote";
 import { TOKEN_CONTRACT } from "constants/addresses";
 import { SNAPSHOT_SPACE_ID, SNAPSHOT_SPACE_URL } from "constants/metagov";
 import { ethers } from "ethers";
-import { CheckIcon, MinusIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
+import MinusIcon from "@heroicons/react/20/solid/MinusIcon";
+import XMarkIcon from "@heroicons/react/20/solid/XMarkIcon";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useAccount, useSigner } from "wagmi";
 
@@ -65,6 +67,7 @@ export default function NounsSnapshotVoteCard({
   const [reason, setReason] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const {
     data,
     error,
@@ -98,13 +101,25 @@ export default function NounsSnapshotVoteCard({
   );
   const scoreTotal = proposal?.scoresTotal || 0;
 
+  useEffect(() => {
+    if (!isActive) return;
+
+    const interval = window.setInterval(() => {
+      setNow(Date.now());
+    }, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [isActive]);
+
   const statusLabel = useMemo(() => {
     if (!proposal) return "Not created";
-    if (proposal.state === "active") return "Active";
+    if (proposal.state === "active") {
+      return `Active for ${formatSnapshotTimeRemaining(proposal.end, now)}`;
+    }
     if (proposal.state === "closed") return "Closed";
     if (proposal.state === "cancelled") return "Cancelled";
     return "Pending";
-  }, [proposal]);
+  }, [now, proposal]);
 
   const submitVote = async () => {
     if (!proposal || !choice || !signer || !address) return;
@@ -426,3 +441,17 @@ const voteChoices: VoteChoice[] = [
     selectedIconClassName: "text-skin-proposal-muted",
   },
 ];
+
+const formatSnapshotTimeRemaining = (endTimestamp: number, now: number) => {
+  const remainingSeconds = Math.max(
+    0,
+    Math.floor(endTimestamp - now / 1000)
+  );
+  const days = Math.floor(remainingSeconds / 86400);
+  const hours = Math.floor((remainingSeconds % 86400) / 3600);
+  const minutes = Math.floor((remainingSeconds % 3600) / 60);
+
+  return `${days}D ${String(hours).padStart(2, "0")}HR ${String(
+    minutes
+  ).padStart(2, "0")}M`;
+};

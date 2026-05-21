@@ -15,10 +15,10 @@ export type VoteMetricItem = {
 
 export default function ProposalVoteSummary({
   votes,
-  metrics,
+  metrics = [],
 }: {
   votes: VoteSummaryItem[];
-  metrics: VoteMetricItem[];
+  metrics?: VoteMetricItem[];
 }) {
   return (
     <div className="mt-5 flex flex-col gap-4 md:mt-8">
@@ -33,24 +33,26 @@ export default function ProposalVoteSummary({
         ))}
       </div>
 
-      <div className="grid w-full gap-4 sm:grid-cols-3">
-        {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="yc-dark-surface flex w-full items-center justify-between rounded-xl border border-skin-stroke bg-white p-4 shadow-sm sm:items-baseline md:p-6"
-          >
-            <div className="font-heading text-lg text-skin-muted md:text-xl">
-              {metric.label}
+      {metrics.length > 0 && (
+        <div className="grid w-full gap-4 sm:grid-cols-3">
+          {metrics.map((metric) => (
+            <div
+              key={metric.label}
+              className="yc-dark-surface flex w-full items-center justify-between rounded-xl border border-skin-stroke bg-white p-4 shadow-sm sm:items-baseline md:p-6"
+            >
+              <div className="font-heading text-lg text-skin-muted md:text-xl">
+                {metric.label}
+              </div>
+              <div className="text-right">
+                {metric.eyebrow && (
+                  <div className="text-skin-muted">{metric.eyebrow}</div>
+                )}
+                <div className="font-semibold">{metric.value}</div>
+              </div>
             </div>
-            <div className="text-right">
-              {metric.eyebrow && (
-                <div className="text-skin-muted">{metric.eyebrow}</div>
-              )}
-              <div className="font-semibold">{metric.value}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
